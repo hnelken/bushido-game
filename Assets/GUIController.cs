@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class GUIController : MonoBehaviour {
 
 	public Image FlashScreen;
+	public Animator TopLine, BottomLine;
 
 	private NaiveGameController controller;
 	private bool screenFlashed;
@@ -89,11 +90,26 @@ public class GUIController : MonoBehaviour {
 			flashColor.a -= 0.01f;
 			FlashScreen.color = flashColor;
 		}
-		else {	// Done fading out, ready for next reaction flash
+		else {	// Done fading out, signal cinematics
 			screenFlashed = false;
 			FlashScreen.enabled = false;
 			FlashScreen.color = Color.white;
-			controller.SignalNextRoundReady();
+
+			TriggerCinematics();
 		}
+	}
+
+	private void TriggerCinematics() {
+		TopLine.Play ("TopLine", -1, 0f);
+		BottomLine.Play ("BottomLine", -1, 0f);
+
+		StartCoroutine(WaitAndStartRound());
+	}
+
+	public IEnumerator WaitAndStartRound() {
+
+		yield return new WaitForSeconds(3.5f);
+
+		controller.SignalNextRoundReady();
 	}
 }

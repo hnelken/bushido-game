@@ -42,6 +42,8 @@ public class NaiveGameController : MonoBehaviour {
 		WinText.enabled = false;
 		LeftCount.enabled = false;
 		RightCount.enabled = false;
+
+		StartCoroutine(WaitAndStartRound ());
 	}
 	
 	// Update is called once per frame
@@ -72,6 +74,15 @@ public class NaiveGameController : MonoBehaviour {
 
 	public void SignalNextRoundReady() {
 		restarting = false;
+		waitingForInput = true;
+		StartCoroutine(WaitAndPopFlag());
+	}
+
+	public IEnumerator WaitAndStartRound() {
+		
+		yield return new WaitForSeconds(3f);
+
+		SignalNextRoundReady();
 	}
 
 	public IEnumerator WaitAndPopFlag()
