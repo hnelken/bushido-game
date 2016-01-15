@@ -4,8 +4,20 @@ using System.Collections;
 public class SamuraiControl : MonoBehaviour {
 
 	public bool leftSamurai;
+	public Sprite idle, attacking;
 
+	private int winCount;
+	private bool isIdle;
 	private NaiveGameController controller;
+	private SpriteRenderer spriteRenderer;
+
+	public void addWin() {
+		winCount++;
+	}
+
+	public string getWinCount() {
+		return winCount.ToString();
+	}
 
 	public void SetController(NaiveGameController controller) {
 		this.controller = controller;
@@ -13,7 +25,9 @@ public class SamuraiControl : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-	
+		spriteRenderer = GetComponent<SpriteRenderer> ();
+		spriteRenderer.sprite = idle;
+		isIdle = true;
 	}
 	
 	// Update is called once per frame
@@ -31,9 +45,19 @@ public class SamuraiControl : MonoBehaviour {
 		}
 	}
 
+	public void ToggleSprite() {
+		if (isIdle) {
+			spriteRenderer.sprite = attacking;
+		}
+		else {
+			spriteRenderer.sprite = idle;
+		}
+		isIdle = !isIdle;
+	}
+
 	// Signal a player input to the game controller
 	private void SamuraiReact() {
-		controller.SamuraiTrigger(leftSamurai);
+		controller.TriggerReaction(leftSamurai);
 	}
 
 }
