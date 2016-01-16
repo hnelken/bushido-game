@@ -133,7 +133,8 @@ public class NaiveGameController : MonoBehaviour {
 			}
 			else 
 			{	// Player reacted before flag popped (strike)
-				TriggerStrike(leftSamurai);
+				//TriggerStrike(leftSamurai);
+				waitingForInput = true;
 			}
 		}
 	}
