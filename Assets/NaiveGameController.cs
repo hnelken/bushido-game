@@ -9,8 +9,10 @@ public class NaiveGameController : MonoBehaviour {
 	public GUIController gui;
 
 	public Text LeftCount, RightCount, WinText;
+	public Text ReactionTimer;
 	private enum LastWinner { LEFT, RIGHT }
 
+	private float startTime;
 	private Vector3 leftPosition, rightPosition;
 	private bool waitingForRestart;
 	private bool waitingForInput;
@@ -49,6 +51,12 @@ public class NaiveGameController : MonoBehaviour {
 	// Update is called once per frame
 	void Update () 
 	{
+		// Update reaction speed timer if possiblesssa
+		if (flagPopped)
+		{
+			ReactionTimer.text = "" + ((int) (100 * (Time.realtimeSinceStartup - startTime))).ToString();
+		}
+
 		// If restarting, space triggers fade to black.
 		if (waitingForRestart && Input.GetKeyDown(KeyCode.Space)) 
 		{
@@ -68,7 +76,7 @@ public class NaiveGameController : MonoBehaviour {
 		LeftCount.enabled = false;
 		RightCount.enabled = false;
 		WinText.enabled = false;
-
+		ReactionTimer.text = "--";
 		ResetPlayerPositions();
 	}
 
@@ -80,7 +88,7 @@ public class NaiveGameController : MonoBehaviour {
 
 	public IEnumerator WaitAndStartRound() {
 		
-		yield return new WaitForSeconds(3f);
+		yield return new WaitForSeconds(5f);
 
 		SignalNextRoundReady();
 	}
@@ -89,9 +97,10 @@ public class NaiveGameController : MonoBehaviour {
 	{
 		float randomWait = Random.Range(2, 8);
 		yield return new WaitForSeconds(randomWait);
-		
+
 		CenterPiece.SetActive(true);
 		flagPopped = true;
+		startTime = Time.realtimeSinceStartup;
 	}
 
 	public IEnumerator WaitAndShowWinner() {
@@ -130,6 +139,7 @@ public class NaiveGameController : MonoBehaviour {
 			if (flagPopped)
 			{	// Player reacted after flag popped (win)
 				TriggerWin(leftSamurai);
+
 			}
 			else 
 			{	// Player reacted before flag popped (strike)
