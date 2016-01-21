@@ -3,28 +3,44 @@ using System.Collections;
 
 public class GameManager : MonoBehaviour {
 	
-	private enum LastWinner { LEFT, RIGHT }
-	
-	private LastWinner lastWinner;
+	public SamuraiControl LeftSamurai, RightSamurai;
+	public GUIController UI;
 
-	private bool waitingForRestart;
+	private enum LastWinner { LEFT, RIGHT }
+	private LastWinner lastWinner;
+	private float startTime;
 	private bool waitingForInput;
 	private bool flagPopped;
-	private bool restarting;
 
+	private const int LOWER_WAIT_BOUND = 5;
+	private const int UPPER_WAIT_BOUND = 10;
 	#region State Methods
 
 	// Use this for initialization
-	void Start () {
-		waitingForRestart = false;
+	void Start ()
+	{
 		waitingForInput = false;
 		flagPopped = false;
-		restarting = false;
+
+		UI.SetController(this);
+
+		BeginNewRound();
 	}
 	
 	// Update is called once per frame
-	void Update () {
-	
+	void Update ()
+	{
+		if (flagPopped)
+		{
+			int time = ((int)(100 * (Time.time - startTime))/2);
+			UI.UpdateTimer(time);
+		}
+	}
+
+	// Used for players to check if input is valid
+	public bool IsInputValid() 
+	{
+		return waitingForInput;
 	}
 
 	// End of overrides methods
@@ -39,34 +55,42 @@ public class GameManager : MonoBehaviour {
 		return GameObject.Find("GameManager").GetComponent<GameManager>();
 	}
 
-	// Signal game manager to refresh for new 
+	// Reset everything for new round 
 	public void RefreshForNewRound() 
 	{
-
+		
 	}
 
-	// Signal game manager that new round timer can begin
-	public void BeginNewRound() {
-		restarting = false;
+	// Begin the wait-period before the flag pops
+	public void BeginNewRound() 
+	{
 		waitingForInput = true;
 		StartCoroutine(WaitAndPopFlag());
 	}
 
+	// Receive input from players and decide validity of timing
 	public void TriggerReaction()
 	{
 		if (waitingForInput) 
 		{
+			Debug.Log ("Reaction");
+
 			// Accept no more input
 			waitingForInput = false;
 			
 			if (flagPopped)
 			{	// Player reacted after flag popped (win)
-				TriggerWin();	
+				UI.SignalPlayerReaction(true);
+				TriggerWin();
+				Debug.Log ("Win");
 			}
 			else 
 			{	// Player reacted before flag popped (strike)
+				UI.SignalPlayerReaction(false);
 				TriggerStrike();
+				Debug.Log ("Strike");
 			}
+			StartCoroutine(WaitAndStartRound());
 		}
 	}
 
@@ -77,20 +101,25 @@ public class GameManager : MonoBehaviour {
 	#region Yield Methods
 
 	// Waits for the initial animations to complete and begins a new round
-	public IEnumerator WaitAndStartRound() {
-		
-		yield return new WaitForSeconds(5f);
-		
+	public IEnumerator WaitAndStartRound() 
+	{
+		yield return new WaitForSeconds(3f);
+
+		Debug.Log ("Beginning match");
 		BeginNewRound();
 	}
 
 	// Waits a random time and pops the center flag
 	public IEnumerator WaitAndPopFlag()
 	{
-		float randomWait = Random.Range(2, 8);
+		float randomWait = Random.Range(LOWER_WAIT_BOUND, UPPER_WAIT_BOUND);
 		yield return new WaitForSeconds(randomWait);
 
+		Debug.Log ("Flag popped");
+		UI.PopFlag();
 		flagPopped = true;
+
+		startTime = Time.time;
 	}
 
 	// Waits a short time after samurais cross to show winner
@@ -105,8 +134,15 @@ public class GameManager : MonoBehaviour {
 		case LastWinner.RIGHT:
 			break;
 		}
-		
-		waitingForRestart = true;
+
+		StartCoroutine(WaitAndRestartRound());
+	}
+
+	public IEnumerator WaitAndRestartRound()
+	{
+		yield return new WaitForSeconds (5);
+
+		RestartDuel();
 	}
 
 	// End of yields
@@ -114,6 +150,11 @@ public class GameManager : MonoBehaviour {
 
 
 	#region Private Methods
+
+	private void RestartDuel() 
+	{
+		UI.FadeBlackFadeOut();
+	}
 
 	// Signal that a player reacted after the flag was popped
 	private void TriggerWin() 
@@ -130,7 +171,6 @@ public class GameManager : MonoBehaviour {
 		waitingForInput = true;
 
 		//flagPopped = false;
-		//waitingForRestart = true;
 	}
 
 	// End of private methods

@@ -39,7 +39,7 @@ public class NaiveGameController : MonoBehaviour {
 
 		LeftSamurai.SetController(this);
 		RightSamurai.SetController(this);
-		gui.SetController(this);
+		//gui.SetController(this);
 
 		WinText.enabled = false;
 		LeftCount.enabled = false;
