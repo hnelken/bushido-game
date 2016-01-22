@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class GUIController : MonoBehaviour {
 
 	// Public (editor) references
+	public SpriteRenderer LeftSamurai, RightSamurai;
 	public GameObject CenterPiece;
 
 	public Text LeftCount, RightCount, WinText;
@@ -18,6 +19,7 @@ public class GUIController : MonoBehaviour {
 	private bool screenFlashed;
 	private bool flashingWhite;
 	private bool fadingIn;
+	private Vector3 leftPosition, rightPosition;
 
 	public void SetController(GameManager manager) 
 	{
@@ -35,6 +37,9 @@ public class GUIController : MonoBehaviour {
 		LeftCount.enabled = false;
 		RightCount.enabled = false;
 		WinText.enabled = false;
+
+		leftPosition = LeftSamurai.transform.position;
+		rightPosition = RightSamurai.transform.position;
 	}
 	
 	// Update is called once per frame
@@ -52,12 +57,15 @@ public class GUIController : MonoBehaviour {
 			}
 		}
 	}
-	
-	private IEnumerator WaitAndSignalRoundStart()
-	{	
-		yield return new WaitForSeconds (3.5f);
+
+	public void ShowWinner(bool leftWin)
+	{
+		RefreshWinCounts();
+		LeftCount.enabled = true;
+		RightCount.enabled = true;
 		
-		manager.BeginNewRound();
+		WinText.text = (leftWin) ? "PLAYER 1 WINS" : "PLAYER 2 WINS";
+		WinText.enabled = true;
 	}
 
 	public void PopFlag()
@@ -65,17 +73,29 @@ public class GUIController : MonoBehaviour {
 		CenterPiece.SetActive(true);
 	}
 
-	public void SignalPlayerReaction(bool win)
+	public void SignalPlayerReaction(bool valid)
 	{
 		CenterPiece.SetActive(false);
-		if (win)
-		{	// Show player win
-			ShowWin();
+		if (valid)
+		{	// Show successful attack
+			FlashWhiteFadeOut();
 		}
 		else
-		{	// Show player strike
+		{	// Show false start
 
 		}
+	}
+
+	public void ClearForNewRound()
+	{
+		LeftCount.enabled = false;
+		RightCount.enabled = false;
+		WinText.enabled = false;
+
+		ReactionTimer.text = "--";
+	
+		// Reset samurai positions
+		ResetSamuraiPositions();
 	}
 
 	public void UpdateTimer(int time) 
@@ -88,6 +108,7 @@ public class GUIController : MonoBehaviour {
 		flashingWhite = true;
 		screenFlashed = true;
 		FlashScreen.enabled = true;
+		SwapSamuraiPositions();
 	}
 
 	public void FadeBlackFadeOut() 
@@ -113,6 +134,18 @@ public class GUIController : MonoBehaviour {
 			flashColor.a = 0f;
 			FlashScreen.color = flashColor;
 		}
+	}
+
+	private void SwapSamuraiPositions() 
+	{
+		LeftSamurai.transform.position = rightPosition;
+		RightSamurai.transform.position = leftPosition;
+	}
+
+	private void ResetSamuraiPositions()
+	{
+		LeftSamurai.transform.position = leftPosition;
+		RightSamurai.transform.position = rightPosition;
 	}
 	
 	private void FadeBlack() 
@@ -156,27 +189,26 @@ public class GUIController : MonoBehaviour {
 			FlashScreen.enabled = false;
 			FlashScreen.color = Color.white;
 
-			//StartCoroutine(WaitAndStartRound());
-			TriggerCinematics();
+			
+			manager.BeginNewRound();
+			//StartCoroutine(WaitAndSignalRoundStart());
+			//TriggerCinematics();
 		}
-	}
-
-	private void ShowWin()
-	{
-		RefreshWinCounts();
-		LeftCount.enabled = true;
-		RightCount.enabled = true;
-
-		WinText.text = "PLAYER 1 WINS";
-		WinText.enabled = true;
 	}
 
 	private void ShowStrike()
 	{
 
+	}	
+
+	private IEnumerator WaitAndSignalRoundStart()
+	{	
+		yield return new WaitForSeconds (3.5f);
+		
+		manager.BeginNewRound();
 	}
 
-	private void RefreshWinCounts() 
+	private void RefreshWinCounts()
 	{
 		LeftCount.text = manager.LeftSamurai.getWinCount();
 		RightCount.text = manager.RightSamurai.getWinCount();

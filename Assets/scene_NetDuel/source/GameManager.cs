@@ -58,12 +58,14 @@ public class GameManager : MonoBehaviour {
 	// Reset everything for new round 
 	public void RefreshForNewRound() 
 	{
-		
+		UI.ClearForNewRound();	
+		Debug.Log ("Stage Cleared");
 	}
 
 	// Begin the wait-period before the flag pops
 	public void BeginNewRound() 
 	{
+		Debug.Log ("New Round");
 		waitingForInput = true;
 		StartCoroutine(WaitAndPopFlag());
 	}
@@ -90,7 +92,7 @@ public class GameManager : MonoBehaviour {
 				TriggerStrike();
 				Debug.Log ("Strike");
 			}
-			StartCoroutine(WaitAndStartRound());
+			//StartCoroutine(WaitAndShowWinner());
 		}
 	}
 
@@ -125,8 +127,8 @@ public class GameManager : MonoBehaviour {
 	// Waits a short time after samurais cross to show winner
 	public IEnumerator WaitAndShowWinner() 
 	{
-		yield return new WaitForSeconds(2);
-		
+		yield return new WaitForSeconds(3);
+
 		switch (lastWinner)
 		{
 		case LastWinner.LEFT:
@@ -135,6 +137,8 @@ public class GameManager : MonoBehaviour {
 			break;
 		}
 
+		bool leftWin = true;
+		UI.ShowWinner(leftWin);
 		StartCoroutine(WaitAndRestartRound());
 	}
 
