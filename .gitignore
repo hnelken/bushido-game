@@ -1,0 +1,11 @@
+
+#git ignore
+Temp/*
+Temp/
+*/.DS_Store
+*/.sln
+*/.userprefs
+*/.csproj
+Library/
+Library/*
+ProjectSettings/*
