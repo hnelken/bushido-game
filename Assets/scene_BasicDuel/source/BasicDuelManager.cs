@@ -40,17 +40,12 @@ public class BasicDuelManager : MonoBehaviour {
 
 	void Update() {
 		if (flagPopped) {
-			gui.UpdateTimer((int)(100 * (Time.realtimeSinceStartup - startTime)));
+			gui.UpdateTimer(startTime);
 		}
 	}
 
 	public bool CanRestartRound() {
 		return waitingForRestart;
-	}
-
-	public void BeginRound() {
-		waitingForInput = true;
-		StartCoroutine(WaitAndPopFlag());
 	}
 	
 	public void TriggerReaction(bool leftSamurai) 
@@ -65,34 +60,46 @@ public class BasicDuelManager : MonoBehaviour {
 			}
 			else {
 				TriggerStrike(leftSamurai);
-
 			}
 		}
 		else if (waitingForTie) {
 			tyingInput = true;
+			waitingForTie = false;
 		}
 	}
 	
+	private void BeginRound() {
+		waitingForInput = true;
+		StartCoroutine(WaitAndPopFlag());
+	}
+
 	private void TriggerWin(bool leftSamurai) 
 	{
 		lastWinner = (leftSamurai) ? LastWinner.LEFT : LastWinner.RIGHT;
+		EventManager.TriggerGameWin();
 		StartCoroutine(WaitAndShowWinner());
 	}
 
 	private void TriggerTie()
 	{
+		waitingForRestart = true;
 		lastWinner = LastWinner.TIE;
 		EventManager.TriggerGameTie();
 	}
 	
 	private void TriggerStrike(bool leftSamurai) 
 	{
+		playerStrike = true;
 		waitingForRestart = true;
 		EventManager.TriggerGameStrike();
 	}
 
 	private void ResetGame() {
+		tyingInput = false;
+		flagPopped = false;
+		playerStrike = false;
 		waitingForRestart = false;
+		StartCoroutine(WaitAndStartRound());
 	}
 
 	public IEnumerator WaitAndStartRound() {
@@ -114,7 +121,7 @@ public class BasicDuelManager : MonoBehaviour {
 	}
 
 	public IEnumerator WaitForTyingInput(bool leftSamurai) {
-		yield return new WaitForSeconds(0.1f);
+		yield return new WaitForSeconds(0.02f);
 
 		if (tyingInput) {
 			TriggerTie();
@@ -127,10 +134,7 @@ public class BasicDuelManager : MonoBehaviour {
 	public IEnumerator WaitAndShowWinner() {
 		yield return new WaitForSeconds(2);
 		
-		EventManager.TriggerGameWin();
-
-		//TODO: update + show win counts and win text
-		
+		EventManager.TriggerWinResult();
 		waitingForRestart = true;
 	}
 }

@@ -32,9 +32,10 @@ public class Player : MonoBehaviour {
 		SetPlayerIdle();
 
 		// Set event listeners
-		EventManager.GameStrike += PlayerStriked;
 		EventManager.GameTie += SetPlayerTied;
-		EventManager.GameWin += RoundEnded;
+		EventManager.GameStrike += PlayerStriked;
+		EventManager.GameWin += SetPlayerAttack;
+		EventManager.WinResult += RoundEnded;
 		EventManager.GameReset += SetPlayerIdle;
 	}
 
@@ -46,22 +47,7 @@ public class Player : MonoBehaviour {
 	}
 
 	private void RoundEnded() {
-		bool leftSamuraiWon = false;
-
-		switch(manager.lastWinner) {
-		case BasicDuelManager.LastWinner.LEFT:
-			leftSamuraiWon = true;
-			break;
-		case BasicDuelManager.LastWinner.RIGHT:
-			leftSamuraiWon = false;
-			break;
-		}
-
-		if (leftSamurai == leftSamuraiWon) {
-			// Player won
-			winCount++;
-		}
-		else {
+		if (!WonLastRound()) {
 			// Player lost
 			spriteRenderer.color = Color.black;
 		}
@@ -75,6 +61,10 @@ public class Player : MonoBehaviour {
 	private void SetPlayerAttack() {
 		spriteRenderer.sprite = attackSprite;
 		SetPlayerPositions(manager.rightIdlePosition, manager.leftIdlePosition);
+		
+		if (WonLastRound()) {
+			winCount++;
+		}
 	}
 
 	private void SetPlayerIdle() {
@@ -90,5 +80,15 @@ public class Player : MonoBehaviour {
 		else {
 			transform.position = rightPlayer;
 		}
+	}
+
+	private bool WonLastRound() {
+		switch(manager.lastWinner) {
+		case BasicDuelManager.LastWinner.LEFT:
+			return leftSamurai;
+		case BasicDuelManager.LastWinner.RIGHT:
+			return !leftSamurai;
+		}
+		return false;
 	}
 }

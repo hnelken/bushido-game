@@ -19,7 +19,7 @@ public class LocalPlayerInput : MonoBehaviour {
 		CheckInput();
 
 		if (manager.CanRestartRound()) {
-			if (leftPlayerInput || rightPlayerInput) {
+			if (leftPlayerInput || rightPlayerInput || Input.GetKeyDown(KeyCode.Space)) {
 				EventManager.TriggerGameReset();
 			}
 		}

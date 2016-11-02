@@ -4,11 +4,17 @@ using System.Collections;
 public static class EventManager {
 
 	public delegate void GameEvent();
-	public static event GameEvent GameStart, GameStrike, GameWin, GameTie, GameReset;
+	public static event GameEvent GameStart, GameWin, GameStrike, WinResult, GameTie, GameReset;
 
 	public static void TriggerGameStart() {
 		if (GameStart != null) {
 			GameStart();
+		}
+	}
+
+	public static void TriggerGameWin() {
+		if (GameWin != null) {
+			GameWin();
 		}
 	}
 
@@ -18,9 +24,9 @@ public static class EventManager {
 		}
 	}
 
-	public static void TriggerGameWin() {
-		if (GameWin != null) {
-			GameWin();
+	public static void TriggerWinResult() {
+		if (WinResult != null) {
+			WinResult();
 		}
 	}
 	

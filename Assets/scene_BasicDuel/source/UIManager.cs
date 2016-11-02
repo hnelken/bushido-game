@@ -24,58 +24,62 @@ public class UIManager : MonoBehaviour {
 		WinText.enabled = false;
 		CenterPiece.SetActive(false);
 
-		EventManager.GameWin += ShowWinner;
+		EventManager.GameTie += ShowTie;
+		EventManager.GameWin += ShowAttack;
+		EventManager.GameStrike += ShowStrike;
+		EventManager.WinResult += ShowWinResult;
+		EventManager.GameReset += ClearForNewRound;
 	}
-	
-	public void ShowWinner()
+
+	public void UpdateTimer(float startTime) 
+	{
+		int time = (int)(100 * (Time.realtimeSinceStartup - startTime));
+		ReactionTimer.text = time.ToString();
+	}
+
+	public void ToggleFlag()
+	{
+		CenterPiece.SetActive(!CenterPiece.activeSelf);
+	}
+
+	private void ShowTie() {
+		ToggleFlag();
+		WinText.text = "TIE!";
+		WinText.enabled = true;
+	}
+
+	private void ShowWinResult()
 	{
 		RefreshWinCounts();
 		LeftCount.enabled = true;
 		RightCount.enabled = true;
 		
-		WinText.text = (manager.lastWinner == BasicDuelManager.LastWinner.LEFT) ? "Player 1 WINS" : "Player 2 WINS";
+		WinText.text = (manager.lastWinner == BasicDuelManager.LastWinner.LEFT) ? "Player 1 WINS!" : "Player 2 WINS!";
 		WinText.enabled = true;
 	}
-	
-	public void ToggleFlag()
-	{
-		CenterPiece.SetActive(!CenterPiece.activeSelf);
-	}
-	
-	public void SignalPlayerReaction(bool valid)
-	{
-		CenterPiece.SetActive(false);
-		if (valid)
-		{	// Show successful attack
 
-		}
-		else
-		{	// Show false start
-			
-		}
+	private void ShowAttack() {
+		ToggleFlag();
 	}
-	
-	public void ClearForNewRound()
+
+	private void ShowStrike()
+	{
+		bool leftSamurai = false;
+		if (manager.lastWinner == BasicDuelManager.LastWinner.STRIKELEFT) {
+			leftSamurai = true;
+		}
+		string player = (leftSamurai) ? "Player 1 " : "Player 2 ";
+		WinText.text = player + "struck too early!";
+		WinText.enabled = true;
+	}
+
+	private void ClearForNewRound()
 	{
 		LeftCount.enabled = false;
 		RightCount.enabled = false;
 		WinText.enabled = false;
 		
 		ReactionTimer.text = "--";
-		
-		// Reset samurai positions
-	}
-	
-	public void UpdateTimer(int time) 
-	{
-		ReactionTimer.text = time.ToString();
-	}
-
-	private void ShowStrike(bool leftSamurai)
-	{
-		string player = (leftSamurai) ? "Player 1 " : "Player 2 ";
-		WinText.text = player + "struck too early!";
-		WinText.enabled = true;
 	}
 	
 	private void RefreshWinCounts()
