@@ -14,6 +14,8 @@ public class UIManager : MonoBehaviour {
 	
 	// Private fields
 	private BasicDuelManager manager;
+	private float startTime;
+	private bool timing;
 
 	// Use this for initialization
 	void Start()
@@ -31,10 +33,19 @@ public class UIManager : MonoBehaviour {
 		EventManager.GameReset += ClearForNewRound;
 	}
 
-	public void UpdateTimer(float startTime) 
-	{
-		int time = (int)(100 * (Time.realtimeSinceStartup - startTime));
-		ReactionTimer.text = time.ToString();
+	void Update() {
+		if (timing) {
+			UpdateTimer();
+		}
+	}
+
+	public void StartTimer(float _startTime) {
+		startTime = _startTime;
+		timing = true;
+	}
+
+	public void StopTimer() {
+		timing = false;
 	}
 
 	public void ToggleFlag()
@@ -86,5 +97,11 @@ public class UIManager : MonoBehaviour {
 	{
 		LeftCount.text = manager.LeftSamurai.GetWinCount();
 		RightCount.text = manager.RightSamurai.GetWinCount();
+	}
+
+	private void UpdateTimer() 
+	{
+		int time = (int)(100 * (Time.realtimeSinceStartup - startTime));
+		ReactionTimer.text = time.ToString();
 	}
 }

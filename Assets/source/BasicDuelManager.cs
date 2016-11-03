@@ -1,8 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/**
+ * This class manages a basic local duel lifecycle and event triggering
+ */
 [RequireComponent (typeof (UIManager))]
 public class BasicDuelManager : MonoBehaviour {
+
+	#region Public References
 
 	[HideInInspector]
 	public LastWinner lastWinner;
@@ -14,6 +19,11 @@ public class BasicDuelManager : MonoBehaviour {
 
 	public Player LeftSamurai, RightSamurai;
 
+	#endregion
+
+
+	#region Private Variables
+
 	private bool waitingForInput;
 	private bool waitingForTie;
 	private bool tyingInput;
@@ -22,32 +32,38 @@ public class BasicDuelManager : MonoBehaviour {
 	private float startTime;
 	
 	private UIManager gui;
-	
-	// Use this for initialization
-	void Awake () 
-	{
+
+	#endregion
+
+
+	#region State Functions
+
+	// Initialization
+	void Awake() {
 		gui = GetComponent<UIManager>();
+
+		// Get initial samurai positions and set their managers
 		leftIdlePosition = LeftSamurai.transform.position;
 		rightIdlePosition = RightSamurai.transform.position;
 		LeftSamurai.SetManager(this);
 		RightSamurai.SetManager(this);
 
+		// Set event listeners
 		EventManager.GameStart += BeginRound;
 		EventManager.GameReset += ResetGame;
 
+		// Start round after some time
 		StartCoroutine(WaitAndStartRound());
 	}
 
-	void Update() {
-		if (flagPopped) {
-			gui.UpdateTimer(startTime);
-		}
-	}
-	
-	public void TriggerReaction(bool leftSamurai) 
-	{
-		if (waitingForInput)
-		{
+	#endregion
+
+
+	#region Public API
+
+	public void TriggerReaction(bool leftSamurai) {
+		if (waitingForInput){
+			gui.StopTimer();
 			if (flagPopped) {
 				flagPopped = false;
 				waitingForTie = true;
@@ -63,6 +79,8 @@ public class BasicDuelManager : MonoBehaviour {
 			waitingForTie = false;
 		}
 	}
+
+	#endregion
 	
 	private void BeginRound() {
 		waitingForInput = true;
@@ -105,7 +123,7 @@ public class BasicDuelManager : MonoBehaviour {
 	}
 
 	public IEnumerator WaitAndStartRound() {
-		yield return new WaitForSeconds(3);
+		yield return new WaitForSeconds(2);
 
 		EventManager.TriggerGameStart();
 	}
@@ -117,8 +135,9 @@ public class BasicDuelManager : MonoBehaviour {
 
 		if (!playerStrike) {
 			startTime = Time.realtimeSinceStartup;
-			flagPopped = true;
+			gui.StartTimer(startTime);
 			gui.ToggleFlag();
+			flagPopped = true;
 		}
 	}
 
@@ -134,7 +153,7 @@ public class BasicDuelManager : MonoBehaviour {
 	}
 	
 	public IEnumerator WaitAndShowWinner() {
-		yield return new WaitForSeconds(2);
+		yield return new WaitForSeconds(3);
 		
 		EventManager.TriggerWinResult();
 		StartCoroutine(WaitAndRestartGame());
