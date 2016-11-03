@@ -18,18 +18,11 @@ public class LocalPlayerInput : MonoBehaviour {
 
 		CheckInput();
 
-		if (manager.CanRestartRound()) {
-			if (leftPlayerInput || rightPlayerInput || Input.GetKeyDown(KeyCode.Space)) {
-				EventManager.TriggerGameReset();
-			}
+		if (leftPlayerInput) {
+			manager.TriggerReaction(true);
 		}
-		else {
-			if (leftPlayerInput) {
-				manager.TriggerReaction(true);
-			}
-			if (rightPlayerInput) {
-				manager.TriggerReaction(false);
-			}
+		if (rightPlayerInput) {
+			manager.TriggerReaction(false);
 		}
 	}
 

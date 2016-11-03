@@ -9,7 +9,8 @@ public class UIManager : MonoBehaviour {
 	public SpriteRenderer LeftSamurai, RightSamurai;
 	public GameObject CenterPiece;
 	
-	public Text LeftCount, RightCount, WinText;
+	public Text LeftCount, RightCount;
+	public Text WinText, DetailText;
 	public Text ReactionTimer;
 	
 	// Private fields
@@ -22,6 +23,7 @@ public class UIManager : MonoBehaviour {
 		LeftCount.enabled = false;
 		RightCount.enabled = false;
 		WinText.enabled = false;
+		DetailText.enabled = false;
 		CenterPiece.SetActive(false);
 
 		EventManager.GameTie += ShowTie;
@@ -29,6 +31,11 @@ public class UIManager : MonoBehaviour {
 		EventManager.GameStrike += ShowStrike;
 		EventManager.WinResult += ShowWinResult;
 		EventManager.GameReset += ClearForNewRound;
+	}
+
+	public void ShowRestartText() {
+		DetailText.text = "Tap to start new round";
+		DetailText.enabled = true;
 	}
 
 	public void UpdateTimer(float startTime) 
@@ -78,6 +85,7 @@ public class UIManager : MonoBehaviour {
 		LeftCount.enabled = false;
 		RightCount.enabled = false;
 		WinText.enabled = false;
+		DetailText.enabled = false;
 		
 		ReactionTimer.text = "--";
 	}

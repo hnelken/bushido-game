@@ -4,14 +4,16 @@ using System.Collections;
 [RequireComponent (typeof (UIManager))]
 public class BasicDuelManager : MonoBehaviour {
 
-	public Player LeftSamurai, RightSamurai;
-	private UIManager gui;
+	[HideInInspector]
+	public LastWinner lastWinner;
+	public enum LastWinner { LEFT, RIGHT, TIE, STRIKELEFT, STRIKERIGHT }
 
 	[HideInInspector]
 	public Vector3 leftIdlePosition, rightIdlePosition;
 	public Vector3 leftTiePosition, rightTiePosition;
 
-	private bool waitingForRestart;
+	public Player LeftSamurai, RightSamurai;
+
 	private bool waitingForInput;
 	private bool waitingForTie;
 	private bool tyingInput;
@@ -19,9 +21,7 @@ public class BasicDuelManager : MonoBehaviour {
 	private bool playerStrike;
 	private float startTime;
 	
-	[HideInInspector]
-	public LastWinner lastWinner;
-	public enum LastWinner { LEFT, RIGHT, TIE, STRIKELEFT, STRIKERIGHT }
+	private UIManager gui;
 	
 	// Use this for initialization
 	void Awake () 
@@ -42,10 +42,6 @@ public class BasicDuelManager : MonoBehaviour {
 		if (flagPopped) {
 			gui.UpdateTimer(startTime);
 		}
-	}
-
-	public bool CanRestartRound() {
-		return waitingForRestart;
 	}
 	
 	public void TriggerReaction(bool leftSamurai) 
@@ -73,44 +69,50 @@ public class BasicDuelManager : MonoBehaviour {
 		StartCoroutine(WaitAndPopFlag());
 	}
 
+	private void ResetGame() {
+		print ("Restarted Round");
+		tyingInput = false;
+		flagPopped = false;
+		playerStrike = false;
+		StartCoroutine(WaitAndStartRound());
+	}
+
+	private void TriggerStrike(bool leftSamurai) 
+	{
+		lastWinner = (leftSamurai) ? LastWinner.STRIKELEFT : LastWinner.STRIKERIGHT;
+		
+		playerStrike = true;
+		waitingForInput = false;
+
+		EventManager.TriggerGameStrike();
+		StartCoroutine(WaitAndRestartGame());
+	}
+
 	private void TriggerWin(bool leftSamurai) 
 	{
 		lastWinner = (leftSamurai) ? LastWinner.LEFT : LastWinner.RIGHT;
+
 		EventManager.TriggerGameWin();
 		StartCoroutine(WaitAndShowWinner());
 	}
 
 	private void TriggerTie()
 	{
-		waitingForRestart = true;
 		lastWinner = LastWinner.TIE;
-		EventManager.TriggerGameTie();
-	}
-	
-	private void TriggerStrike(bool leftSamurai) 
-	{
-		playerStrike = true;
-		waitingForRestart = true;
-		EventManager.TriggerGameStrike();
-	}
 
-	private void ResetGame() {
-		tyingInput = false;
-		flagPopped = false;
-		playerStrike = false;
-		waitingForRestart = false;
-		StartCoroutine(WaitAndStartRound());
+		EventManager.TriggerGameTie();
+		StartCoroutine(WaitAndRestartGame());
 	}
 
 	public IEnumerator WaitAndStartRound() {
-		yield return new WaitForSeconds(2f);
+		yield return new WaitForSeconds(3);
 
 		EventManager.TriggerGameStart();
 	}
 
 	public IEnumerator WaitAndPopFlag()
 	{
-		float randomWait = Random.Range(2, 6);
+		float randomWait = Random.Range(3, 6);
 		yield return new WaitForSeconds(randomWait);
 
 		if (!playerStrike) {
@@ -135,6 +137,12 @@ public class BasicDuelManager : MonoBehaviour {
 		yield return new WaitForSeconds(2);
 		
 		EventManager.TriggerWinResult();
-		waitingForRestart = true;
+		StartCoroutine(WaitAndRestartGame());
+	}
+
+	public IEnumerator WaitAndRestartGame() {
+		yield return new WaitForSeconds(4);
+
+		EventManager.TriggerGameReset();
 	}
 }
