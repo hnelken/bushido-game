@@ -50,11 +50,16 @@ public class BasicDuelManager : MonoBehaviour {
 		RightSamurai.SetManager(this);
 
 		// Set event listeners
-		EventManager.GameStart += BeginRound;
+		//EventManager.GameStart += BeginRound;
 		EventManager.GameReset += ResetGame;
 
 		// Start round after some time
 		StartCoroutine(WaitAndStartRound());
+	}
+
+	void OnDestroy() {
+		
+		EventManager.GameReset -= ResetGame;
 	}
 
 	#endregion
@@ -137,7 +142,8 @@ public class BasicDuelManager : MonoBehaviour {
 	public IEnumerator WaitAndStartRound() {
 		yield return new WaitForSeconds(2);
 
-		EventManager.TriggerGameStart();
+		BeginRound();
+		//EventManager.TriggerGameStart();
 	}
 
 	public IEnumerator WaitAndPopFlag()

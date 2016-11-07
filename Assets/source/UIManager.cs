@@ -7,10 +7,9 @@ public class UIManager : MonoBehaviour {
 
 	// Public (editor) references
 	public SpriteRenderer LeftSamurai, RightSamurai;
-	public GameObject CenterPiece;
-	
 	public Text LeftCount, RightCount, WinText;
 	public Text ReactionTimer;
+	public Image Flag;
 	
 	// Private fields
 	private BasicDuelManager manager;
@@ -24,13 +23,23 @@ public class UIManager : MonoBehaviour {
 		LeftCount.enabled = false;
 		RightCount.enabled = false;
 		WinText.enabled = false;
-		CenterPiece.SetActive(false);
+		Flag.enabled = false;
 
 		EventManager.GameTie += ShowTie;
 		EventManager.GameWin += ShowAttack;
 		EventManager.GameStrike += ShowStrike;
 		EventManager.WinResult += ShowWinResult;
 		EventManager.GameReset += ClearForNewRound;
+		EventManager.GameOver += ShowMatchWin;
+	}
+
+	void OnDestroy() {
+		EventManager.GameTie -= ShowTie;
+		EventManager.GameWin -= ShowAttack;
+		EventManager.GameStrike -= ShowStrike;
+		EventManager.WinResult -= ShowWinResult;
+		EventManager.GameReset -= ClearForNewRound;
+		EventManager.GameOver -= ShowMatchWin;
 	}
 
 	void Update() {
@@ -50,7 +59,8 @@ public class UIManager : MonoBehaviour {
 
 	public void ToggleFlag()
 	{
-		CenterPiece.SetActive(!CenterPiece.activeSelf);
+		Flag.enabled = !Flag.enabled;
+		//CenterPiece.SetActive(!CenterPiece.activeSelf);
 	}
 
 	private void ShowTie() {
@@ -81,6 +91,16 @@ public class UIManager : MonoBehaviour {
 		}
 		string player = (leftSamurai) ? "Player 1 " : "Player 2 ";
 		WinText.text = player + "struck too early!";
+		WinText.enabled = true;
+	}
+
+	private void ShowMatchWin() {
+		bool leftSamurai = false;
+		if (manager.lastWinner == BasicDuelManager.LastWinner.LEFT) {
+			leftSamurai = true;
+		}
+		string player = (leftSamurai) ? "Player 1 " : "Player 2 ";
+		WinText.text = player + "wins the match!";
 		WinText.enabled = true;
 	}
 

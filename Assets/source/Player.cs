@@ -42,6 +42,15 @@ public class Player : MonoBehaviour {
 		EventManager.GameReset += SetPlayerIdle;
 	}
 
+	void OnDestroy() {
+		// Set event listeners
+		EventManager.GameTie -= SetPlayerTied;
+		EventManager.GameStrike -= PlayerStriked;
+		EventManager.GameWin -= SetPlayerAttack;
+		EventManager.WinResult -= RoundEnded;
+		EventManager.GameReset -= SetPlayerIdle;
+	}
+
 	#endregion
 
 
