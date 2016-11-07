@@ -95,8 +95,8 @@ public class UIManager : MonoBehaviour {
 	
 	private void RefreshWinCounts()
 	{
-		LeftCount.text = manager.LeftSamurai.GetWinCount();
-		RightCount.text = manager.RightSamurai.GetWinCount();
+		LeftCount.text = "P1: " + manager.LeftSamurai.GetWinCount();
+		RightCount.text = "P2: " + manager.RightSamurai.GetWinCount();
 	}
 
 	private void UpdateTimer() 

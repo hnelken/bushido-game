@@ -18,6 +18,7 @@ public class BasicDuelManager : MonoBehaviour {
 	public Vector3 leftTiePosition, rightTiePosition;
 
 	public Player LeftSamurai, RightSamurai;
+	public int winCap;
 
 	#endregion
 
@@ -80,9 +81,14 @@ public class BasicDuelManager : MonoBehaviour {
 		}
 	}
 
+	public bool WaitingForInput() {
+		return waitingForInput;
+	}
+
 	#endregion
 	
 	private void BeginRound() {
+		playerStrike = false;
 		waitingForInput = true;
 		StartCoroutine(WaitAndPopFlag());
 	}
@@ -91,7 +97,8 @@ public class BasicDuelManager : MonoBehaviour {
 		print ("Restarted Round");
 		tyingInput = false;
 		flagPopped = false;
-		playerStrike = false;
+		waitingForInput = false;
+		waitingForTie = false;
 		StartCoroutine(WaitAndStartRound());
 	}
 
@@ -122,6 +129,11 @@ public class BasicDuelManager : MonoBehaviour {
 		StartCoroutine(WaitAndRestartGame());
 	}
 
+	private bool MatchWon() {
+		return LeftSamurai.GetWinCount() >= winCap
+			|| RightSamurai.GetWinCount() >= winCap;
+	}
+
 	public IEnumerator WaitAndStartRound() {
 		yield return new WaitForSeconds(2);
 
@@ -142,7 +154,7 @@ public class BasicDuelManager : MonoBehaviour {
 	}
 
 	public IEnumerator WaitForTyingInput(bool leftSamurai) {
-		yield return new WaitForSeconds(0.02f);
+		yield return new WaitForSeconds(0.0001f);
 
 		if (tyingInput) {
 			TriggerTie();
@@ -162,6 +174,18 @@ public class BasicDuelManager : MonoBehaviour {
 	public IEnumerator WaitAndRestartGame() {
 		yield return new WaitForSeconds(4);
 
-		EventManager.TriggerGameReset();
+		if (MatchWon()) {
+			EventManager.TriggerGameOver();
+			StartCoroutine(WaitAndEndGame());
+		}
+		else {
+			EventManager.TriggerGameReset();
+		}
+	}
+
+	public IEnumerator WaitAndEndGame() {
+		yield return new WaitForSeconds(4);
+
+		Application.LoadLevel("Menu");
 	}
 }

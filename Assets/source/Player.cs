@@ -58,15 +58,8 @@ public class Player : MonoBehaviour {
 	}
 
 	// Returns a string containing player win count
-	public string GetWinCount() {
-		// Left player is P1
-		if (leftSamurai) {
-			return "P1: " + winCount;
-		}
-		// Right player is P2
-		else {
-			return "P2: " + winCount;
-		}
+	public int GetWinCount() {
+		return winCount;
 	}
 
 	// Sets the manager for the duel this player is in

@@ -11,7 +11,7 @@ public static class EventManager {
 	public delegate void GameEvent();									// Event listeners must be void and take no parameters
 	public static event GameEvent GameStart, WinResult, GameReset;		// These events cover the lifecycle of the duel
 	public static event GameEvent GameWin, GameStrike, GameTie;			// Only one of these events occurs each round
-
+	public static event GameEvent GameOver;								// Occurs at the end of a match when the win cap is reached
 	#endregion
 
 
@@ -56,6 +56,13 @@ public static class EventManager {
 	public static void TriggerGameTie() {
 		if (GameTie != null) {
 			GameTie();
+		}
+	}
+
+	// Triggers "game over" event
+	public static void TriggerGameOver() {
+		if (GameOver != null) {
+			GameOver();
 		}
 	}
 

@@ -32,11 +32,13 @@ public class LocalPlayerInput : MonoBehaviour {
 		CheckInput();
 
 		// Submit reaction inputs from either player
-		if (leftPlayerInput) {
-			manager.TriggerReaction(true);
-		}
-		if (rightPlayerInput) {
-			manager.TriggerReaction(false);
+		if (manager.WaitingForInput()) {
+			if (leftPlayerInput) {
+				manager.TriggerReaction(true);
+			}
+			if (rightPlayerInput) {
+				manager.TriggerReaction(false);
+			}
 		}
 	}
 
