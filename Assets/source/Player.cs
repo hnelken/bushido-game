@@ -42,28 +42,17 @@ public class Player : MonoBehaviour {
 		EventManager.GameReset += SetPlayerIdle;
 	}
 
-	void OnDestroy() {
-		// Set event listeners
-		EventManager.GameTie -= SetPlayerTied;
-		EventManager.GameStrike -= PlayerStriked;
-		EventManager.GameWin -= SetPlayerAttack;
-		EventManager.WinResult -= RoundEnded;
-		EventManager.GameReset -= SetPlayerIdle;
-	}
-
 	#endregion
 
 
 	#region Public API
 
-	// Returns the number of strikes this player has
-	public int GetStrikeCount() {
-		return strikeCount;
+	public bool StrikeOut(int strikeLimit) {
+		return strikeCount >= strikeLimit;
 	}
 
-	// Resets this player's strike count to zero
-	public void ResetStrikeCount() {
-		strikeCount = 0;
+	public void WinRound() {
+		winCount++;
 	}
 
 	// Returns a string containing player win count
@@ -143,6 +132,7 @@ public class Player : MonoBehaviour {
 			// Player lost
 			spriteRenderer.color = Color.black;
 		}
+		strikeCount = 0;
 	}
 
 	#endregion

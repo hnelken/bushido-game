@@ -15,6 +15,7 @@ public class Menu : MonoBehaviour {
 	
 		if (!input && ReceivedInput()) {
 			input = true;
+			EventManager.Nullify();
 			Application.LoadLevel("BasicDuel");
 		}
 

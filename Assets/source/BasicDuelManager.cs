@@ -18,7 +18,8 @@ public class BasicDuelManager : MonoBehaviour {
 	public Vector3 leftTiePosition, rightTiePosition;
 
 	public Player LeftSamurai, RightSamurai;
-	public int winCap;
+	public int strikeLimit;
+	public int winLimit;
 
 	#endregion
 
@@ -55,11 +56,6 @@ public class BasicDuelManager : MonoBehaviour {
 
 		// Start round after some time
 		StartCoroutine(WaitAndStartRound());
-	}
-
-	void OnDestroy() {
-		
-		EventManager.GameReset -= ResetGame;
 	}
 
 	#endregion
@@ -115,7 +111,20 @@ public class BasicDuelManager : MonoBehaviour {
 		waitingForInput = false;
 
 		EventManager.TriggerGameStrike();
-		StartCoroutine(WaitAndRestartGame());
+
+		if (leftSamurai && LeftSamurai.StrikeOut(strikeLimit)) {
+			lastWinner = LastWinner.RIGHT;
+			RightSamurai.WinRound();
+			StartCoroutine(WaitAndShowWinner());
+		}
+		else if (!leftSamurai && RightSamurai.StrikeOut(strikeLimit)) {
+			lastWinner = LastWinner.LEFT;
+			LeftSamurai.WinRound();
+			StartCoroutine(WaitAndShowWinner());
+		}
+		else {
+			StartCoroutine(WaitAndRestartGame());
+		}
 	}
 
 	private void TriggerWin(bool leftSamurai) 
@@ -123,6 +132,7 @@ public class BasicDuelManager : MonoBehaviour {
 		lastWinner = (leftSamurai) ? LastWinner.LEFT : LastWinner.RIGHT;
 
 		EventManager.TriggerGameWin();
+
 		StartCoroutine(WaitAndShowWinner());
 	}
 
@@ -135,8 +145,8 @@ public class BasicDuelManager : MonoBehaviour {
 	}
 
 	private bool MatchWon() {
-		return LeftSamurai.GetWinCount() >= winCap
-			|| RightSamurai.GetWinCount() >= winCap;
+		return LeftSamurai.GetWinCount() >= winLimit
+			|| RightSamurai.GetWinCount() >= winLimit;
 	}
 
 	public IEnumerator WaitAndStartRound() {
@@ -192,6 +202,7 @@ public class BasicDuelManager : MonoBehaviour {
 	public IEnumerator WaitAndEndGame() {
 		yield return new WaitForSeconds(4);
 
+		EventManager.Nullify();
 		Application.LoadLevel("Menu");
 	}
 }

@@ -66,5 +66,16 @@ public static class EventManager {
 		}
 	}
 
+	// Empties event responses for loading a new scene
+	public static void Nullify() {
+		GameStart = null;
+		WinResult = null;
+		GameReset = null;
+		GameWin = null;
+		GameTie = null;
+		GameStrike = null;
+		GameOver = null;
+	}
+
 	#endregion
 }

@@ -33,15 +33,6 @@ public class UIManager : MonoBehaviour {
 		EventManager.GameOver += ShowMatchWin;
 	}
 
-	void OnDestroy() {
-		EventManager.GameTie -= ShowTie;
-		EventManager.GameWin -= ShowAttack;
-		EventManager.GameStrike -= ShowStrike;
-		EventManager.WinResult -= ShowWinResult;
-		EventManager.GameReset -= ClearForNewRound;
-		EventManager.GameOver -= ShowMatchWin;
-	}
-
 	void Update() {
 		if (timing) {
 			UpdateTimer();
