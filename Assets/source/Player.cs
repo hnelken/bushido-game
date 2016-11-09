@@ -47,12 +47,13 @@ public class Player : MonoBehaviour {
 
 	#region Public API
 
-	public bool StrikeOut(int strikeLimit) {
-		return strikeCount >= strikeLimit;
-	}
-
-	public void WinRound() {
-		winCount++;
+	// Returns whether 
+	public bool StrikeOut(int strikeLimit, Player opponent) {
+		bool strikeOut = strikeCount >= strikeLimit;
+		if (strikeOut) {
+			opponent.winCount++;
+		}
+		return strikeOut;
 	}
 
 	// Returns a string containing player win count
@@ -73,11 +74,11 @@ public class Player : MonoBehaviour {
 	// Checks if this player won the last complete round
 	private bool WonLastRound() {
 
-		// Check manager last winner and compare with this player's side
-		switch(manager.lastWinner) {
-		case BasicDuelManager.LastWinner.LEFT:
+		// Check the round result and compare with this player's side
+		switch(manager.roundResult) {
+		case BasicDuelManager.RoundResult.WINLEFT:
 			return leftSamurai;
-		case BasicDuelManager.LastWinner.RIGHT:
+		case BasicDuelManager.RoundResult.WINRIGHT:
 			return !leftSamurai;
 		}
 		return false;
@@ -102,8 +103,8 @@ public class Player : MonoBehaviour {
 	
 	// Sets the players color to show the strikeout state
 	private void PlayerStriked() {
-		if ((leftSamurai && manager.lastWinner == BasicDuelManager.LastWinner.STRIKELEFT) ||
-		    (!leftSamurai && manager.lastWinner == BasicDuelManager.LastWinner.STRIKERIGHT)) {
+		if ((leftSamurai && manager.roundResult == BasicDuelManager.RoundResult.STRIKELEFT) ||
+		    (!leftSamurai && manager.roundResult == BasicDuelManager.RoundResult.STRIKERIGHT)) {
 			spriteRenderer.color = Color.black;
 			strikeCount++;
 		}

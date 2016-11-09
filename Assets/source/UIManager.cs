@@ -51,7 +51,6 @@ public class UIManager : MonoBehaviour {
 	public void ToggleFlag()
 	{
 		Flag.enabled = !Flag.enabled;
-		//CenterPiece.SetActive(!CenterPiece.activeSelf);
 	}
 
 	private void ShowTie() {
@@ -66,7 +65,7 @@ public class UIManager : MonoBehaviour {
 		LeftCount.enabled = true;
 		RightCount.enabled = true;
 		
-		WinText.text = (manager.lastWinner == BasicDuelManager.LastWinner.LEFT) ? "Player 1 WINS!" : "Player 2 WINS!";
+		WinText.text = (manager.roundResult == BasicDuelManager.RoundResult.WINLEFT) ? "Player 1 WINS!" : "Player 2 WINS!";
 		WinText.enabled = true;
 	}
 
@@ -77,7 +76,7 @@ public class UIManager : MonoBehaviour {
 	private void ShowStrike()
 	{
 		bool leftSamurai = false;
-		if (manager.lastWinner == BasicDuelManager.LastWinner.STRIKELEFT) {
+		if (manager.roundResult == BasicDuelManager.RoundResult.STRIKELEFT) {
 			leftSamurai = true;
 		}
 		string player = (leftSamurai) ? "Player 1 " : "Player 2 ";
@@ -87,7 +86,7 @@ public class UIManager : MonoBehaviour {
 
 	private void ShowMatchWin() {
 		bool leftSamurai = false;
-		if (manager.lastWinner == BasicDuelManager.LastWinner.LEFT) {
+		if (manager.roundResult == BasicDuelManager.RoundResult.WINLEFT) {
 			leftSamurai = true;
 		}
 		string player = (leftSamurai) ? "Player 1 " : "Player 2 ";
@@ -112,7 +111,7 @@ public class UIManager : MonoBehaviour {
 
 	private void UpdateTimer() 
 	{
-		int time = (int)(100 * (Time.realtimeSinceStartup - startTime));
+		int time = manager.GetReactionTime();
 		ReactionTimer.text = time.ToString();
 	}
 }
