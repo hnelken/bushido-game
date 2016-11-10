@@ -2,6 +2,9 @@
 using UnityEngine.UI;
 using System.Collections;
 
+/**
+ * This class manages all UI elements of a basic local duel
+ */
 [RequireComponent (typeof (BasicDuelManager))]
 public class UIManager : MonoBehaviour {
 
