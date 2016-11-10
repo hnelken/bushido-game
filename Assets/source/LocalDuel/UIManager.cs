@@ -10,9 +10,17 @@ public class UIManager : MonoBehaviour {
 
 	#region Editor References + Public Properties
 
-	public Text LeftCount, RightCount, MainText;		// The text UI elements
-	public Text ReactionTimer;							// The timer UI element
-	public Image Flag;									// The centerpiece flag UI element
+	public Sprite idleSprite, attackSprite, tiedSprite;		// The sprites for different player states
+	
+	public Image LeftSamurai, RightSamurai;					// The image elements for the left and right samurai
+	public Image Flag;										// The centerpiece flag image element
+
+	public Text ReactionTimer, MainText;					// The timer and main text elements
+	public Text LeftCount, RightCount;						// The win count text elements
+	
+	[HideInInspector]
+	public Vector3 leftIdlePosition, rightIdlePosition;		// Default idle position of players
+	public Vector3 leftTiePosition, rightTiePosition;		// Default position of sprites during a tie
 
 	#endregion
 
@@ -31,6 +39,10 @@ public class UIManager : MonoBehaviour {
 	void Start() {
 		// Get required manager component
 		manager = GetComponent<BasicDuelManager>();
+
+		// Set idle positions based on initial image positions
+		leftIdlePosition = LeftSamurai.rectTransform.anchoredPosition;
+		rightIdlePosition = RightSamurai.rectTransform.anchoredPosition;
 
 		// Disable all text elements at beginning of round
 		LeftCount.enabled = false;
@@ -75,19 +87,40 @@ public class UIManager : MonoBehaviour {
 
 	#region Private API
 
-	// Displays UI representing a valid attack
-	private void ShowAttack() {
-		// Hide the flag
-		ToggleFlag();
-	}
-
 	// Displays UI representing a tied round
 	private void ShowTie() {
 		// Hide the flag
 		ToggleFlag();
 
-		// Show text element
+		// Set samurai sprites and positions to show the tied state
+		LeftSamurai.sprite = tiedSprite;
+		RightSamurai.sprite = tiedSprite;
+		SetPlayerPositions(leftTiePosition, rightTiePosition);
+
+		// Show main text element
 		MainText.text = "Tie!";
+		MainText.enabled = true;
+	}
+
+	// Displays UI representing a valid attack
+	private void ShowAttack() {
+		// Hide the flag
+		ToggleFlag();
+		
+		// Sets the players sprite and position to show the attacking state
+		LeftSamurai.sprite = attackSprite;
+		RightSamurai.sprite = attackSprite;
+		SetPlayerPositions(rightIdlePosition, leftIdlePosition);
+	}
+
+	// Displays UI representing an early attack
+	private void ShowStrike() {
+		// Change the sprite color of the player who struck early
+		ShowPlayerLoss(false);
+
+		// Set the main text element to reflect early strike
+		string player = GetPlayerString(false);
+		MainText.text = player + " struck too early!";
 		MainText.enabled = true;
 	}
 
@@ -98,24 +131,19 @@ public class UIManager : MonoBehaviour {
 		LeftCount.enabled = true;
 		RightCount.enabled = true;
 
-		// Show winner text element
-		string player = GetPlayerString(BasicDuelManager.RoundResult.WINLEFT);
-		MainText.text = player + " wins!";
-		MainText.enabled = true;
-	}
+		// Change the sprite color of the player who lost the round
+		ShowPlayerLoss(true);
 
-	// Displays UI representing an early attack
-	private void ShowStrike() {
-		// Show player strike text element
-		string player = GetPlayerString(BasicDuelManager.RoundResult.STRIKELEFT);
-		MainText.text = player + " struck too early!";
+		// Set main text element to reflect round win
+		string player = GetPlayerString(true);
+		MainText.text = player + " wins!";
 		MainText.enabled = true;
 	}
 
 	// Displays UI representing a match win
 	private void ShowMatchWin() {
-		// Show match winner text element
-		string player = GetPlayerString(BasicDuelManager.RoundResult.WINLEFT);
+		// Set main text element to reflect match win
+		string player = GetPlayerString(true);
 		MainText.text = player + " wins the match!";
 		MainText.enabled = true;
 	}
@@ -126,6 +154,13 @@ public class UIManager : MonoBehaviour {
 		LeftCount.enabled = false;
 		RightCount.enabled = false;
 		MainText.enabled = false;
+
+		// Set player sprites and positions to show idle state
+		LeftSamurai.sprite = idleSprite;
+		RightSamurai.sprite = idleSprite;
+		LeftSamurai.color = Color.white;
+		RightSamurai.color = Color.yellow;
+		SetPlayerPositions(leftIdlePosition, rightIdlePosition);
 
 		// Sets timer text to default
 		ReactionTimer.text = "00";
@@ -150,12 +185,32 @@ public class UIManager : MonoBehaviour {
 	}
 
 	// Returns the display name of the player that caused the given result
-	// - result: The sided round result to check against the manager's recorded result
-	private string GetPlayerString(BasicDuelManager.RoundResult result) {
+	private string GetPlayerString(bool roundWon) {
 		// Get the players name depending if the left or right player caused the result
-		return (manager.roundResult == result) 
+		return (manager.LeftPlayerCausedResult()) 
 			? manager.LeftSamurai.GetPlayerName() 
 			: manager.RightSamurai.GetPlayerName();
+	}
+	
+	// Sets both samurai image elements to given positions
+	private void SetPlayerPositions(Vector2 leftPlayer, Vector2 rightPlayer) {
+		LeftSamurai.rectTransform.anchoredPosition = leftPlayer;
+		RightSamurai.rectTransform.anchoredPosition = rightPlayer;
+	}
+
+	// Sets the player who caused the re
+	private void ShowPlayerLoss(bool roundWon) {
+		// Check if the round ended in a win or a strike
+		if (roundWon) {
+			// Round was won, change the color of the losing player to black
+			LeftSamurai.color = (manager.LeftPlayerCausedResult()) ? Color.white : Color.black;
+			RightSamurai.color = (manager.LeftPlayerCausedResult()) ? Color.black : Color.yellow;
+		}
+		else {
+			// Round was not won, change color of player that struck early to black
+			LeftSamurai.color = (manager.LeftPlayerCausedResult()) ? Color.black : Color.white;
+			RightSamurai.color = (manager.LeftPlayerCausedResult()) ? Color.yellow : Color.black;
+		}
 	}
 
 	#endregion

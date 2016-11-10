@@ -12,22 +12,13 @@ public class BasicDuelManager : MonoBehaviour {
 	public int strikeLimit;									// Number of strikes required to lose a round
 	public int winLimit;									// Number of wins required to win the match
 	public Player LeftSamurai, RightSamurai;				// Reference to the two player entities
-	
-	[HideInInspector]
-	public Vector3 leftIdlePosition, rightIdlePosition;		// Default idle position of players
-	public Vector3 leftTiePosition, rightTiePosition;		// Default position of sprites during a tie
-
-	[HideInInspector]
-	public RoundResult roundResult;							
-	public enum RoundResult {								// Enum representation of last round result
-		WINLEFT, WINRIGHT, TIE, STRIKELEFT, STRIKERIGHT 
-	}
 
 	#endregion
 	
 
 	#region Private Variables
 
+	private bool leftPlayerCausedResult; 					// True if the left samurai caused the latest round result
 	private bool waitingForInput;							// True when input will be reacted to
 	private bool waitingForTie;								// True when waiting for tying input before calling the round
 	private bool tyingInput;								// True if there was tying input while waiting for it
@@ -51,8 +42,6 @@ public class BasicDuelManager : MonoBehaviour {
 		gui = GetComponent<UIManager>();
 
 		// Get initial samurai positions and set their managers
-		leftIdlePosition = LeftSamurai.transform.position;
-		rightIdlePosition = RightSamurai.transform.position;
 		LeftSamurai.SetManager(this);
 		RightSamurai.SetManager(this);
 
@@ -113,6 +102,11 @@ public class BasicDuelManager : MonoBehaviour {
 		return (int)((100 * (Time.realtimeSinceStartup - startTime)) / 2);
 	}
 
+	// Returns which player caused the last round result
+	public bool LeftPlayerCausedResult() {
+		return leftPlayerCausedResult;
+	}
+
 	#endregion
 
 
@@ -147,7 +141,7 @@ public class BasicDuelManager : MonoBehaviour {
 	private void TriggerStrike(bool leftSamurai) 
 	{
 		// Set the round result following the strike
-		roundResult = (leftSamurai) ? RoundResult.STRIKELEFT : RoundResult.STRIKERIGHT;
+		leftPlayerCausedResult = leftSamurai;
 
 		// Halt input and register early reaction
 		waitingForInput = false;
@@ -160,7 +154,7 @@ public class BasicDuelManager : MonoBehaviour {
 		if (LeftSamurai.StrikeOut(strikeLimit, RightSamurai)) {
 			// Change the result to be a win
 			// Left player struck out, right player gets a win
-			roundResult = RoundResult.WINRIGHT;
+			leftPlayerCausedResult = false;
 
 			// Show resulting winner after a delay
 			StartCoroutine(WaitAndShowWinner());
@@ -168,7 +162,7 @@ public class BasicDuelManager : MonoBehaviour {
 		else if (RightSamurai.StrikeOut(strikeLimit, LeftSamurai)) {
 			// Change the result to be a win
 			// Right player struck out, left player gets a win
-			roundResult = RoundResult.WINLEFT;
+			leftPlayerCausedResult = true;
 
 			// Show resulting winner after a delay
 			StartCoroutine(WaitAndShowWinner());
@@ -184,7 +178,7 @@ public class BasicDuelManager : MonoBehaviour {
 	private void TriggerWin(bool leftSamurai) 
 	{
 		// Set the round result following the win
-		roundResult = (leftSamurai) ? RoundResult.WINLEFT : RoundResult.WINRIGHT;
+		leftPlayerCausedResult = leftSamurai;
 
 		// Signal the win to the system
 		EventManager.TriggerGameWin();
@@ -196,9 +190,6 @@ public class BasicDuelManager : MonoBehaviour {
 	// Singal that the players tied
 	private void TriggerTie()
 	{
-		// Set the round result following the tie
-		roundResult = RoundResult.TIE;
-
 		// Signal the tie to the system
 		EventManager.TriggerGameTie();
 
