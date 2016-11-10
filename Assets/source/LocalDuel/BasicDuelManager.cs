@@ -6,25 +6,25 @@ using System.Collections;
  */
 [RequireComponent (typeof (UIManager))]
 public class BasicDuelManager : MonoBehaviour {
-
-	#region Public References
-
-	[HideInInspector]
-	public RoundResult roundResult;							
-	public enum RoundResult {								// Enum rep. of last round result
-		WINLEFT, WINRIGHT, TIE, STRIKELEFT, STRIKERIGHT 
-	}
-
+	
+	#region Inspector References + Public Properties
+	
+	public int strikeLimit;									// Number of strikes required to lose a round
+	public int winLimit;									// Number of wins required to win the match
+	public Player LeftSamurai, RightSamurai;				// Reference to the two player entities
+	
 	[HideInInspector]
 	public Vector3 leftIdlePosition, rightIdlePosition;		// Default idle position of players
 	public Vector3 leftTiePosition, rightTiePosition;		// Default position of sprites during a tie
 
-	public Player LeftSamurai, RightSamurai;				// Reference to the two player entities
-	public int strikeLimit;									// Number of strikes required to lose a round
-	public int winLimit;									// Number of wins required to win the match
+	[HideInInspector]
+	public RoundResult roundResult;							
+	public enum RoundResult {								// Enum representation of last round result
+		WINLEFT, WINRIGHT, TIE, STRIKELEFT, STRIKERIGHT 
+	}
 
 	#endregion
-
+	
 
 	#region Private Variables
 
@@ -75,11 +75,11 @@ public class BasicDuelManager : MonoBehaviour {
 		// Check if the input is valid
 		if (waitingForInput){
 
-			// Stop the updating of the timer UI element
-			gui.StopTimer();
-
 			// Check if the player was early or not
 			if (flagPopped) {
+				// Stop the updating of the timer UI element
+				gui.ToggleTimer();
+
 				// Flag was out, reaction counts. Save reaction time.
 				reactTime = GetReactionTime();
 				flagPopped = false;
@@ -110,7 +110,7 @@ public class BasicDuelManager : MonoBehaviour {
 
 	// Calculates the rounded-off reaction time since the flag popped
 	public int GetReactionTime() {
-		return (int)(100 * (Time.realtimeSinceStartup - startTime));
+		return (int)((100 * (Time.realtimeSinceStartup - startTime)) / 2);
 	}
 
 	#endregion
@@ -217,55 +217,77 @@ public class BasicDuelManager : MonoBehaviour {
 
 	#region Delayed Routines
 
+	// Triggers the "game start" event after 2 seconds
 	public IEnumerator WaitAndStartRound() {
 		yield return new WaitForSeconds(2);
 
 		EventManager.TriggerGameStart();
 	}
 
+	// Displays the flag after a randomized wait time
 	public IEnumerator WaitAndPopFlag()
 	{
+		// Get random wait time
 		float randomWait = Random.Range(3, 6);
 		yield return new WaitForSeconds(randomWait);
 
+		// Only pop flag if the player has not struck early
 		if (!playerStrike) {
+			// No strike, record time of flag pop and start timer
 			startTime = Time.realtimeSinceStartup;
-			gui.StartTimer(startTime);
+			gui.ToggleTimer();
+
+			// "Pop" the flag 
 			gui.ToggleFlag();
 			flagPopped = true;
 		}
 	}
 
+	// Determines the result of a round with no strike after a slight delay to wait for tying input
 	public IEnumerator WaitForTyingInput(bool leftSamurai) {
-		yield return new WaitForSeconds(0.05f);
+		yield return new WaitForSeconds(0.02f);
 
+		// Check if there was a tying input of equal reaction time
 		if (tyingInput && reactTime == tieTime) {
+			// Players tied
 			TriggerTie();
 		}
 		else {
+			// No tie, winner is delared
 			TriggerWin(leftSamurai);
 		}
 	}
-	
+
+	// Triggers the "show win result" event after 3 seconds
 	public IEnumerator WaitAndShowWinner() {
 		yield return new WaitForSeconds(3);
 		
 		EventManager.TriggerWinResult();
+
+		// Reset for new round after some time
 		StartCoroutine(WaitAndRestartGame());
 	}
 
+	// Resets for a new round after 4 seconds
 	public IEnumerator WaitAndRestartGame() {
 		yield return new WaitForSeconds(4);
 
+		// Checks if either player has won the match after this round
 		if (MatchWon()) {
+			// Trigger the "match win" event
 			EventManager.TriggerGameOver();
+
+			// Leave the duel scene after a delay
 			StartCoroutine(WaitAndEndGame());
 		}
 		else {
+			// No player has won the match
+			// Trigger the "reset for new round" event
 			EventManager.TriggerGameReset();
 		}
 	}
 
+	// Leaves the duel scene after 4 seconds
 	public IEnumerator WaitAndEndGame() {
 		yield return new WaitForSeconds(4);
 

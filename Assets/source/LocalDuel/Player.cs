@@ -7,20 +7,21 @@ using System.Collections;
 [RequireComponent (typeof (SpriteRenderer))]
 public class Player : MonoBehaviour {
 
-	#region Editor Properties
+	#region Inspector References + Public Properties
 
-	public bool leftSamurai;
-	public Sprite idleSprite, attackSprite, tiedSprite;
+	public bool leftSamurai;								// True if this player is on the left side of the screen, false if on the right
+	public Sprite idleSprite, attackSprite, tiedSprite;		// The references to the sprites for different states
 
 	#endregion
 
 
 	#region Private Variables
 
-	private SpriteRenderer spriteRenderer;
-	private BasicDuelManager manager;
-	private int winCount;
-	private int strikeCount;
+	private SpriteRenderer spriteRenderer;					// The required sprite renderer component
+	private BasicDuelManager manager;						// The duel manager monitoring this player
+	private int winCount;									// The number of round wins this player has this match
+	private int strikeCount;								// The number of strikes this player has this round
+	private string displayName;									// This player's display name
 
 	#endregion
 
@@ -29,10 +30,12 @@ public class Player : MonoBehaviour {
 
 	// Initialization
 	void Start () {
+		// Get required sprite renderer component
 		spriteRenderer = GetComponent<SpriteRenderer> ();
 		
 		// Initialize players in scene
 		SetPlayerIdle();
+		displayName = (leftSamurai) ? "Player 1" : "Player 2";
 		
 		// Set event listeners
 		EventManager.GameTie += SetPlayerTied;
@@ -47,12 +50,17 @@ public class Player : MonoBehaviour {
 
 	#region Public API
 
-	// Returns whether 
+	// Returns whether a player has struck out following the last round
 	public bool StrikeOut(int strikeLimit, Player opponent) {
+		// Player's strike count must exceed limit to strike out
 		bool strikeOut = strikeCount >= strikeLimit;
+
+		// Player's oppenent receives a win if a strike out occured
 		if (strikeOut) {
 			opponent.winCount++;
 		}
+
+		// Return whether strikeout occured
 		return strikeOut;
 	}
 
@@ -64,6 +72,11 @@ public class Player : MonoBehaviour {
 	// Sets the manager for the duel this player is in
 	public void SetManager(BasicDuelManager _manager) {
 		manager = _manager;
+	}
+
+	// Returns the display name for this player
+	public string GetPlayerName() {
+		return displayName;
 	}
 
 	#endregion
