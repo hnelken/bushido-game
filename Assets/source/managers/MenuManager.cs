@@ -9,11 +9,15 @@ using System.Collections;
 public class MenuManager : MonoBehaviour {
 
 	public Text PlayText, PlayText2, TitleText;
+	public Image Shade, BG;
 
 	#region Private Variables
 
-	private bool alphaFading;
-	private bool opened;
+	private string nextSceneName;
+	private bool leavingMenu;
+	private bool shadeFadingIn, shadeFadingOut;
+	private bool playTextFading;
+	private bool openAnimsDone;
 	private bool input;					// True if input was received this frame
 
 	#endregion
@@ -23,10 +27,12 @@ public class MenuManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		HideAlpha(PlayText);
-		HideAlpha(PlayText2);
+		HideTextAlpha(PlayText);
+		HideTextAlpha(PlayText2);
+		FillShade();
 
-		alphaFading = true;
+		shadeFadingOut = true;
+		playTextFading = true;
 	}
 	
 	// Update is called once per frame
@@ -34,11 +40,28 @@ public class MenuManager : MonoBehaviour {
 
 		CheckForInput();
 
-		if (!opened) {
+		// Manage shade fading out
+		if (shadeFadingOut) {
+			FadeShadeAlpha();
+		}
+		// Once shade is gone, animate title
+		else if (!openAnimsDone) {
 			AnimateTitle();
 		}
+		// After title is steady, animate play text
 		else {
 			AnimatePlayText();
+		}
+
+		// Manage shade fading in
+		if (shadeFadingIn) {
+			RaiseShadeAlpha();
+		}
+		// After shade is black, leave menu
+		else if (leavingMenu) {
+			leavingMenu = false;
+			EventManager.Nullify();
+			SceneManager.LoadScene(nextSceneName);
 		}
 	}
 
@@ -46,6 +69,106 @@ public class MenuManager : MonoBehaviour {
 
 
 	#region Private API
+
+	private void CheckForInput() {
+		// Check for input on the initial menu
+		if (!input && ReceivedInput()) {
+			if (!openAnimsDone) {
+				TitleText.rectTransform.anchoredPosition = new Vector2(0, -100);
+				PlayText.enabled = true;
+				openAnimsDone = true;
+			}
+			else {
+				// Register input this frame
+				input = true;
+
+				// Leave menu after hiding behind shade
+				LeaveMenu("LocalDuel");
+			}
+		}
+	}
+
+	// Checks for any input this frame (touch or spacebar)
+	private bool ReceivedInput() {
+		return (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) 
+			|| Input.GetKeyDown(KeyCode.Space);
+	}
+
+	private void LeaveMenu(string sceneName) {
+		nextSceneName = sceneName;
+		leavingMenu = true;
+		ToggleShade();
+	}
+
+	#endregion
+
+
+	#region BG Animations
+
+	private void SetBGColor(Color color, float rgbValue) {
+		color.r = rgbValue;
+		color.g = rgbValue;
+		color.b = rgbValue;
+		BG.color = color;
+	}
+
+	#endregion
+
+
+	#region Shade Animations
+
+	private void ToggleShade() {
+		if (!Shade.enabled) {
+			Shade.enabled = true;
+			shadeFadingIn = true;
+			shadeFadingOut = false;
+		}
+		else {
+			shadeFadingOut = true;
+			shadeFadingIn = false;
+		}
+	}
+
+	private void RaiseShadeAlpha() {
+		var color = Shade.color;
+		var limit = 1;
+		if (color.a < limit) {
+			SetShadeAlpha(color, color.a + .02f);
+		}
+		else {
+			SetShadeAlpha(color, limit);
+			shadeFadingIn = false;
+		}
+	}
+
+	private void FadeShadeAlpha() {
+		var color = Shade.color;
+		if (color.a > 0) {
+			SetShadeAlpha(color, color.a - .02f);
+		}
+		else {
+			SetShadeAlpha(color, 0);
+			shadeFadingOut = false;
+			Shade.enabled = false;
+		}
+	}
+
+	private void FillShade() {
+		Shade.enabled = true;
+		var color = Shade.color;
+		color.a = 1;
+		Shade.color = color;
+	}
+
+	private void SetShadeAlpha(Color color, float alphaValue) {
+		color.a = alphaValue;
+		Shade.color = color;
+	}
+
+	#endregion
+
+
+	#region Text Animations
 
 	private void AnimateTitle() {
 		var titleY = TitleText.rectTransform.anchoredPosition.y;
@@ -56,41 +179,22 @@ public class MenuManager : MonoBehaviour {
 			TitleText.rectTransform.anchoredPosition = new Vector2(0, -100);
 			PlayText.enabled = true;
 			PlayText2.enabled = true;
-			opened = true;
+			openAnimsDone = true;
 		}
 	}
 
 	private void AnimatePlayText() {
-		if (alphaFading) {
-			FadeAlpha(PlayText);
-			FadeAlpha(PlayText2);
+		if (playTextFading) {
+			FadeTextAlpha(PlayText);
+			FadeTextAlpha(PlayText2);
 		}
 		else {
-			RaiseAlpha(PlayText);
-			RaiseAlpha(PlayText2);
+			RaiseTextAlpha(PlayText);
+			RaiseTextAlpha(PlayText2);
 		}
 	}
 
-	private void CheckForInput() {
-		// Check for input on the initial menu
-		if (!input && ReceivedInput()) {
-			if (!opened) {
-				TitleText.rectTransform.anchoredPosition = new Vector2(0, -100);
-				PlayText.enabled = true;
-				opened = true;
-			}
-			else {
-				// Register input this frame
-				input = true;
-
-				// Nullify event listeners and load the local duel scene
-				EventManager.Nullify();
-				SceneManager.LoadScene("LocalDuel");
-			}
-		}
-	}
-
-	private void RaiseAlpha(Text text) {
+	private void RaiseTextAlpha(Text text) {
 		var color = text.color;
 		if (color.a < 1) {
 			color.a += 0.03f;
@@ -99,11 +203,11 @@ public class MenuManager : MonoBehaviour {
 		else {
 			color.a = 1;
 			text.color = color;
-			alphaFading = true;
+			playTextFading = true;
 		}
 	}
 
-	private void FadeAlpha(Text text) {
+	private void FadeTextAlpha(Text text) {
 		var color = text.color;
 		if (color.a > 0) {
 			color.a -= 0.03f;
@@ -112,20 +216,14 @@ public class MenuManager : MonoBehaviour {
 		else {
 			color.a = 0;
 			text.color = color;
-			alphaFading = false;
+			playTextFading = false;
 		}
 	}
 
-	private void HideAlpha(Text text) {
+	private void HideTextAlpha(Text text) {
 		var color = text.color;
 		color.a = 0;
 		text.color = color;
-	}
-
-	// Checks for any input this frame (touch or spacebar)
-	private bool ReceivedInput() {
-		return (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) 
-			|| Input.GetKeyDown(KeyCode.Space);
 	}
 
 	#endregion

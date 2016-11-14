@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using System.Collections;
 
 public class DuelManager : MonoBehaviour {
@@ -258,9 +257,9 @@ public class DuelManager : MonoBehaviour {
 	
 	#region Delayed Routines
 	
-	// Triggers the "game start" event after 2 seconds
+	// Triggers the "game start" event after 1 second
 	public IEnumerator WaitAndStartRound() {
-		yield return new WaitForSeconds(2);
+		yield return new WaitForSeconds(1);
 		
 		EventManager.TriggerGameStart();
 	}
@@ -326,16 +325,15 @@ public class DuelManager : MonoBehaviour {
 		else {
 			// No player has won the match
 			// Trigger the "reset for new round" event
-			EventManager.TriggerGameReset();
+			gui.ToggleShadeForRoundEnd();
 		}
 	}
 	
 	// Leaves the duel scene after 4 seconds
 	public IEnumerator WaitAndEndGame() {
 		yield return new WaitForSeconds(4);
-		
-		EventManager.Nullify();
-		SceneManager.LoadScene("Menu");
+
+		gui.ToggleShadeForMatchEnd();
 	}
 	
 	#endregion
