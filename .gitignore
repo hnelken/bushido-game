@@ -1,0 +1,13 @@
+
+#git ignore
+*.app
+*.meta
+*.DS_Store
+*.sln
+*.userprefs
+*.csproj
+/Library
+/Library/*
+Temp/*
+Temp/
+ProjectSettings/*
