@@ -16,7 +16,7 @@ public class UIManager : MonoBehaviour {
 	public Image Flag;											// The centerpiece flag image element
 	public Image BG;											// The background image element
 
-	public Text ReadyText;
+	public Text ReadyText, P1Text, P2Text;
 	public Text ReactionTimer, MainText;						// The timer and main text elements
 	public Text LeftCount, RightCount;							// The win count text elements
 	
@@ -129,6 +129,8 @@ public class UIManager : MonoBehaviour {
 		LeftCheckbox.enabled = false;
 		RightCheckbox.enabled = false;
 		ReadyText.enabled = false;
+		P1Text.enabled = false;
+		P2Text.enabled = false;
 	}
 
 	// Toggles the timer activity
@@ -166,10 +168,14 @@ public class UIManager : MonoBehaviour {
 	#region Private API
 
 	// Update the win count text elements
-	private void RefreshWinCounts() {
+	private void RefreshWinCounts(bool leftSamurai) {
 		// Set text elements to show latest win counts
-		LeftCount.text = "P1: " + manager.LeftSamurai.GetWinCount();
-		RightCount.text = "P2: " + manager.RightSamurai.GetWinCount();
+		LeftCount.text = "P1\n" + manager.LeftSamurai.GetWinCount();
+		RightCount.text = "P2\n" + manager.RightSamurai.GetWinCount();
+
+		LeftCount.color = leftSamurai ? Color.blue : Color.gray;
+		RightCount.color = leftSamurai ? Color.gray : Color.yellow;
+
 	}
 
 	// Updates the timer text element
@@ -327,7 +333,7 @@ public class UIManager : MonoBehaviour {
 	// Displays UI representing a round win
 	private void ShowWinResult() {
 		// Refresh and display win count text elements
-		RefreshWinCounts();
+		RefreshWinCounts(manager.LeftPlayerCausedResult());
 		LeftCount.enabled = true;
 		RightCount.enabled = true;
 

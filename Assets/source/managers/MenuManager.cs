@@ -117,7 +117,8 @@ public class MenuManager : MonoBehaviour {
 	}
 
 	public void OnNetworkPressed() {
-		
+		// Leave menu for network duel
+		LeaveMenu("NetworkDuel");
 	}
 
 	#endregion
