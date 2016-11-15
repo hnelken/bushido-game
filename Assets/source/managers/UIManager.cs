@@ -7,15 +7,16 @@ public class UIManager : MonoBehaviour {
 
 	#region Editor References + Public Properties
 
-	public Sprite checkedBox, uncheckedBox;
+	public Sprite checkedBox, uncheckedBox;						// The sprites for the checkbox states
 	public Sprite idleSprite, attackSprite, tiedSprite;			// The sprites for different player states
 
-	public Image LeftCheckbox, RightCheckbox;
+	public Image LeftCheckbox, RightCheckbox;					// The left and right checkbox image elements
 	public Image LeftSamurai, RightSamurai;						// The image elements for the left and right samurai
-	public Image Shade;											// The transparent black image element for visual effects
+	public Image Shade, Flash;									// The black and white image elements for visual effects
 	public Image Flag;											// The centerpiece flag image element
-	public Image BG;
-	
+	public Image BG;											// The background image element
+
+	public Text ReadyText;
 	public Text ReactionTimer, MainText;						// The timer and main text elements
 	public Text LeftCount, RightCount;							// The win count text elements
 	
@@ -26,12 +27,13 @@ public class UIManager : MonoBehaviour {
 	
 	private DuelManager manager;								// The required duel manager component
 
-	private bool leftBoxChecked, rightBoxChecked;
-	private bool timing;										// True if the timer is active, false otherwise
 	private bool roundStart, roundEnd, matchEnd;
 	private bool shadeFadingIn, shadeFadingOut;
+	private bool flashFadingOut, flashShouldFade;
+
+	private bool timing;										// True if the timer is active, false otherwise
+
 	private Vector3 leftIdlePosition, rightIdlePosition;		// Default idle position of players
-	
 	private Vector3 leftTiePosition = new Vector2(-100, -50);	// Default position of left sprite during a tie
 	private Vector3 rightTiePosition = new Vector2(100, -50);	// Default position of right sprite during a tie
 	
@@ -52,10 +54,12 @@ public class UIManager : MonoBehaviour {
 		// Disable all text elements at beginning of round
 		LeftCount.enabled = false;
 		RightCount.enabled = false;
+		MainText.enabled = false;
 		Flag.enabled = false;
 
-		// Set shade over screen
+		// Set shade over screen and hide flash screen
 		FillShade();
+		Flash.enabled = false;
 		
 		// Set event listeners
 		EventManager.GameStart += ToggleShade;
@@ -72,6 +76,20 @@ public class UIManager : MonoBehaviour {
 		// Update the timer if its active
 		if (timing) {
 			UpdateTimer();
+		}
+
+
+		// Flash
+
+		if (flashFadingOut) {
+			FadeFlashAlpha();
+		}
+
+
+		// Shade
+
+		if (shadeFadingOut) {
+			FadeShadeAlpha();
 		}
 
 		if (shadeFadingIn) {
@@ -91,9 +109,6 @@ public class UIManager : MonoBehaviour {
 			EventManager.Nullify();
 			SceneManager.LoadScene("Menu");
 		}
-		if (shadeFadingOut) {
-			FadeShadeAlpha();
-		}
 	}
 	
 	#endregion
@@ -103,11 +118,9 @@ public class UIManager : MonoBehaviour {
 
 	public void SignalPlayerReady(bool leftSamurai) {
 		if (leftSamurai) {
-			leftBoxChecked = true;
 			LeftCheckbox.sprite = checkedBox;
 		}
 		else {
-			rightBoxChecked = true;
 			RightCheckbox.sprite = checkedBox;
 		}
 	}
@@ -115,7 +128,7 @@ public class UIManager : MonoBehaviour {
 	public void OnBothPlayersReady() {
 		LeftCheckbox.enabled = false;
 		RightCheckbox.enabled = false;
-		MainText.enabled = false;
+		ReadyText.enabled = false;
 	}
 
 	// Toggles the timer activity
@@ -126,6 +139,10 @@ public class UIManager : MonoBehaviour {
 	// Toggles the display of the centerpiece flag UI element
 	public void ToggleFlag() {
 		Flag.enabled = !Flag.enabled;
+	}
+
+	public void ShowFlash() {
+		ToggleFlash();
 	}
 
 	public void ToggleShadeForRoundStart() {
@@ -180,6 +197,18 @@ public class UIManager : MonoBehaviour {
 		RightSamurai.rectTransform.anchoredPosition = rightPlayer;
 	}
 
+	// Sets a given UI element's color to have a designated alpha value
+	private void SetGraphicAlpha(Graphic graphic, float alphaValue) {
+		var color = graphic.color;
+		color.a = alphaValue;
+		graphic.color = color;
+	}
+
+	#endregion
+
+
+	#region Shade Animations
+
 	private void ToggleShade() {
 		if (!Shade.enabled) {
 			Shade.enabled = true;
@@ -190,72 +219,121 @@ public class UIManager : MonoBehaviour {
 			shadeFadingOut = true;
 			shadeFadingIn = false;
 		}
-	}	
-
-	private void SetShadeAlpha(Color color, float alphaValue) {
-		color.a = alphaValue;
-		Shade.color = color;
 	}
 
-	private void SetBGColor(Color color, float rgbValue) {
-		color.r = rgbValue;
-		color.g = rgbValue;
-		color.b = rgbValue;
-		BG.color = color;
+	private void FillShade() {
+		Shade.enabled = true;
+		SetGraphicAlpha(Shade, 1);
 	}
-		
+
+	private void FadeShadeAlpha() {
+		var alpha = Shade.color.a;
+		if (alpha > 0) {
+			SetGraphicAlpha(Shade, alpha - .03f);
+		}
+		else {
+			SetGraphicAlpha(Shade, 0);
+			Shade.enabled = false;
+			shadeFadingOut = false;
+		}
+	}
+
+	private void RaiseShadeAlpha() {
+		var alpha = Shade.color.a;
+		if (alpha < 1) {
+			SetGraphicAlpha(Shade, alpha + .03f);
+		}
+		else {
+			SetGraphicAlpha(Shade, 1);
+			shadeFadingIn = false;
+		}
+	}
+	
 	#endregion
 
-	
+
+	#region Flash Animations
+
+	private void ToggleFlash() {
+		if (!Flash.enabled) {
+			SetGraphicAlpha(Flash, 1);
+			Flash.enabled = true;
+		}
+		else {
+			flashFadingOut = true;
+		}
+	}	
+
+	private void FadeFlashAlpha() {
+		var alpha = Flash.color.a;
+		if (alpha > 0) {
+			SetGraphicAlpha(Flash, alpha - .05f);
+		}
+		else {
+			SetGraphicAlpha(Flash, 0);
+			Flash.enabled = false;
+			flashFadingOut = false;
+		}
+	}
+
+	#endregion
+
+
 	#region Game Event Listeners
 
 	// Displays UI representing a tied round
 	private void ShowTie() {
 		// Hide the flag
 		ToggleFlag();
-		
+
 		// Set samurai sprites and positions to show the tied state
 		LeftSamurai.sprite = tiedSprite;
 		RightSamurai.sprite = tiedSprite;
 		SetPlayerPositions(leftTiePosition, rightTiePosition);
-		
+
 		// Show main text element
 		MainText.text = "Tie!";
 		MainText.enabled = true;
+
+		// Begin fading flash element
+		ToggleFlash();
 	}
-	
+
 	// Displays UI representing a valid attack
 	private void ShowAttack() {
 		// Hide the flag
 		ToggleFlag();
-		
+
 		// Sets the players sprite and position to show the attacking state
 		LeftSamurai.sprite = attackSprite;
 		RightSamurai.sprite = attackSprite;
 		SetPlayerPositions(rightIdlePosition, leftIdlePosition);
+
+		// Begin fading flash element
+		ToggleFlash();
 	}
-	
+
 	// Displays UI representing an early attack
 	private void ShowStrike() {
 		// Change the sprite color of the player who struck early
 		ShowPlayerLoss(false);
-		
+
 		// Set the main text element to reflect early strike
 		string player = GetPlayerString(false);
 		MainText.text = player + " struck too early!";
 		MainText.enabled = true;
 	}
-	
+
 	// Displays UI representing a round win
 	private void ShowWinResult() {
 		// Refresh and display win count text elements
 		RefreshWinCounts();
 		LeftCount.enabled = true;
 		RightCount.enabled = true;
-		
+
 		// Change the sprite color of the player who lost the round
 		ShowPlayerLoss(true);
-		
+
 		// Set main text element to reflect round win
 		string player = GetPlayerString(true);
 		MainText.text = player + " wins!";
@@ -276,7 +354,7 @@ public class UIManager : MonoBehaviour {
 			RightSamurai.color = (manager.LeftPlayerCausedResult()) ? Color.yellow : Color.black;
 		}
 	}
-	
+
 	// Displays UI representing a match win
 	private void ShowMatchWin() {
 		// Set main text element to reflect match win
@@ -284,84 +362,25 @@ public class UIManager : MonoBehaviour {
 		MainText.text = player + " wins the match!";
 		MainText.enabled = true;
 	}
-	
+
 	// Clears the UI elements for a new round
 	private void ClearForNewRound() {
 		// Disables text elements
 		LeftCount.enabled = false;
 		RightCount.enabled = false;
 		MainText.enabled = false;
-		
+
 		// Set player sprites and positions to show idle state
 		LeftSamurai.sprite = idleSprite;
 		RightSamurai.sprite = idleSprite;
 		LeftSamurai.color = Color.white;
 		RightSamurai.color = Color.yellow;
 		SetPlayerPositions(leftIdlePosition, rightIdlePosition);
-		
+
 		// Sets timer text to default
 		ReactionTimer.text = "00";
 	}
 
 	#endregion
-
-
-	#region UI Animations
-
-	private void FillShade() {
-		Shade.enabled = true;
-		var color = Shade.color;
-		color.a = 1;
-		Shade.color = color;
-	}
-
-	/*
-	private void FadeBGColor() {
-		var color = BG.color;
-		if (color.r > (184 / 255)) {
-			SetBGColor(color, color.r - 0.02f);
-		}
-		else {
-			SetBGColor(color, (184 / 255));
-			bgDarken = false;
-			bgIsLight = false;
-		}
-	}
-
-	private void RaiseBGColor() {
-		var color = BG.color;
-		if (color.r < 1) {
-			SetBGColor(color, color.r + 0.02f);
-		}
-		else {
-			SetBGColor(color, 1);
-			bgLighten = false;
-			bgIsLight = true;
-		}
-	}*/
-
-	private void FadeShadeAlpha() {
-		var color = Shade.color;
-		if (color.a > 0) {
-			SetShadeAlpha(color, color.a - 0.03f);
-		}
-		else {
-			SetShadeAlpha(color, 0);
-			Shade.enabled = false;
-			shadeFadingOut = false;
-		}
-	}
-
-	private void RaiseShadeAlpha() {
-		var color = Shade.color;
-		if (color.a < 1) {
-			SetShadeAlpha(color, color.a + 0.03f);
-		}
-		else {
-			SetShadeAlpha(color, 1);
-			shadeFadingIn = false;
-		}
-	}
-	
-	#endregion
 }
+

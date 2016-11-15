@@ -104,11 +104,14 @@ public class DuelManager : MonoBehaviour {
 			if (flagPopped) {
 				// Stop the updating of the timer UI element
 				gui.ToggleTimer();
+
+				// Flash a white screen
+				gui.ShowFlash();
 				
 				// Flag was out, reaction counts. Save reaction time.
 				reactTime = GetReactionTime(reactionTime);
 				flagPopped = false;
-				
+
 				// Set all further input as tying input and wait to call the round.
 				waitingForInput = false;
 				waitingForTie = true;
