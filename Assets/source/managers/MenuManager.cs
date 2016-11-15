@@ -21,6 +21,8 @@ public class MenuManager : MonoBehaviour {
 	private bool openAnimsDone;
 	private bool input;					// True if input was received this frame
 
+	private int titleHeight;
+
 	#endregion
 
 
@@ -28,6 +30,8 @@ public class MenuManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		titleHeight = (int)-TitleText.preferredHeight;
+
 		HideTextAlpha(PlayText);
 		HideTextAlpha(PlayText2);
 		FillShade();
@@ -78,7 +82,7 @@ public class MenuManager : MonoBehaviour {
 		// Check for input on the initial menu
 		if (!input && ReceivedInput()) {
 			if (!openAnimsDone) {
-				TitleText.rectTransform.anchoredPosition = new Vector2(0, -100);
+				TitleText.rectTransform.anchoredPosition = new Vector2(0, titleHeight);
 				PlayText.enabled = true;
 				openAnimsDone = true;
 			}
@@ -192,11 +196,11 @@ public class MenuManager : MonoBehaviour {
 
 	private void AnimateTitle() {
 		var titleY = TitleText.rectTransform.anchoredPosition.y;
-		if (titleY > -100) {
+		if (titleY > titleHeight) {
 			TitleText.rectTransform.anchoredPosition = new Vector2(0, titleY - 5);
 		}
 		else {
-			TitleText.rectTransform.anchoredPosition = new Vector2(0, -100);
+			TitleText.rectTransform.anchoredPosition = new Vector2(0, titleHeight);
 			PlayText.enabled = true;
 			PlayText2.enabled = true;
 			openAnimsDone = true;

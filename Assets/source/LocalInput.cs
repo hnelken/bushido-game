@@ -61,6 +61,15 @@ public class LocalInput : MonoBehaviour {
 		leftPlayerInput = Input.GetKeyDown(KeyCode.S);
 		rightPlayerInput = Input.GetKeyDown(KeyCode.K);
 
+		for (int i = 0; i < Input.touchCount && (!leftPlayerInput || !rightPlayerInput); i++) {
+			if (Input.touches[i].phase == TouchPhase.Began) {
+				Debug.LogError(Input.touches[i].position.x);
+				leftPlayerInput = leftPlayerInput || Input.touches[i].position.x < Screen.width / 2;
+				rightPlayerInput = rightPlayerInput || Input.touches[i].position.x > Screen.width / 2;
+			}
+		}
+
+		/*
 		// Assemble all touches' x coordinates
 		List<float> beganTouchesX = GetTouchPositionsX();
 
@@ -74,8 +83,9 @@ public class LocalInput : MonoBehaviour {
 			if (TouchIsInRightScreen(beganTouchesX[i])) {
 				rightPlayerInput = true;
 			}
-		}
+		} */
 	}
+
 
 	// Gets a list of positions of touches that began this frame
 	private List<float> GetTouchPositionsX() {
@@ -97,14 +107,14 @@ public class LocalInput : MonoBehaviour {
 	private bool TouchIsInLeftScreen(float touchX) {
 		// True if touch is on left half of screen
 		// Player input clause speeds up loop in GetTouchPositionsX
-		return !leftPlayerInput && touchX < Screen.width / 2;
+		return touchX < Screen.width / 2;
 	}
 	
 	// Checks if a touch is in the right side of the screen
 	private bool TouchIsInRightScreen(float touchX) {
 		// True if touch is on right half of screen
 		// Player input clause speeds up loop in GetTouchPositionsX
-		return !rightPlayerInput && touchX > Screen.width / 2;
+		return touchX > Screen.width / 2;
 	}
 
 	#endregion
