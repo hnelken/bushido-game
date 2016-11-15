@@ -6,9 +6,11 @@ using System.Collections;
 public class UIManager : MonoBehaviour {
 
 	#region Editor References + Public Properties
-	
+
+	public Sprite checkedBox, uncheckedBox;
 	public Sprite idleSprite, attackSprite, tiedSprite;			// The sprites for different player states
 
+	public Image LeftCheckbox, RightCheckbox;
 	public Image LeftSamurai, RightSamurai;						// The image elements for the left and right samurai
 	public Image Shade;											// The transparent black image element for visual effects
 	public Image Flag;											// The centerpiece flag image element
@@ -23,10 +25,11 @@ public class UIManager : MonoBehaviour {
 	#region Private Variables
 	
 	private DuelManager manager;								// The required duel manager component
+
+	private bool leftBoxChecked, rightBoxChecked;
 	private bool timing;										// True if the timer is active, false otherwise
-	private bool roundEnd, matchEnd;
+	private bool roundStart, roundEnd, matchEnd;
 	private bool shadeFadingIn, shadeFadingOut;
-	private bool bgIsLight, bgLighten, bgDarken;
 	private Vector3 leftIdlePosition, rightIdlePosition;		// Default idle position of players
 	
 	private Vector3 leftTiePosition = new Vector2(-100, -50);	// Default position of left sprite during a tie
@@ -45,12 +48,14 @@ public class UIManager : MonoBehaviour {
 		// Set idle positions based on initial image positions
 		leftIdlePosition = LeftSamurai.rectTransform.anchoredPosition;
 		rightIdlePosition = RightSamurai.rectTransform.anchoredPosition;
-		
+
 		// Disable all text elements at beginning of round
 		LeftCount.enabled = false;
 		RightCount.enabled = false;
-		MainText.enabled = false;
 		Flag.enabled = false;
+
+		// Set shade over screen
+		FillShade();
 		
 		// Set event listeners
 		EventManager.GameStart += ToggleShade;
@@ -69,15 +74,12 @@ public class UIManager : MonoBehaviour {
 			UpdateTimer();
 		}
 
-		if (bgDarken) {
-			FadeBGColor();
-		}
-		if (bgLighten) {
-			RaiseBGColor();
-		}
-
 		if (shadeFadingIn) {
 			RaiseShadeAlpha();
+		}
+		else if (roundStart) {
+			roundStart = false;
+			EventManager.TriggerGameStart();
 		}
 		else if (roundEnd) {
 			roundEnd = false;
@@ -99,6 +101,23 @@ public class UIManager : MonoBehaviour {
 	
 	#region Public API
 
+	public void SignalPlayerReady(bool leftSamurai) {
+		if (leftSamurai) {
+			leftBoxChecked = true;
+			LeftCheckbox.sprite = checkedBox;
+		}
+		else {
+			rightBoxChecked = true;
+			RightCheckbox.sprite = checkedBox;
+		}
+	}
+
+	public void OnBothPlayersReady() {
+		LeftCheckbox.enabled = false;
+		RightCheckbox.enabled = false;
+		MainText.enabled = false;
+	}
+
 	// Toggles the timer activity
 	public void ToggleTimer() {
 		timing = !timing;
@@ -109,13 +128,18 @@ public class UIManager : MonoBehaviour {
 		Flag.enabled = !Flag.enabled;
 	}
 
-	public void ToggleShadeForMatchEnd() {
-		matchEnd = true;
+	public void ToggleShadeForRoundStart() {
+		roundStart = true;
 		ToggleShade();
 	}
 
 	public void ToggleShadeForRoundEnd() {
 		roundEnd = true;
+		ToggleShade();
+	}
+
+	public void ToggleShadeForMatchEnd() {
+		matchEnd = true;
 		ToggleShade();
 	}
 	
@@ -157,16 +181,6 @@ public class UIManager : MonoBehaviour {
 	}
 
 	private void ToggleShade() {
-
-
-		/*if (bgIsLight) {
-			bgDarken = true;
-			bgLighten = false;
-		}
-		else {
-			bgLighten = true;
-			bgDarken = false;
-		}*/
 		if (!Shade.enabled) {
 			Shade.enabled = true;
 			shadeFadingIn = true;
@@ -294,6 +308,14 @@ public class UIManager : MonoBehaviour {
 
 	#region UI Animations
 
+	private void FillShade() {
+		Shade.enabled = true;
+		var color = Shade.color;
+		color.a = 1;
+		Shade.color = color;
+	}
+
+	/*
 	private void FadeBGColor() {
 		var color = BG.color;
 		if (color.r > (184 / 255)) {
@@ -316,7 +338,7 @@ public class UIManager : MonoBehaviour {
 			bgLighten = false;
 			bgIsLight = true;
 		}
-	}
+	}*/
 
 	private void FadeShadeAlpha() {
 		var color = Shade.color;
@@ -332,12 +354,11 @@ public class UIManager : MonoBehaviour {
 
 	private void RaiseShadeAlpha() {
 		var color = Shade.color;
-		var limit = (matchEnd || roundEnd) ? 1 : 0.5f;
-		if (color.a < limit) {
+		if (color.a < 1) {
 			SetShadeAlpha(color, color.a + 0.03f);
 		}
 		else {
-			SetShadeAlpha(color, limit);
+			SetShadeAlpha(color, 1);
 			shadeFadingIn = false;
 		}
 	}

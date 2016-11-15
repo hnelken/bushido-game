@@ -81,8 +81,11 @@ public class DuelManager : MonoBehaviour {
 			Debug.Log("Right Player Ready");
 			RightSamurai.SignalPlayerReady();
 		}
-		
+		// Check the players checkbox
+		gui.SignalPlayerReady(leftSamurai);
+
 		if (IsReadyToDuel()) {
+
 			// Delay the beginning of the round
 			StartCoroutine(WaitAndStartRound());
 		}
@@ -257,18 +260,22 @@ public class DuelManager : MonoBehaviour {
 	
 	#region Delayed Routines
 	
-	// Triggers the "game start" event after 1 second
+	// Triggers the "game start" event after 2 second
 	public IEnumerator WaitAndStartRound() {
-		yield return new WaitForSeconds(1);
-		
-		EventManager.TriggerGameStart();
+
+		yield return new WaitForSeconds(2);
+
+		gui.OnBothPlayersReady();
+		gui.ToggleShadeForRoundStart();
+
+		//EventManager.TriggerGameStart();
 	}
 	
 	// Displays the flag after a randomized wait time
 	public IEnumerator WaitAndPopFlag() {
 
 		if (!networking) {
-			randomWait = Random.Range(3, 6);
+			randomWait = Random.Range(4, 7);
 		}
 
 		yield return new WaitForSeconds(randomWait);

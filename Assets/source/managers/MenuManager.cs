@@ -9,6 +9,7 @@ using System.Collections;
 public class MenuManager : MonoBehaviour {
 
 	public Text PlayText, PlayText2, TitleText;
+	public Button Local, Network;
 	public Image Shade, BG;
 
 	#region Private Variables
@@ -30,6 +31,9 @@ public class MenuManager : MonoBehaviour {
 		HideTextAlpha(PlayText);
 		HideTextAlpha(PlayText2);
 		FillShade();
+
+		Local.gameObject.SetActive(false);
+		Network.gameObject.SetActive(false);
 
 		shadeFadingOut = true;
 		playTextFading = true;
@@ -82,8 +86,11 @@ public class MenuManager : MonoBehaviour {
 				// Register input this frame
 				input = true;
 
-				// Leave menu after hiding behind shade
-				LeaveMenu("LocalDuel");
+				PlayText.enabled = false;
+				PlayText2.enabled = false;
+
+				Local.gameObject.SetActive(true);
+				Network.gameObject.SetActive(true);
 			}
 		}
 	}
@@ -102,6 +109,18 @@ public class MenuManager : MonoBehaviour {
 
 	#endregion
 
+	#region ButtonEvents
+
+	public void OnLocalPressed() {
+		// Leave menu for local duel
+		LeaveMenu("LocalDuel");
+	}
+
+	public void OnNetworkPressed() {
+		
+	}
+
+	#endregion
 
 	#region BG Animations
 
