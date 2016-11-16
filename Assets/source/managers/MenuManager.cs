@@ -95,6 +95,8 @@ public class MenuManager : MonoBehaviour {
 
 				Local.gameObject.SetActive(true);
 				Network.gameObject.SetActive(true);
+
+				AudioManager.Get().PlayMenuSound();
 			}
 		}
 	}
@@ -117,11 +119,13 @@ public class MenuManager : MonoBehaviour {
 
 	public void OnLocalPressed() {
 		// Leave menu for local duel
+		AudioManager.Get().PlayMenuSound();
 		LeaveMenu("LocalDuel");
 	}
 
 	public void OnNetworkPressed() {
 		// Leave menu for network duel
+		AudioManager.Get().PlayMenuSound();
 		LeaveMenu("NetworkDuel");
 	}
 

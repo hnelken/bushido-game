@@ -81,6 +81,9 @@ public class DuelManager : MonoBehaviour {
 			Debug.Log("Right Player Ready");
 			RightSamurai.SignalPlayerReady();
 		}
+
+		AudioManager.Get().PlayMenuSound();
+
 		// Check the players checkbox
 		gui.SignalPlayerReady(leftSamurai);
 
@@ -188,15 +191,16 @@ public class DuelManager : MonoBehaviour {
 	
 	// Signal that a player's input was too early
 	// - leftSamurai: A boolean representing which player triggered this event
-	private void TriggerStrike(bool leftSamurai) 
-	{
+	private void TriggerStrike(bool leftSamurai) {
 		// Set the round result following the strike
 		leftPlayerCausedResult = leftSamurai;
 		
 		// Halt input and register early reaction
 		waitingForInput = false;
 		playerStrike = true;
-		
+
+		AudioManager.Get().PlayStrikeSound();
+
 		// Signal player strike to system
 		EventManager.TriggerGameStrike();
 		
@@ -225,11 +229,12 @@ public class DuelManager : MonoBehaviour {
 	
 	// Signal that a player's input was fastest and counts as a win
 	// - leftSamurai: A boolean representing which player triggered this event
-	private void TriggerWin(bool leftSamurai) 
-	{
+	private void TriggerWin(bool leftSamurai) {
 		// Set the round result following the win
 		leftPlayerCausedResult = leftSamurai;
-		
+
+		AudioManager.Get().PlayHitSound();
+
 		// Signal the win to the system
 		EventManager.TriggerGameWin();
 		
@@ -238,8 +243,10 @@ public class DuelManager : MonoBehaviour {
 	}
 	
 	// Singal that the players tied
-	private void TriggerTie()
-	{
+	private void TriggerTie() {
+
+		AudioManager.Get().PlayTieSound();
+
 		// Signal the tie to the system
 		EventManager.TriggerGameTie();
 		
@@ -270,7 +277,7 @@ public class DuelManager : MonoBehaviour {
 
 		gui.OnBothPlayersReady();
 		gui.ToggleShadeForRoundStart();
-
+		AudioManager.Get().StartMusic();
 		//EventManager.TriggerGameStart();
 	}
 	
@@ -292,6 +299,8 @@ public class DuelManager : MonoBehaviour {
 			// "Pop" the flag 
 			gui.ToggleFlag();
 			flagPopped = true;
+
+			AudioManager.Get().PlayPopSound();
 		}
 	}
 	
@@ -312,7 +321,7 @@ public class DuelManager : MonoBehaviour {
 	
 	// Triggers the "show win result" event after 3 seconds
 	public IEnumerator WaitAndShowWinner() {
-		yield return new WaitForSeconds(3);
+		yield return new WaitForSeconds(2);
 		
 		EventManager.TriggerWinResult();
 		

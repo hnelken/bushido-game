@@ -107,6 +107,7 @@ public class UIManager : MonoBehaviour {
 			matchEnd = false;
 
 			EventManager.Nullify();
+			AudioManager.Get().BackToMenu();
 			SceneManager.LoadScene("Menu");
 		}
 	}
