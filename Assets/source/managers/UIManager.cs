@@ -173,8 +173,8 @@ public class UIManager : MonoBehaviour {
 		LeftCount.text = "P1\n" + manager.LeftSamurai.GetWinCount();
 		RightCount.text = "P2\n" + manager.RightSamurai.GetWinCount();
 
-		LeftCount.color = leftSamurai ? Color.blue : Color.gray;
-		RightCount.color = leftSamurai ? Color.gray : Color.yellow;
+		LeftCount.color = leftSamurai ? Color.blue : Color.black;
+		RightCount.color = leftSamurai ? Color.black : Color.yellow;
 
 	}
 
