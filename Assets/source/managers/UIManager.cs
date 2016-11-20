@@ -75,9 +75,8 @@ public class UIManager : MonoBehaviour {
 	void Update() {
 		// Update the timer if its active
 		if (timing) {
-			UpdateTimer();
+			manager.UpdateTimer();
 		}
-
 
 		// Flash
 
@@ -134,6 +133,13 @@ public class UIManager : MonoBehaviour {
 		P2Text.enabled = false;
 	}
 
+	public void UpdateTimer(int time) {
+		// Format and set the time on the timer text element
+		ReactionTimer.text = (time < 10)
+			? "0" + time.ToString()
+			: time.ToString();
+	}
+
 	// Toggles the timer activity
 	public void ToggleTimer() {
 		timing = !timing;
@@ -177,17 +183,6 @@ public class UIManager : MonoBehaviour {
 		LeftCount.color = leftSamurai ? Color.blue : Color.black;
 		RightCount.color = leftSamurai ? Color.black : Color.yellow;
 
-	}
-
-	// Updates the timer text element
-	private void UpdateTimer() {
-		// Get the reaction time
-		int time = manager.GetReactionTime(Time.realtimeSinceStartup);
-
-		// Format and set the time on the timer text element
-		ReactionTimer.text = (time < 10) 
-			? "0" + time.ToString() 
-			: time.ToString();
 	}
 
 	// Returns the display name of the player that caused the given result

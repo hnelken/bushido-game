@@ -9,6 +9,9 @@ public class DuelManager : MonoBehaviour {
 	public Samurai LeftSamurai, RightSamurai;
 	public bool networking;
 
+	[HideInInspector]
+	public UIManager gui;									// The manager of all UI elements
+
 	#endregion
 	
 	
@@ -28,8 +31,6 @@ public class DuelManager : MonoBehaviour {
 	private float startTime;								// The time at which the centerpiece icon was displayed
 	private float reactTime;								// The time at which the first valid input was received
 	private float tieTime;									// The time at which the potentially tying input was received
-	
-	private UIManager gui;								// The manager of all UI elements
 	
 	#endregion
 	
@@ -67,6 +68,15 @@ public class DuelManager : MonoBehaviour {
 		return LeftSamurai.IsPlayerReady() && RightSamurai.IsPlayerReady();
 	}
 
+	public void UpdateTimer() {
+		if (networking) {
+			Generator.CmdUpdateTimer();
+		}
+		else {
+			gui.UpdateTimer(GetReactionTime(Time.realtimeSinceStartup));
+		}
+	}
+
 	public bool SignalPlayerReady(bool leftSamurai) {
 
 		if (networking && !BothPlayersInMatch()) {
@@ -98,7 +108,7 @@ public class DuelManager : MonoBehaviour {
 
 	// Signal a player reaction during a round
 	// - leftSamurai: A boolean representing which player triggered this event
-	public void TriggerReaction(bool leftSamurai, float reactionTime) {
+	public void TriggerReaction(bool leftSamurai, int reactionTime) {
 
 		// Check if the input is valid
 		if (waitingForInput){
@@ -112,7 +122,7 @@ public class DuelManager : MonoBehaviour {
 				gui.ShowFlash();
 				
 				// Flag was out, reaction counts. Save reaction time.
-				reactTime = GetReactionTime(reactionTime);
+				reactTime = reactionTime;
 				flagPopped = false;
 
 				// Set all further input as tying input and wait to call the round.
@@ -128,7 +138,7 @@ public class DuelManager : MonoBehaviour {
 		// Check if input counts as a tie
 		else if (waitingForTie) {
 			// Get time of tying reaction
-			tieTime = GetReactionTime(reactionTime);
+			tieTime = reactionTime;
 			waitingForTie = false;
 			tyingInput = true;
 		}
@@ -278,7 +288,6 @@ public class DuelManager : MonoBehaviour {
 		gui.OnBothPlayersReady();
 		gui.ToggleShadeForRoundStart();
 		AudioManager.Get().StartMusic();
-		//EventManager.TriggerGameStart();
 	}
 	
 	// Displays the flag after a randomized wait time

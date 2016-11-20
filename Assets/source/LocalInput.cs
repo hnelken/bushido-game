@@ -41,11 +41,12 @@ public class LocalInput : MonoBehaviour {
 			}
 		}
 		else if (manager.WaitingForInput()) {
+			int reactionTime = DuelManager.Get().GetReactionTime(Time.realtimeSinceStartup);
 			if (leftPlayerInput) {
-				manager.TriggerReaction(true, Time.realtimeSinceStartup);
+				manager.TriggerReaction(true, reactionTime);
 			}
 			if (rightPlayerInput) {
-				manager.TriggerReaction(false, Time.realtimeSinceStartup);
+				manager.TriggerReaction(false, reactionTime);
 			}
 		}
 	}
