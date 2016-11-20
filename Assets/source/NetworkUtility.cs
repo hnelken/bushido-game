@@ -2,7 +2,7 @@
 using UnityEngine.Networking;
 using System.Collections;
 
-public class NetworkRNG : NetworkBehaviour {
+public class NetworkUtility : NetworkBehaviour {
 
 	public DuelManager manager;
 
@@ -13,7 +13,7 @@ public class NetworkRNG : NetworkBehaviour {
 
 	[ClientRpc]
 	private void RpcUpdateTimer(int time) {
-		manager.gui.UpdateTimer(time);
+		manager.GUI.UpdateTimer(time);
 	}
 
 	[Command]
