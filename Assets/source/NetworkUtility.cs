@@ -6,26 +6,14 @@ public class NetworkUtility : NetworkBehaviour {
 
 	public DuelManager manager;			// Reference to the manager using this utility
 
-	[SyncVar]
-	private int currentTime;
-
-	#region Public API
-
-	public int GetCurrentTime() {
-		return currentTime;
-	}
-
-	public void UpdateCurrentTime() {
-		if (isServer) {
-			currentTime = manager.GetReactionTime();
-			RpcSetCurrentTime(currentTime);
-		}
-	}
-
-	#endregion
-
-
 	#region Server Commands
+
+	[Command]
+	public void CmdSetLatency(float clientStartTime) {
+
+		Debug.Log("Server: " + manager.GetStartTime() + " - Client: " + clientStartTime);
+		//RpcSetLatency(clientStartTime);
+	}
 
 	[Command]
 	public void CmdSetStartTime() {
@@ -34,13 +22,28 @@ public class NetworkUtility : NetworkBehaviour {
 
 	[Command]
 	public void CmdSetRandomWaitTime() {
-		RpcSetRandomWaitTime(Random.Range(3, 6));
+		RpcSetRandomWaitTime(Random.Range(4, 7));
 	}
 
 	#endregion
 
 
 	#region Client RPC's
+
+	[ClientRpc]
+	public void RpcTriggerGameStart() {
+		manager.TriggerGameStart();
+	}
+
+	[ClientRpc]
+	public void RpcPopFlag() {
+		manager.PopFlag();
+	}
+
+	[ClientRpc]
+	private void RpcSetLatency(float clientStartTime) {
+		
+	}
 
 	[ClientRpc]
 	private void RpcSetRandomWaitTime(float waitTime) {
@@ -50,11 +53,6 @@ public class NetworkUtility : NetworkBehaviour {
 	[ClientRpc]
 	private void RpcSetStartTime(float startTime) {
 		manager.SetStartTime(startTime);
-	}
-
-	[ClientRpc]
-	private void RpcSetCurrentTime(int currTime) {
-		manager.SetCurrentTime(currTime);
 	}
 
 	#endregion

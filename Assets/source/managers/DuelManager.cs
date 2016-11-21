@@ -29,11 +29,11 @@ public class DuelManager : MonoBehaviour {
 
 	private float randomWait;								// The random wait time
 	private float startTime;								// The time at which the centerpiece icon was displayed
-	private float reactTime;								// The time at which the first valid input was received
-	private float tieTime;									// The time at which the potentially tying input was received
 
+	private int reactTime;									// The time at which the first valid input was received
+	private int tieTime;									// The time at which the potentially tying input was received
 	private int currTime;
-	
+	private int latency;
 	#endregion
 	
 	
@@ -53,7 +53,9 @@ public class DuelManager : MonoBehaviour {
 	}
 
 	void Update() {
-		UpdateCurrentTime();
+		if (flagPopped) {
+			UpdateCurrentTime();
+		}
 	}
 	
 	#endregion
@@ -77,6 +79,31 @@ public class DuelManager : MonoBehaviour {
 	public void SetCurrentTime(int time) {
 		currTime = time;
 	}
+
+	public void TriggerGameStart() {
+		GUI.OnBothPlayersReady();
+		GUI.ToggleShadeForRoundStart();
+		AudioManager.Get().StartMusic();
+	}
+
+	public void PopFlag() {
+		// No strike, record time of flag pop and start timer
+		startTime = Time.realtimeSinceStartup;
+
+		if (networking) {
+			Utility.CmdSetLatency(startTime);
+		}
+
+		GUI.ToggleTimer();
+
+		// "Pop" the flag 
+		GUI.ToggleFlag();
+		flagPopped = true;
+
+		AudioManager.Get().PlayPopSound();
+	}
+
+
 
 	// Signal a player reaction during a round
 	// - leftSamurai: A boolean representing which player triggered this event
@@ -161,7 +188,7 @@ public class DuelManager : MonoBehaviour {
 
 	// Calculates the rounded-off reaction time since the flag popped
 	public int GetReactionTime() {
-		return (int)(100 * (Time.realtimeSinceStartup - startTime));
+		return (int)((100 * (Time.realtimeSinceStartup - startTime)) / 2);
 	}
 	
 	// Returns which player caused the last round result
@@ -198,9 +225,11 @@ public class DuelManager : MonoBehaviour {
 		flagPopped = false;
 		waitingForInput = false;
 		waitingForTie = false;
+		startTime = 0;
 		reactTime = 0;
 		tieTime = 0;
-		
+		currTime = 0;
+
 		// Start delayed wait before round start
 		StartCoroutine(WaitAndStartRound());
 	}
@@ -271,12 +300,7 @@ public class DuelManager : MonoBehaviour {
 	}
 
 	private void UpdateCurrentTime() {
-		if (networking) {
-			Utility.UpdateCurrentTime();
-		}
-		else {
-			currTime = GetReactionTime();
-		}
+		currTime = GetReactionTime();
 	}
 	
 	// Checks if either player has enough wins to claim the match
@@ -300,9 +324,14 @@ public class DuelManager : MonoBehaviour {
 
 		yield return new WaitForSeconds(2);
 
-		GUI.OnBothPlayersReady();
-		GUI.ToggleShadeForRoundStart();
-		AudioManager.Get().StartMusic();
+		if (networking) {
+			if (Utility.isServer) {
+				Utility.RpcTriggerGameStart();
+			}
+		}
+		else {
+			TriggerGameStart();
+		}
 	}
 	
 	// Displays the flag after a randomized wait time
@@ -316,21 +345,14 @@ public class DuelManager : MonoBehaviour {
 		
 		// Only pop flag if the player has not struck early
 		if (!playerStrike) {
-			// No strike, record time of flag pop and start timer
 			if (networking) {
-				Utility.CmdSetStartTime();
+				if (Utility.isServer) {
+					Utility.RpcPopFlag();
+				}
 			}
 			else {
-				startTime = Time.realtimeSinceStartup;
+				PopFlag();
 			}
-
-			GUI.ToggleTimer();
-			
-			// "Pop" the flag 
-			GUI.ToggleFlag();
-			flagPopped = true;
-
-			AudioManager.Get().PlayPopSound();
 		}
 	}
 	
