@@ -359,13 +359,18 @@ public class DuelManager : MonoBehaviour {
 	// Determines the result of a round with no strike after a slight delay to wait for tying input
 	public IEnumerator WaitForTyingInput(bool leftSamurai) {
 		yield return new WaitForSeconds(3f);//0.02f);
+
+		Debug.Log("First: " + reactTime + " - Second: " + tieTime);
 		
 		// Check if there was a tying input of equal reaction time
-		if (tyingInput) {// && reactTime == tieTime) {
-			Debug.Log("First: " + reactTime + " - Second: " + tieTime);
-
-			// Players tied
-			TriggerTie();
+		if (tyingInput && reactTime >= tieTime) {// && reactTime == tieTime) {
+			if (reactTime > tieTime) {
+				TriggerWin(!leftSamurai);
+			}
+			else {
+				// Players tied
+				TriggerTie();
+			}
 		}
 		else {
 			// No tie, winner is delared
