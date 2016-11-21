@@ -75,7 +75,7 @@ public class UIManager : MonoBehaviour {
 	void Update() {
 		// Update the timer if its active
 		if (timing) {
-			manager.UpdateTimer();
+			UpdateTimer();
 		}
 
 		// Flash
@@ -133,8 +133,9 @@ public class UIManager : MonoBehaviour {
 		P2Text.enabled = false;
 	}
 
-	public void UpdateTimer(int time) {
+	private void UpdateTimer() {
 		// Format and set the time on the timer text element
+		int time = manager.GetCurrentTime();
 		ReactionTimer.text = (time < 10)
 			? "0" + time.ToString()
 			: time.ToString();

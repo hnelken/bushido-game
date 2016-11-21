@@ -16,7 +16,7 @@ public class NetworkInput : NetworkBehaviour {
 		// Check for touch or keyboard input
 		if (TouchInput() || Input.GetKeyDown(KeyCode.Space)) {
 			if (playerReady) {
-				CmdTriggerReaction(isServer, DuelManager.Get().GetReactionTime(Time.realtimeSinceStartup));
+				CmdTriggerReaction(isServer, Time.realtimeSinceStartup);
 			}
 			else {
 				CmdSignalPlayerReady(isServer);
@@ -38,7 +38,12 @@ public class NetworkInput : NetworkBehaviour {
 	}
 
 	[Command]
-	private void CmdTriggerReaction(bool hostSamurai, int reactionTime) {
+	private void CmdTriggerReaction(bool hostSamurai, float inputTime) {
+		
+		Debug.Log("Host: " + hostSamurai);
+		Debug.Log("Input: " + inputTime);
+		int reactionTime = DuelManager.Get().GetCurrentTime();
+		Debug.Log("Reaction: " + reactionTime);
 		RpcTriggerReaction(hostSamurai, reactionTime);
 	}
 	

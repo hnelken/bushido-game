@@ -31,6 +31,8 @@ public class DuelManager : MonoBehaviour {
 	private float startTime;								// The time at which the centerpiece icon was displayed
 	private float reactTime;								// The time at which the first valid input was received
 	private float tieTime;									// The time at which the potentially tying input was received
+
+	private int currTime;
 	
 	#endregion
 	
@@ -49,6 +51,10 @@ public class DuelManager : MonoBehaviour {
 		EventManager.GameStart += BeginRound;
 		EventManager.GameReset += ResetGame;
 	}
+
+	void Update() {
+		UpdateCurrentTime();
+	}
 	
 	#endregion
 	
@@ -64,52 +70,17 @@ public class DuelManager : MonoBehaviour {
 		StartCoroutine(WaitAndPopFlag());
 	}
 
-	public bool IsReadyToDuel() {
-		return LeftSamurai.IsPlayerReady() && RightSamurai.IsPlayerReady();
+	public void SetStartTime(float time) {
+		startTime = time;
 	}
 
-	public void UpdateTimer() {
-		if (networking) {
-			Utility.CmdUpdateTimer();
-		}
-		else {
-			GUI.UpdateTimer(GetReactionTime(Time.realtimeSinceStartup));
-		}
-	}
-
-	public bool SignalPlayerReady(bool leftSamurai) {
-
-		if (networking && !BothPlayersInMatch()) {
-			return false;
-		}
-
-		if (leftSamurai) {
-			Debug.Log("Left Player Ready");
-			LeftSamurai.SignalPlayerReady();
-		}
-		else {
-			Debug.Log("Right Player Ready");
-			RightSamurai.SignalPlayerReady();
-		}
-
-		AudioManager.Get().PlayMenuSound();
-
-		// Check the players checkbox
-		GUI.SignalPlayerReady(leftSamurai);
-
-		if (IsReadyToDuel()) {
-
-			// Delay the beginning of the round
-			StartCoroutine(WaitAndStartRound());
-		}
-
-		return true;
+	public void SetCurrentTime(int time) {
+		currTime = time;
 	}
 
 	// Signal a player reaction during a round
 	// - leftSamurai: A boolean representing which player triggered this event
 	public void TriggerReaction(bool leftSamurai, int reactionTime) {
-		Debug.Log("Left: " + leftSamurai + " - Time: " + reactionTime); 
 		// Check if the input is valid
 		if (waitingForInput){
 			
@@ -144,18 +115,53 @@ public class DuelManager : MonoBehaviour {
 		}
 	}
 
-	public float GetStartTime() {
-		return startTime;
+	public bool SignalPlayerReady(bool leftSamurai) {
+
+		if (networking && !BothPlayersInMatch()) {
+			return false;
+		}
+
+		if (leftSamurai) {
+			LeftSamurai.SignalPlayerReady();
+		}
+		else {
+			RightSamurai.SignalPlayerReady();
+		}
+
+		AudioManager.Get().PlayMenuSound();
+
+		// Check the players checkbox
+		GUI.SignalPlayerReady(leftSamurai);
+
+		if (BothPlayersReady()) {
+
+			// Delay the beginning of the round
+			StartCoroutine(WaitAndStartRound());
+		}
+
+		return true;
+	}
+
+	public bool BothPlayersReady() {
+		return LeftSamurai.IsPlayerReady() && RightSamurai.IsPlayerReady();
 	}
 
 	// Returns whether or not input will count as a reaction
 	public bool WaitingForInput() {
 		return waitingForInput;
 	}
-	
+
+	public float GetStartTime() {
+		return startTime;
+	}
+
+	public int GetCurrentTime() {
+		return currTime;
+	}
+
 	// Calculates the rounded-off reaction time since the flag popped
-	public int GetReactionTime(float reactionTime) {
-		return (int)((100 * (reactionTime - startTime)) / 2);
+	public int GetReactionTime() {
+		return (int)(100 * (Time.realtimeSinceStartup - startTime));
 	}
 	
 	// Returns which player caused the last round result
@@ -178,7 +184,7 @@ public class DuelManager : MonoBehaviour {
 
 		if (networking) {
 			// Get random wait time
-			Utility.CmdRandomWaitTime();
+			Utility.CmdSetRandomWaitTime();
 		}
 		else {
 			StartCoroutine(WaitAndPopFlag());
@@ -252,7 +258,7 @@ public class DuelManager : MonoBehaviour {
 		StartCoroutine(WaitAndShowWinner());
 	}
 	
-	// Singal that the players tied
+	// Signal that the players tied
 	private void TriggerTie() {
 
 		AudioManager.Get().PlayTieSound();
@@ -262,6 +268,15 @@ public class DuelManager : MonoBehaviour {
 		
 		// Reset for a new round after a delay
 		StartCoroutine(WaitAndRestartGame());
+	}
+
+	private void UpdateCurrentTime() {
+		if (networking) {
+			Utility.UpdateCurrentTime();
+		}
+		else {
+			currTime = GetReactionTime();
+		}
 	}
 	
 	// Checks if either player has enough wins to claim the match
@@ -302,7 +317,13 @@ public class DuelManager : MonoBehaviour {
 		// Only pop flag if the player has not struck early
 		if (!playerStrike) {
 			// No strike, record time of flag pop and start timer
-			startTime = Time.realtimeSinceStartup;
+			if (networking) {
+				Utility.CmdSetStartTime();
+			}
+			else {
+				startTime = Time.realtimeSinceStartup;
+			}
+
 			GUI.ToggleTimer();
 			
 			// "Pop" the flag 
