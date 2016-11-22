@@ -9,6 +9,7 @@ using System.Collections;
 public class MenuManager : MonoBehaviour {
 
 	public Text PlayText, PlayText2, TitleText;
+	public Button QuickPlay, CreateGame;
 	public Button Local, Network;
 	public Image Shade, BG;
 
@@ -23,6 +24,8 @@ public class MenuManager : MonoBehaviour {
 
 	private int titleHeight;
 
+	private BushidoMatchMaker matchMaker;
+
 	#endregion
 
 
@@ -30,6 +33,7 @@ public class MenuManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		matchMaker = GetComponent<BushidoMatchMaker>();
 
 		titleHeight = (int)-TitleText.preferredHeight;
 
@@ -39,6 +43,8 @@ public class MenuManager : MonoBehaviour {
 
 		Local.gameObject.SetActive(false);
 		Network.gameObject.SetActive(false);
+		QuickPlay.gameObject.SetActive(false);
+		CreateGame.gameObject.SetActive(false);
 
 		shadeFadingOut = true;
 		playTextFading = true;
@@ -77,6 +83,17 @@ public class MenuManager : MonoBehaviour {
 	#endregion
 
 
+	#region Public API
+
+	public void LeaveMenu(string sceneName) {
+		nextSceneName = sceneName;
+		leavingMenu = true;
+		ToggleShade();
+	}
+
+	#endregion
+
+
 	#region Private API
 
 	private void CheckForInput() {
@@ -102,16 +119,18 @@ public class MenuManager : MonoBehaviour {
 		}
 	}
 
+	private void ShowNetworkMenu() {
+		Local.gameObject.SetActive(false);
+		Network.gameObject.SetActive(false);
+
+		QuickPlay.gameObject.SetActive(true);
+		CreateGame.gameObject.SetActive(true);
+	}
+
 	// Checks for any input this frame (touch or spacebar)
 	private bool ReceivedInput() {
 		return (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) 
 			|| Input.GetKeyDown(KeyCode.Space);
-	}
-
-	private void LeaveMenu(string sceneName) {
-		nextSceneName = sceneName;
-		leavingMenu = true;
-		ToggleShade();
 	}
 
 	#endregion
@@ -125,9 +144,18 @@ public class MenuManager : MonoBehaviour {
 	}
 
 	public void OnNetworkPressed() {
-		// Leave menu for network duel
 		AudioManager.Get().PlayMenuSound();
-		LeaveMenu("NetworkDuel");
+		ShowNetworkMenu();
+	}
+
+	public void OnQuickPlayPressed() {
+		matchMaker.QuickPlay();
+		TitleText.text = "Finding game...";
+	}
+
+	public void OnCreateGamePressed() {
+		matchMaker.CreateInternetMatch();
+		TitleText.text = "Waiting for another player...";
 	}
 
 	#endregion
