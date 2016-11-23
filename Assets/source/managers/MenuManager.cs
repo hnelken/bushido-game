@@ -13,25 +13,25 @@ public class MenuManager : MonoBehaviour {
 	public Button QuickPlay, CreateGame;
 	public Button Local, Network;
 	public Image LocalSettings;
-	public Image Shade, BG;
+	public Image Shade;
 
 
 	#region Private Variables
 
 	private string nextSceneName;
-	private bool localSettings;
-	private bool leavingMenu;
+
+	private BushidoMatchMaker matchMaker;
+
 	private bool shadeFadingIn, shadeFadingOut;
 	private bool playTextFading;
 	private bool openAnimsDone;
-	private bool input;					// True if input was received this frame
+	private bool localSettings;
+	private bool leavingMenu;
+	private bool input;
 
 	private int titleHeight;
 	private int bestOfIndex = 0;
 	private string[] bestOfOptions = {"3", "5", "7"};
-
-	private BushidoMatchMaker matchMaker;
-
 
 	#endregion
 
@@ -129,10 +129,10 @@ public class MenuManager : MonoBehaviour {
 
 	private void UpdateBestOfText() {
 		if (localSettings) {
-			LocalBestOf.text = bestOfOptions[bestOfIndex];
+			ChangeTextInChildText(bestOfOptions[bestOfIndex], LocalBestOf);
 		}
 		else {
-			NetworkBestOf.text = bestOfOptions[bestOfIndex];
+			ChangeTextInChildText(bestOfOptions[bestOfIndex], NetworkBestOf);
 		}
 	}
 
@@ -163,25 +163,22 @@ public class MenuManager : MonoBehaviour {
 
 	#endregion
 
+
 	#region ButtonEvents
 
 	public void OnLeftPressed() {
-		if (bestOfIndex == 0) {
-			bestOfIndex = bestOfOptions.Length - 1;
-		}
-		else {
-			bestOfIndex--;
-		}
+		AudioManager.Get().PlayMenuSound();
+		bestOfIndex = (bestOfIndex > 0)
+			? bestOfIndex - 1
+			: bestOfOptions.Length - 1;
 		UpdateBestOfText();
 	}
 
 	public void OnRightPressed() {
-		if (bestOfIndex == bestOfOptions.Length - 1) {
-			bestOfIndex = 0;
-		}
-		else {
-			bestOfIndex++;
-		}
+		AudioManager.Get().PlayMenuSound();
+		bestOfIndex = (bestOfIndex < bestOfOptions.Length - 1) 
+			? bestOfIndex + 1
+			: 0;
 		UpdateBestOfText();
 	}
 
@@ -212,17 +209,6 @@ public class MenuManager : MonoBehaviour {
 	public void OnCreateGamePressed() {
 		matchMaker.CreateInternetMatch();
 		TitleText.text = "Waiting for another player...";
-	}
-
-	#endregion
-
-	#region BG Animations
-
-	private void SetBGColor(Color color, float rgbValue) {
-		color.r = rgbValue;
-		color.g = rgbValue;
-		color.b = rgbValue;
-		BG.color = color;
 	}
 
 	#endregion
@@ -282,6 +268,12 @@ public class MenuManager : MonoBehaviour {
 
 
 	#region Text Animations
+
+	private void ChangeTextInChildText(string newText, Text text) {
+		Text child = text.transform.GetChild(0).GetComponentInChildren<Text>();
+		text.text = newText;
+		child.text = newText;
+	}
 
 	private void AnimateTitle() {
 		var titleY = TitleText.rectTransform.anchoredPosition.y;

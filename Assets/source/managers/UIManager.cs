@@ -16,6 +16,7 @@ public class UIManager : MonoBehaviour {
 	public Image Flag;											// The centerpiece flag image element
 	public Image BG;											// The background image element
 
+	public GameObject Outline;
 	public Text ReadyText, P1Text, P2Text;
 	public Text ReactionTimer, MainText;						// The timer and main text elements
 	public Text LeftCount, RightCount;							// The win count text elements
@@ -55,7 +56,12 @@ public class UIManager : MonoBehaviour {
 		LeftCount.enabled = false;
 		RightCount.enabled = false;
 		MainText.enabled = false;
-		Flag.enabled = false;
+
+		Flag.gameObject.SetActive(false);
+
+		if (manager.networking) {
+			Outline.gameObject.SetActive(false);
+		}
 
 		// Set shade over screen and hide flash screen
 		FillShade();
@@ -131,6 +137,7 @@ public class UIManager : MonoBehaviour {
 		ReadyText.enabled = false;
 		P1Text.enabled = false;
 		P2Text.enabled = false;
+		Outline.gameObject.SetActive(false);
 	}
 
 	private void UpdateTimer() {
@@ -148,7 +155,7 @@ public class UIManager : MonoBehaviour {
 	
 	// Toggles the display of the centerpiece flag UI element
 	public void ToggleFlag() {
-		Flag.enabled = !Flag.enabled;
+		Flag.gameObject.SetActive(!Flag.isActiveAndEnabled);
 	}
 
 	public void ShowFlash() {
