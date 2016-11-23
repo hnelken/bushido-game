@@ -16,8 +16,7 @@ public class UIManager : MonoBehaviour {
 	public Image Flag;											// The centerpiece flag image element
 	public Image BG;											// The background image element
 
-	public GameObject Outline;
-	public Text ReadyText, P1Text, P2Text;
+	public GameObject Outline;									// Gameobject containing pre-match ready ui 
 	public Text ReactionTimer, MainText;						// The timer and main text elements
 	public Text LeftCount, RightCount;							// The win count text elements
 	
@@ -134,9 +133,6 @@ public class UIManager : MonoBehaviour {
 	public void OnBothPlayersReady() {
 		LeftCheckbox.enabled = false;
 		RightCheckbox.enabled = false;
-		ReadyText.enabled = false;
-		P1Text.enabled = false;
-		P2Text.enabled = false;
 		Outline.gameObject.SetActive(false);
 	}
 
@@ -181,6 +177,12 @@ public class UIManager : MonoBehaviour {
 
 
 	#region Private API
+
+	private void ChangeTextInChildText(string newText, Text text) {
+		Text child = text.transform.GetChild(0).GetComponentInChildren<Text>();
+		text.text = newText;
+		child.text = newText;
+	}
 
 	// Update the win count text elements
 	private void RefreshWinCounts(bool leftSamurai) {

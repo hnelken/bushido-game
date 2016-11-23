@@ -8,13 +8,10 @@ using System.Collections;
  */
 public class MenuManager : MonoBehaviour {
 
-	public Text LocalBestOf, NetworkBestOf;
-	public Text PlayText, PlayText2, TitleText;
-	public Button QuickPlay, CreateGame;
-	public Button Local, Network;
-	public Image LocalSettings;
 	public Image Shade;
-
+	public Text PlayText, TitleText;
+	public Text LocalBestOf, NetworkBestOf;
+	public GameObject PlayMenu, LocalDialog, NetworkDialog;
 
 	#region Private Variables
 
@@ -42,17 +39,15 @@ public class MenuManager : MonoBehaviour {
 	void Start () {
 		matchMaker = GetComponent<BushidoMatchMaker>();
 
-		titleHeight = (int)-TitleText.preferredHeight;
+		titleHeight = ((int)-TitleText.preferredHeight * 3) / 4;
 
 		HideTextAlpha(PlayText);
-		HideTextAlpha(PlayText2);
+		HideTextAlpha(GetTextComponentInChild(PlayText));
 		FillShade();
 
-		Local.gameObject.SetActive(false);
-		Network.gameObject.SetActive(false);
-		QuickPlay.gameObject.SetActive(false);
-		CreateGame.gameObject.SetActive(false);
-		LocalSettings.gameObject.SetActive(false);
+		PlayMenu.SetActive(false);
+		LocalDialog.SetActive(false);
+		NetworkDialog.SetActive(false);
 
 		shadeFadingOut = true;
 		playTextFading = true;
@@ -109,20 +104,16 @@ public class MenuManager : MonoBehaviour {
 		if (!input && ReceivedInput()) {
 			if (!openAnimsDone) {
 				TitleText.rectTransform.anchoredPosition = new Vector2(0, titleHeight);
-				PlayText.enabled = true;
+				PlayText.gameObject.SetActive(true);
 				openAnimsDone = true;
 			}
 			else {
+				PlayText.gameObject.SetActive(false);
+				AudioManager.Get().PlayMenuSound();
+				PlayMenu.SetActive(true);
+
 				// Register input this frame
 				input = true;
-
-				PlayText.enabled = false;
-				PlayText2.enabled = false;
-
-				Local.gameObject.SetActive(true);
-				Network.gameObject.SetActive(true);
-
-				AudioManager.Get().PlayMenuSound();
 			}
 		}
 	}
@@ -136,23 +127,18 @@ public class MenuManager : MonoBehaviour {
 		}
 	}
 
-	private void ShowLocalSettings() {
-		localSettings = true;
-
-		Local.gameObject.SetActive(false);
-		Network.gameObject.SetActive(false);
-
-		LocalSettings.gameObject.SetActive(true);
+	private void TogglePlayMenu() {
+		PlayMenu.SetActive(!PlayMenu.activeSelf);
 	}
 
-	private void ShowNetworkMenu() {
+	private void ToggleLocalMenu() {
+		localSettings = true;
+		LocalDialog.SetActive(!LocalDialog.activeSelf);
+	}
+
+	private void ToggleNetworkMenu() {
 		localSettings = false;
-
-		Local.gameObject.SetActive(false);
-		Network.gameObject.SetActive(false);
-
-		QuickPlay.gameObject.SetActive(true);
-		CreateGame.gameObject.SetActive(true);
+		NetworkDialog.SetActive(!NetworkDialog.activeSelf);
 	}
 
 	// Checks for any input this frame (touch or spacebar)
@@ -182,33 +168,49 @@ public class MenuManager : MonoBehaviour {
 		UpdateBestOfText();
 	}
 
-	public void OnLocalPressed() {
+	public void OnLocalToggle() {
 		// Leave menu for local duel
 		AudioManager.Get().PlayMenuSound();
-		ShowLocalSettings();
+		TogglePlayMenu();
+		ToggleLocalMenu();
 	}
 
-	public void OnLocalConfirm() {
+	public void OnNetworkToggle() {
+		AudioManager.Get().PlayMenuSound();
+		TogglePlayMenu();
+		ToggleNetworkMenu();
+	}
+
+	public void OnLocalMenuConfirm() {
 		AudioManager.Get().PlayMenuSound();
 
 		// Set game wins based on UI
-
+		int.TryParse(LocalBestOf.text, out BushidoNetManager.Get().matchLimit);
 		LeaveMenu("LocalDuel");
 	}
 
-	public void OnNetworkPressed() {
-		AudioManager.Get().PlayMenuSound();
-		ShowNetworkMenu();
-	}
-
 	public void OnQuickPlayPressed() {
+		AudioManager.Get().PlayMenuSound();
 		matchMaker.QuickPlay();
-		TitleText.text = "Finding game...";
+		ToggleNetworkMenu();
+
+		ChangeTextInChildText("Finding game...", PlayText);
+		PlayText.gameObject.SetActive(true);
 	}
 
 	public void OnCreateGamePressed() {
+		AudioManager.Get().PlayMenuSound();
 		matchMaker.CreateInternetMatch();
-		TitleText.text = "Waiting for another player...";
+		ToggleNetworkMenu();
+
+		ChangeTextInChildText("Waiting for another player...", PlayText);
+		PlayText.gameObject.SetActive(true);
+	}
+
+	public void OnFindGamePressed() {
+		AudioManager.Get().PlayMenuSound();
+
+		//ToggleNetworkMenu();
 	}
 
 	#endregion
@@ -269,8 +271,12 @@ public class MenuManager : MonoBehaviour {
 
 	#region Text Animations
 
+	private Text GetTextComponentInChild(Text text) {
+		return text.transform.GetChild(0).GetComponentInChildren<Text>();
+	}
+
 	private void ChangeTextInChildText(string newText, Text text) {
-		Text child = text.transform.GetChild(0).GetComponentInChildren<Text>();
+		Text child = GetTextComponentInChild(text);
 		text.text = newText;
 		child.text = newText;
 	}
@@ -282,8 +288,7 @@ public class MenuManager : MonoBehaviour {
 		}
 		else {
 			TitleText.rectTransform.anchoredPosition = new Vector2(0, titleHeight);
-			PlayText.enabled = true;
-			PlayText2.enabled = true;
+			PlayText.gameObject.SetActive(true);
 			openAnimsDone = true;
 		}
 	}
@@ -291,11 +296,11 @@ public class MenuManager : MonoBehaviour {
 	private void AnimatePlayText() {
 		if (playTextFading) {
 			FadeTextAlpha(PlayText);
-			FadeTextAlpha(PlayText2);
+			FadeTextAlpha(GetTextComponentInChild(PlayText));
 		}
 		else {
 			RaiseTextAlpha(PlayText);
-			RaiseTextAlpha(PlayText2);
+			RaiseTextAlpha(GetTextComponentInChild(PlayText));
 		}
 	}
 

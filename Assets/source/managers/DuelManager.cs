@@ -18,7 +18,7 @@ public class DuelManager : MonoBehaviour {
 	#region Private Variables
 
 	private const int strikeLimit = 2;						// Number of strikes required to lose a round
-	private const int winLimit = 3;							// Number of wins required to win the match
+	private int winLimit = 3;							// Number of wins required to win the match
 
 	private bool leftPlayerCausedResult; 					// True if the left samurai caused the latest round result
 	private bool waitingForInput;							// True from when round starts until after first input
@@ -43,6 +43,9 @@ public class DuelManager : MonoBehaviour {
 	void Awake() {
 		// Get UI manager
 		GUI = GetComponent<UIManager>();
+
+		// Get match limit from net manager
+		winLimit = BushidoNetManager.Get().matchLimit;
 
 		LeftSamurai.SetManager(this);
 		RightSamurai.SetManager(this);
@@ -305,8 +308,8 @@ public class DuelManager : MonoBehaviour {
 	
 	// Checks if either player has enough wins to claim the match
 	private bool MatchWon() {
-		return LeftSamurai.GetWinCount() >= winLimit
-			|| RightSamurai.GetWinCount() >= winLimit;
+		return LeftSamurai.GetWinCount() > winLimit / 2
+			|| RightSamurai.GetWinCount() > winLimit / 2;
 	}
 
 	// Checks if both players have entered the room
@@ -358,7 +361,7 @@ public class DuelManager : MonoBehaviour {
 	
 	// Determines the result of a round with no strike after a slight delay to wait for tying input
 	public IEnumerator WaitForTyingInput(bool leftSamurai) {
-		yield return new WaitForSeconds(0.03f);
+		yield return new WaitForSeconds(0.1f);
 
 		Debug.Log("First: " + reactTime + " - Second: " + tieTime);
 		

@@ -5,6 +5,12 @@ using System.Collections;
 
 public class BushidoNetManager : NetworkManager {
 
+	public int matchLimit;
+
+	public static BushidoNetManager Get() {
+		return GameObject.FindObjectOfType<BushidoNetManager>();
+	}
+
 	public void StartupHost() {
 		SetPort();
 		NetworkManager.singleton.StartHost();
