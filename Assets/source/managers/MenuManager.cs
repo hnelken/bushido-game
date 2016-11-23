@@ -8,14 +8,18 @@ using System.Collections;
  */
 public class MenuManager : MonoBehaviour {
 
+	public Text LocalBestOf, NetworkBestOf;
 	public Text PlayText, PlayText2, TitleText;
 	public Button QuickPlay, CreateGame;
 	public Button Local, Network;
+	public Image LocalSettings;
 	public Image Shade, BG;
+
 
 	#region Private Variables
 
 	private string nextSceneName;
+	private bool localSettings;
 	private bool leavingMenu;
 	private bool shadeFadingIn, shadeFadingOut;
 	private bool playTextFading;
@@ -23,8 +27,11 @@ public class MenuManager : MonoBehaviour {
 	private bool input;					// True if input was received this frame
 
 	private int titleHeight;
+	private int bestOfIndex = 0;
+	private string[] bestOfOptions = {"3", "5", "7"};
 
 	private BushidoMatchMaker matchMaker;
+
 
 	#endregion
 
@@ -45,6 +52,7 @@ public class MenuManager : MonoBehaviour {
 		Network.gameObject.SetActive(false);
 		QuickPlay.gameObject.SetActive(false);
 		CreateGame.gameObject.SetActive(false);
+		LocalSettings.gameObject.SetActive(false);
 
 		shadeFadingOut = true;
 		playTextFading = true;
@@ -119,7 +127,27 @@ public class MenuManager : MonoBehaviour {
 		}
 	}
 
+	private void UpdateBestOfText() {
+		if (localSettings) {
+			LocalBestOf.text = bestOfOptions[bestOfIndex];
+		}
+		else {
+			NetworkBestOf.text = bestOfOptions[bestOfIndex];
+		}
+	}
+
+	private void ShowLocalSettings() {
+		localSettings = true;
+
+		Local.gameObject.SetActive(false);
+		Network.gameObject.SetActive(false);
+
+		LocalSettings.gameObject.SetActive(true);
+	}
+
 	private void ShowNetworkMenu() {
+		localSettings = false;
+
 		Local.gameObject.SetActive(false);
 		Network.gameObject.SetActive(false);
 
@@ -137,9 +165,37 @@ public class MenuManager : MonoBehaviour {
 
 	#region ButtonEvents
 
+	public void OnLeftPressed() {
+		if (bestOfIndex == 0) {
+			bestOfIndex = bestOfOptions.Length - 1;
+		}
+		else {
+			bestOfIndex--;
+		}
+		UpdateBestOfText();
+	}
+
+	public void OnRightPressed() {
+		if (bestOfIndex == bestOfOptions.Length - 1) {
+			bestOfIndex = 0;
+		}
+		else {
+			bestOfIndex++;
+		}
+		UpdateBestOfText();
+	}
+
 	public void OnLocalPressed() {
 		// Leave menu for local duel
 		AudioManager.Get().PlayMenuSound();
+		ShowLocalSettings();
+	}
+
+	public void OnLocalConfirm() {
+		AudioManager.Get().PlayMenuSound();
+
+		// Set game wins based on UI
+
 		LeaveMenu("LocalDuel");
 	}
 
