@@ -147,6 +147,10 @@ public class MenuManager : MonoBehaviour {
 			|| Input.GetKeyDown(KeyCode.Space);
 	}
 
+	public void MatchFound() {
+		ChangeTextInChildText("Joining game", PlayText);
+	}
+
 	#endregion
 
 
@@ -194,7 +198,7 @@ public class MenuManager : MonoBehaviour {
 		matchMaker.QuickPlay();
 		ToggleNetworkMenu();
 
-		ChangeTextInChildText("Finding game...", PlayText);
+		ChangeTextInChildText("Finding a game", PlayText);
 		PlayText.gameObject.SetActive(true);
 	}
 
@@ -203,7 +207,7 @@ public class MenuManager : MonoBehaviour {
 		matchMaker.CreateInternetMatch();
 		ToggleNetworkMenu();
 
-		ChangeTextInChildText("Waiting for another player...", PlayText);
+		ChangeTextInChildText("Waiting for another player", PlayText);
 		PlayText.gameObject.SetActive(true);
 	}
 

@@ -59,7 +59,7 @@ public class BushidoMatchMaker : MonoBehaviour {
 			NetworkManager.singleton.StartHost(hostInfo);
 
 			// Leave menu for network duel
-			menu.LeaveMenu("NetworkDuel");
+			//menu.LeaveMenu("NetworkDuel");
 		}
 		else
 		{
@@ -78,7 +78,7 @@ public class BushidoMatchMaker : MonoBehaviour {
 			NetworkManager.singleton.StartClient(hostInfo);
 
 			// Leave menu for network duel
-			menu.LeaveMenu("NetworkDuel");
+			//menu.LeaveMenu("NetworkDuel");
 		}
 		else
 		{

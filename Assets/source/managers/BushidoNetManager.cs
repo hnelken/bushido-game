@@ -3,33 +3,24 @@ using UnityEngine.UI;
 using UnityEngine.Networking;
 using System.Collections;
 
-public class BushidoNetManager : NetworkManager {
+public class BushidoNetManager : NetworkLobbyManager {
 
+	[HideInInspector]
 	public int matchLimit;
 
 	public static BushidoNetManager Get() {
 		return GameObject.FindObjectOfType<BushidoNetManager>();
 	}
 
-	public void StartupHost() {
-		SetPort();
-		NetworkManager.singleton.StartHost();
+	void OnClientEnterLobby() {
+
 	}
 
-	public void JoinGame() {
-		SetIPAddress();
-		SetPort();
-		NetworkManager.singleton.StartClient();
+	void OnClientExitLobby() {
+
 	}
 
-	private void SetIPAddress() {
-		string ipAddress = GameObject.Find("ipAddressField").transform.FindChild("Text").GetComponent<Text>().text;
-		NetworkManager.singleton.networkAddress = ipAddress;
+	void OnClientReady(bool readyState) {
+
 	}
-
-	private void SetPort() {
-		NetworkManager.singleton.networkPort = 7777;
-	}
-
-
 }
