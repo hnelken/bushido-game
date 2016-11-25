@@ -11,7 +11,8 @@ public class MenuManager : MonoBehaviour {
 	public Image Shade;
 	public Text PlayText, TitleText;
 	public Text LocalBestOf, NetworkBestOf;
-	public GameObject PlayMenu, LocalDialog, NetworkDialog;
+	public Text InfoText;
+	public GameObject PlayMenu, LocalDialog, NetworkDialog, InfoDialog;
 
 	#region Private Variables
 
@@ -46,6 +47,7 @@ public class MenuManager : MonoBehaviour {
 		FillShade();
 
 		PlayMenu.SetActive(false);
+		InfoDialog.SetActive(false);
 		LocalDialog.SetActive(false);
 		NetworkDialog.SetActive(false);
 
@@ -103,16 +105,19 @@ public class MenuManager : MonoBehaviour {
 		// Check for input on the initial menu
 		if (!input && ReceivedInput()) {
 			if (!openAnimsDone) {
+				// Fast forward title animation and begin animating play text
 				TitleText.rectTransform.anchoredPosition = new Vector2(0, titleHeight);
 				PlayText.gameObject.SetActive(true);
 				openAnimsDone = true;
 			}
 			else {
-				PlayText.gameObject.SetActive(false);
 				AudioManager.Get().PlayMenuSound();
+
+				// Hide play text and show play menu
+				PlayText.gameObject.SetActive(false);
 				PlayMenu.SetActive(true);
 
-				// Register input this frame
+				// Prevent further non-button input
 				input = true;
 			}
 		}
@@ -131,13 +136,15 @@ public class MenuManager : MonoBehaviour {
 		PlayMenu.SetActive(!PlayMenu.activeSelf);
 	}
 
+	private void ToggleInfoDialog() {
+		InfoDialog.SetActive(!InfoDialog.activeSelf);
+	}
+
 	private void ToggleLocalMenu() {
-		localSettings = true;
 		LocalDialog.SetActive(!LocalDialog.activeSelf);
 	}
 
 	private void ToggleNetworkMenu() {
-		localSettings = false;
 		NetworkDialog.SetActive(!NetworkDialog.activeSelf);
 	}
 
@@ -156,33 +163,45 @@ public class MenuManager : MonoBehaviour {
 
 	#region ButtonEvents
 
-	public void OnLeftPressed() {
+	public void OnGameMenuExit() {
 		AudioManager.Get().PlayMenuSound();
-		bestOfIndex = (bestOfIndex > 0)
-			? bestOfIndex - 1
-			: bestOfOptions.Length - 1;
-		UpdateBestOfText();
-	}
 
-	public void OnRightPressed() {
-		AudioManager.Get().PlayMenuSound();
-		bestOfIndex = (bestOfIndex < bestOfOptions.Length - 1) 
-			? bestOfIndex + 1
-			: 0;
-		UpdateBestOfText();
-	}
+		// Close the menu that was open
+		if (localSettings) {
+			ToggleLocalMenu();
+		}
+		else {
+			ToggleNetworkMenu();
+		}
 
-	public void OnLocalToggle() {
-		// Leave menu for local duel
-		AudioManager.Get().PlayMenuSound();
+		// Bring up the play menu
 		TogglePlayMenu();
-		ToggleLocalMenu();
 	}
 
-	public void OnNetworkToggle() {
+	public void OnInfoDialogOk() {
 		AudioManager.Get().PlayMenuSound();
+
+		// Close info dialog and open next menu
+		ToggleInfoDialog();
+
+		if (localSettings) {
+			ToggleLocalMenu();
+		}
+		else {
+			// Toggle lobby dialog
+		}
+	}
+
+	public void OnLocalGameSelect() {
+		AudioManager.Get().PlayMenuSound();
+		localSettings = true;
+
+		// Customize info dialog for local play
+		ChangeTextInChildText("Touch your side\nof the screen\nas soon as you see", InfoText);
+
+		// Hide play menu and show info dialog
 		TogglePlayMenu();
-		ToggleNetworkMenu();
+		ToggleInfoDialog();
 	}
 
 	public void OnLocalMenuConfirm() {
@@ -191,6 +210,15 @@ public class MenuManager : MonoBehaviour {
 		// Set game wins based on UI
 		int.TryParse(LocalBestOf.text, out BushidoNetManager.Get().matchLimit);
 		LeaveMenu("LocalDuel");
+	}
+
+	public void OnNetworkGameSelect() {
+		AudioManager.Get().PlayMenuSound();
+		localSettings = false;
+
+		// Hide play menu and show info dialog
+		TogglePlayMenu();
+		ToggleNetworkMenu();
 	}
 
 	public void OnQuickPlayPressed() {
@@ -217,6 +245,22 @@ public class MenuManager : MonoBehaviour {
 		//ToggleNetworkMenu();
 	}
 
+
+	public void OnLeftPressed() {
+		AudioManager.Get().PlayMenuSound();
+		bestOfIndex = (bestOfIndex > 0)
+			? bestOfIndex - 1
+			: bestOfOptions.Length - 1;
+		UpdateBestOfText();
+	}
+
+	public void OnRightPressed() {
+		AudioManager.Get().PlayMenuSound();
+		bestOfIndex = (bestOfIndex < bestOfOptions.Length - 1) 
+			? bestOfIndex + 1
+			: 0;
+		UpdateBestOfText();
+	}
 	#endregion
 
 
