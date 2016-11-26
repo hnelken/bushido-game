@@ -41,9 +41,9 @@ public class BushidoMatchMaker : MonoBehaviour {
 	}
 
 	//call this method to request a match to be created on the server
-	public void CreateInternetMatch()//string matchName)
+	public void CreateInternetMatch()
 	{
-		NetworkManager.singleton.matchMaker.CreateMatch("newmatch", 2, true, "", "", "", 0, 0, OnInternetMatchCreate);
+		NetworkManager.singleton.matchMaker.CreateMatch("", 2, true, "", "", "", 0, 0, OnInternetMatchCreate);
 	}
 
 	//this method is called when your request for creating a match is returned

@@ -8,11 +8,17 @@ using System.Collections;
  */
 public class MenuManager : MonoBehaviour {
 
+	public Sprite CheckedBox, UncheckedBox;
+
 	public Image Shade;
+	public Image LeftCheckbox, RightCheckbox;
+	public Image LeftLobbySamurai, RightLobbySamurai;
+
+	public Text InfoText;
 	public Text PlayText, TitleText;
 	public Text LocalBestOf, NetworkBestOf;
-	public Text InfoText;
-	public GameObject PlayMenu, LocalDialog, NetworkDialog, InfoDialog;
+
+	public GameObject PlayMenu, LocalDialog, NetworkDialog, InfoDialog, LobbyDialog;
 
 	#region Private Variables
 
@@ -48,6 +54,7 @@ public class MenuManager : MonoBehaviour {
 
 		PlayMenu.SetActive(false);
 		InfoDialog.SetActive(false);
+		LobbyDialog.SetActive(false);
 		LocalDialog.SetActive(false);
 		NetworkDialog.SetActive(false);
 
@@ -123,6 +130,12 @@ public class MenuManager : MonoBehaviour {
 		}
 	}
 
+	// Checks for any input this frame (touch or spacebar)
+	private bool ReceivedInput() {
+		return (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) 
+			|| Input.GetKeyDown(KeyCode.Space);
+	}
+
 	private void UpdateBestOfText() {
 		if (localSettings) {
 			ChangeTextInChildText(bestOfOptions[bestOfIndex], LocalBestOf);
@@ -130,6 +143,10 @@ public class MenuManager : MonoBehaviour {
 		else {
 			ChangeTextInChildText(bestOfOptions[bestOfIndex], NetworkBestOf);
 		}
+	}
+
+	public void MatchFound() {
+		ChangeTextInChildText("Joining game", PlayText);
 	}
 
 	private void TogglePlayMenu() {
@@ -148,15 +165,16 @@ public class MenuManager : MonoBehaviour {
 		NetworkDialog.SetActive(!NetworkDialog.activeSelf);
 	}
 
-	// Checks for any input this frame (touch or spacebar)
-	private bool ReceivedInput() {
-		return (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) 
-			|| Input.GetKeyDown(KeyCode.Space);
-	}
+	/*
+	private void CreateNetworkGame(string roomName, string password, int bestOfNum) {
+		matchMaker.CreateInternetMatch();
+		// ToggleCreateGameDialog();
 
-	public void MatchFound() {
-		ChangeTextInChildText("Joining game", PlayText);
-	}
+		// show lobby dialog
+
+		ChangeTextInChildText("Waiting for another player", PlayText);
+		PlayText.gameObject.SetActive(true);
+	} */
 
 	#endregion
 
@@ -221,21 +239,20 @@ public class MenuManager : MonoBehaviour {
 		ToggleNetworkMenu();
 	}
 
+	public void OnCreateGameToggle() {
+		AudioManager.Get().PlayMenuSound();
+
+		// Switch between network menu and create game dialog
+		ToggleNetworkMenu();
+		//ToggleCreateGameDialog();
+	}
+
 	public void OnQuickPlayPressed() {
 		AudioManager.Get().PlayMenuSound();
 		matchMaker.QuickPlay();
 		ToggleNetworkMenu();
 
 		ChangeTextInChildText("Finding a game", PlayText);
-		PlayText.gameObject.SetActive(true);
-	}
-
-	public void OnCreateGamePressed() {
-		AudioManager.Get().PlayMenuSound();
-		matchMaker.CreateInternetMatch();
-		ToggleNetworkMenu();
-
-		ChangeTextInChildText("Waiting for another player", PlayText);
 		PlayText.gameObject.SetActive(true);
 	}
 
