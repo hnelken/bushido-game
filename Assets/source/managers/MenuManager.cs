@@ -165,6 +165,10 @@ public class MenuManager : MonoBehaviour {
 		NetworkDialog.SetActive(!NetworkDialog.activeSelf);
 	}
 
+	private void ToggleLobbyDialog() {
+		LobbyDialog.SetActive(!LobbyDialog.activeSelf);
+	}
+
 	/*
 	private void CreateNetworkGame(string roomName, string password, int bestOfNum) {
 		matchMaker.CreateInternetMatch();
@@ -239,14 +243,6 @@ public class MenuManager : MonoBehaviour {
 		ToggleNetworkMenu();
 	}
 
-	public void OnCreateGameToggle() {
-		AudioManager.Get().PlayMenuSound();
-
-		// Switch between network menu and create game dialog
-		ToggleNetworkMenu();
-		//ToggleCreateGameDialog();
-	}
-
 	public void OnQuickPlayPressed() {
 		AudioManager.Get().PlayMenuSound();
 		matchMaker.QuickPlay();
@@ -254,6 +250,24 @@ public class MenuManager : MonoBehaviour {
 
 		ChangeTextInChildText("Finding a game", PlayText);
 		PlayText.gameObject.SetActive(true);
+	}
+
+	public void OnLobbyJoin() {
+		ToggleLobbyDialog();
+	}
+
+	public void OnLobbyExit() {
+		AudioManager.Get().PlayMenuSound();
+		ToggleLobbyDialog();
+		ToggleNetworkMenu();
+	}
+
+	public void OnCreateGameToggle() {
+		AudioManager.Get().PlayMenuSound();
+
+		// Switch between network menu and create game dialog
+		ToggleNetworkMenu();
+		//ToggleCreateGameDialog();
 	}
 
 	public void OnFindGamePressed() {
