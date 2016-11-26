@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using System.Collections;
 
@@ -96,6 +97,27 @@ public class MenuManager : MonoBehaviour {
 
 
 	#region Public API
+
+	public static MenuManager Get() {
+		return FindObjectOfType<MenuManager>();
+	}
+
+	public void UpdateLobbyDialog(NetworkLobbyPlayer[] lobbySlots) {
+		LeftLobbySamurai.enabled = false;
+		RightLobbySamurai.enabled = false;
+		for (int i = 0; i < lobbySlots.Length; i++) {
+			if (lobbySlots[i]) {
+				if (lobbySlots[i].isServer) {
+					LeftLobbySamurai.enabled = true;
+					LeftCheckbox.sprite = (lobbySlots[i].readyToBegin) ? CheckedBox : UncheckedBox;
+				}
+				else {
+					RightLobbySamurai.enabled = true;
+					RightCheckbox.sprite = (lobbySlots[i].readyToBegin) ? CheckedBox : UncheckedBox;
+				}
+			}
+		}
+	}
 
 	public void LeaveMenu(string sceneName) {
 		nextSceneName = sceneName;
