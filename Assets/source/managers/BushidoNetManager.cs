@@ -2,43 +2,42 @@
 using UnityEngine.UI;
 using UnityEngine.Networking;
 using System.Collections;
+using System.Collections.Generic;
 
 public class BushidoNetManager : NetworkLobbyManager {
 
-	[HideInInspector]
+	#region Public Accessors
+
 	public int matchLimit;
+
+	#endregion
+
+
+	#region Overriden Callbacks
+
+	public override GameObject OnLobbyServerCreateLobbyPlayer(NetworkConnection conn, short playerControllerId) {
+		var lobbyPlayer = Instantiate(lobbyPlayerPrefab) as LobbyPlayer;
+		var lobbyUtility = LobbyUtility.Get();
+		lobbyUtility.AddPlayerToLobby(lobbyPlayer);
+
+		Debug.Log("LobbyPlayer created");
+		return lobbyPlayer.gameObject;
+	}
+		
+	public override void OnLobbyClientEnter() {
+		Debug.Log("Client entered");
+		//NetworkUtility.Get().CmdUpdateLobbyUI();
+	}
+
+	#endregion
+
+
+	#region Public API
 
 	public static BushidoNetManager Get() {
 		return GameObject.FindObjectOfType<BushidoNetManager>();
 	}
 
-	public override GameObject OnLobbyServerCreateLobbyPlayer(NetworkConnection conn, short playerControllerId) {
-		var lobbyPlayer = Instantiate(lobbyPlayerPrefab);
-		Debug.Log(playerControllerId);
-		if (lobbySlots[0]) {
-			lobbySlots[1] = lobbyPlayer;
-		}
-		else {
-			lobbySlots[0] = lobbyPlayer;
-		}
-		MenuManager.Get().UpdateLobbyDialog(lobbySlots);
-		return lobbyPlayer.gameObject;
-	}
+	#endregion
 
-	public override void OnServerConnect(NetworkConnection conn) {
-		//Debug.Log(lobbySlots.Length);
-	}
-
-	void OnClientEnterLobby() {
-		//this.lobbySlots
-		//this.matches
-	}
-
-	void OnClientExitLobby() {
-
-	}
-
-	void OnClientReady(bool readyState) {
-
-	}
 }

@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using System.Collections.Generic;
 
 /*
  * This class is the manager for the main menu of the game
@@ -59,6 +60,9 @@ public class MenuManager : MonoBehaviour {
 		LocalDialog.SetActive(false);
 		NetworkDialog.SetActive(false);
 
+		LeftLobbySamurai.enabled = false;
+		RightLobbySamurai.enabled = false;
+
 		shadeFadingOut = true;
 		playTextFading = true;
 	}
@@ -102,21 +106,13 @@ public class MenuManager : MonoBehaviour {
 		return FindObjectOfType<MenuManager>();
 	}
 
-	public void UpdateLobbyDialog(NetworkLobbyPlayer[] lobbySlots) {
-		LeftLobbySamurai.enabled = false;
-		RightLobbySamurai.enabled = false;
-		for (int i = 0; i < lobbySlots.Length; i++) {
-			if (lobbySlots[i]) {
-				if (lobbySlots[i].isServer) {
-					LeftLobbySamurai.enabled = true;
-					LeftCheckbox.sprite = (lobbySlots[i].readyToBegin) ? CheckedBox : UncheckedBox;
-				}
-				else {
-					RightLobbySamurai.enabled = true;
-					RightCheckbox.sprite = (lobbySlots[i].readyToBegin) ? CheckedBox : UncheckedBox;
-				}
-			}
-		}
+	public void UpdateLobbyDialog() {
+		var lobbyUtility = LobbyUtility.Get();
+		LeftLobbySamurai.enabled = lobbyUtility.HostInLobby;
+		RightLobbySamurai.enabled = lobbyUtility.ClientInLobby;
+
+		LeftCheckbox.sprite = (lobbyUtility.HostReady) ? CheckedBox : UncheckedBox;
+		RightCheckbox.sprite = (lobbyUtility.ClientReady) ? CheckedBox : UncheckedBox;
 	}
 
 	public void LeaveMenu(string sceneName) {
@@ -191,17 +187,6 @@ public class MenuManager : MonoBehaviour {
 		LobbyDialog.SetActive(!LobbyDialog.activeSelf);
 	}
 
-	/*
-	private void CreateNetworkGame(string roomName, string password, int bestOfNum) {
-		matchMaker.CreateInternetMatch();
-		// ToggleCreateGameDialog();
-
-		// show lobby dialog
-
-		ChangeTextInChildText("Waiting for another player", PlayText);
-		PlayText.gameObject.SetActive(true);
-	} */
-
 	#endregion
 
 
@@ -275,11 +260,20 @@ public class MenuManager : MonoBehaviour {
 	}
 
 	public void OnLobbyJoin() {
+		PlayText.gameObject.SetActive(false);
 		ToggleLobbyDialog();
+	}
+
+	public void OnLobbyReady() {
+		AudioManager.Get().PlayMenuSound();
+		LobbyUtility.Get().CmdSignalPlayerReady(LobbyPlayer.GetLocalPlayer().IsHost);
 	}
 
 	public void OnLobbyExit() {
 		AudioManager.Get().PlayMenuSound();
+
+		// Quit match
+
 		ToggleLobbyDialog();
 		ToggleNetworkMenu();
 	}

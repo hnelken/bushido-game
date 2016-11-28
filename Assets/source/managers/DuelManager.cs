@@ -93,9 +93,6 @@ public class DuelManager : MonoBehaviour {
 		// No strike, record time of flag pop and start timer
 		startTime = Time.realtimeSinceStartup;
 
-		if (networking) {
-			Utility.CmdSetLatency(startTime);
-		}
 
 		GUI.ToggleTimer();
 

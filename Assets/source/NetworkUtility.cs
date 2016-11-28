@@ -1,19 +1,17 @@
 ﻿using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
+using System.Collections.Generic;
 
 public class NetworkUtility : NetworkBehaviour {
 
 	public DuelManager manager;			// Reference to the manager using this utility
 
-	#region Server Commands
-
-	[Command]
-	public void CmdSetLatency(float clientStartTime) {
-
-		Debug.Log("Server: " + manager.GetStartTime() + " - Client: " + clientStartTime);
-		//RpcSetLatency(clientStartTime);
+	public static NetworkUtility Get() {
+		return FindObjectOfType<NetworkUtility>();
 	}
+
+	#region Server Commands
 
 	[Command]
 	public void CmdSetStartTime() {
@@ -38,11 +36,6 @@ public class NetworkUtility : NetworkBehaviour {
 	[ClientRpc]
 	public void RpcPopFlag() {
 		manager.PopFlag();
-	}
-
-	[ClientRpc]
-	private void RpcSetLatency(float clientStartTime) {
-		
 	}
 
 	[ClientRpc]
