@@ -25,6 +25,10 @@ public class BushidoNetManager : NetworkLobbyManager {
 		return GameObject.FindObjectOfType<BushidoNetManager>();
 	}
 
+	public void OnBothPlayersReady() {
+		ServerChangeScene(networkSceneName);
+	}
+
 	#endregion
 
 }

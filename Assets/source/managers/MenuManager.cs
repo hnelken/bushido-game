@@ -142,9 +142,10 @@ public class MenuManager : MonoBehaviour {
 	}
 
 	public IEnumerator CountDown() {
-		yield return new WaitForSeconds(3);
+		yield return new WaitForSeconds(5);
+		Debug.Log("Changing scene");
 
-		Debug.Log("Change Scene Now");
+		BushidoNetManager.Get().OnBothPlayersReady();
 	}
 
 	#endregion
@@ -293,6 +294,7 @@ public class MenuManager : MonoBehaviour {
 	public void OnLobbyReady() {
 		AudioManager.Get().PlayMenuSound();
 
+		// Find local player and give ready signal
 		foreach (LobbyPlayer player in LobbyPlayer.GetAll()) {
 			if (player.isLocalPlayer) {
 				player.CmdGiveReadySignal();
