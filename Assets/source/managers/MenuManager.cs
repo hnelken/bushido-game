@@ -292,17 +292,28 @@ public class MenuManager : MonoBehaviour {
 
 	public void OnLobbyReady() {
 		AudioManager.Get().PlayMenuSound();
-		LobbyUtility.Get().CmdSignalPlayerReady(matchMaker.PlayingAsHost);
+
+		foreach (LobbyPlayer player in LobbyPlayer.GetAll()) {
+			if (player.isLocalPlayer) {
+				player.CmdGiveReadySignal();
+				return;
+			}
+		}
 	}
 
 	public void OnLobbyExit() {
 		AudioManager.Get().PlayMenuSound();
 
 		// Quit match
-		Network.Disconnect();
+		if (matchMaker.PlayingAsHost) {
+			NetworkManager.singleton.StopHost();
+		}
+		else {
+			NetworkManager.singleton.StopClient();
+		}
 
-		ToggleLobbyDialog();
-		ToggleNetworkMenu();
+		//ToggleLobbyDialog();
+		//ToggleNetworkMenu();
 	}
 
 	public void OnCreateGameToggle() {

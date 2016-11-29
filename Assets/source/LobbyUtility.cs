@@ -70,6 +70,16 @@ public class LobbyUtility : NetworkBehaviour {
 		}
 	}
 
+	public void OnPlayerReady(bool hostSamurai) {
+		// Update lobby ready status
+		if (hostSamurai) {
+			hostReady = true;
+		}
+		else {
+			clientReady = true;
+		}
+	}
+
 	#endregion
 
 
@@ -93,22 +103,6 @@ public class LobbyUtility : NetworkBehaviour {
 	private void OnClientReadyStatusChanged(bool newClientReady) {
 		clientReady = newClientReady;
 		MenuManager.Get().UpdateLobbyReadyBoxes(hostReady, newClientReady);
-	}
-
-	#endregion
-
-
-	#region Server Commands
-
-	[Command]
-	public void CmdSignalPlayerReady(bool hostSamurai) {
-		// Update lobby ready status
-		if (hostSamurai) {
-			hostReady = true;
-		}
-		else {
-			clientReady = true;
-		}
 	}
 
 	#endregion

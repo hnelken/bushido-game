@@ -32,6 +32,12 @@ public class LobbyPlayer : NetworkLobbyPlayer {
 	}
 
 	[Command]
+	public void CmdGiveReadySignal() {
+		LobbyUtility.Get().OnPlayerReady(isHost);
+		ready = true;
+	}
+
+	[Command]
 	public void CmdAddPlayerToLobby() {
 		isHost = LobbyUtility.Get().OnPlayerEnteredLobby();
 	}

@@ -15,6 +15,12 @@ public class BushidoNetManager : NetworkLobbyManager {
 
 	#region Public API
 
+	public override void OnLobbyClientExit ()
+	{
+		base.OnLobbyClientExit ();
+		Debug.Log("Client left lobby");
+	}
+
 	public static BushidoNetManager Get() {
 		return GameObject.FindObjectOfType<BushidoNetManager>();
 	}
