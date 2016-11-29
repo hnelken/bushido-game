@@ -4,7 +4,10 @@ using System.Collections;
 
 public class LobbyPlayer : NetworkLobbyPlayer {
 
-	private bool isHost;
+	[SyncVar]
+	public bool isHost;
+
+	[SyncVar]
 	private bool ready;
 
 	public bool IsHost {
@@ -19,27 +22,17 @@ public class LobbyPlayer : NetworkLobbyPlayer {
 		}
 	}
 
-	public static LobbyPlayer GetLocalPlayer() {
-		foreach (LobbyPlayer player in GetAll()) {
-			if (player.isLocalPlayer) {
-				return player;
-			}
-		}
-		Debug.LogError("No Local Player");
-		return null;
-	}
-
 	public static LobbyPlayer[] GetAll() {
 		return FindObjectsOfType<LobbyPlayer>();
 	}
-
-	[ClientRpc]
-	public void RpcSignalReady() {
-		ready = true;
+		
+	public override void OnStartLocalPlayer() {
+		Debug.Log("Local Client");
+		CmdAddPlayerToLobby();
 	}
 
-	[ClientRpc]
-	public void RpcSetAsHost() {
-		isHost = true;
+	[Command]
+	public void CmdAddPlayerToLobby() {
+		isHost = LobbyUtility.Get().OnPlayerEnteredLobby();
 	}
 }

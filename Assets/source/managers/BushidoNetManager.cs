@@ -13,25 +13,6 @@ public class BushidoNetManager : NetworkLobbyManager {
 	#endregion
 
 
-	#region Overriden Callbacks
-
-	public override GameObject OnLobbyServerCreateLobbyPlayer(NetworkConnection conn, short playerControllerId) {
-		var lobbyPlayer = Instantiate(lobbyPlayerPrefab) as LobbyPlayer;
-		var lobbyUtility = LobbyUtility.Get();
-		lobbyUtility.AddPlayerToLobby(lobbyPlayer);
-
-		Debug.Log("LobbyPlayer created");
-		return lobbyPlayer.gameObject;
-	}
-		
-	public override void OnLobbyClientEnter() {
-		Debug.Log("Client entered");
-		//NetworkUtility.Get().CmdUpdateLobbyUI();
-	}
-
-	#endregion
-
-
 	#region Public API
 
 	public static BushidoNetManager Get() {

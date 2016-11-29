@@ -33,6 +33,8 @@ public class MenuManager : MonoBehaviour {
 	private bool openAnimsDone;
 	private bool localSettings;
 	private bool leavingMenu;
+	private bool lobbyFull;
+	private bool inLobby;
 	private bool input;
 
 	private int titleHeight;
@@ -106,13 +108,31 @@ public class MenuManager : MonoBehaviour {
 		return FindObjectOfType<MenuManager>();
 	}
 
-	public void UpdateLobbyDialog() {
-		var lobbyUtility = LobbyUtility.Get();
-		LeftLobbySamurai.enabled = lobbyUtility.HostInLobby;
-		RightLobbySamurai.enabled = lobbyUtility.ClientInLobby;
+	public void UpdateLobbySamurai(bool hostInLobby, bool clientInLobby) {
+		LeftLobbySamurai.enabled = hostInLobby;
+		RightLobbySamurai.enabled = clientInLobby;
+		if (!LobbyDialog.activeSelf) {
+			ActivateLobby();
+		}
+	}
 
-		LeftCheckbox.sprite = (lobbyUtility.HostReady) ? CheckedBox : UncheckedBox;
-		RightCheckbox.sprite = (lobbyUtility.ClientReady) ? CheckedBox : UncheckedBox;
+	public void UpdateLobbyReadyBoxes(bool hostReady, bool clientReady) {
+		// Left checkbox
+		LeftCheckbox.sprite =
+			(hostReady) 
+			? CheckedBox 
+			: UncheckedBox;
+
+		// Right checkbox
+		RightCheckbox.sprite = 
+			(clientReady)
+			? CheckedBox 
+			: UncheckedBox;
+
+		// Check if both players are ready
+		if (hostReady && clientReady) {
+			StartCoroutine(CountDown());
+		}
 	}
 
 	public void LeaveMenu(string sceneName) {
@@ -121,10 +141,21 @@ public class MenuManager : MonoBehaviour {
 		ToggleShade();
 	}
 
+	public IEnumerator CountDown() {
+		yield return new WaitForSeconds(3);
+
+		Debug.Log("Change Scene Now");
+	}
+
 	#endregion
 
 
 	#region Private API
+
+	private void ActivateLobby() {
+		PlayText.gameObject.SetActive(false);
+		ToggleLobbyDialog();
+	}
 
 	private void CheckForInput() {
 		// Check for input on the initial menu
@@ -259,20 +290,16 @@ public class MenuManager : MonoBehaviour {
 		PlayText.gameObject.SetActive(true);
 	}
 
-	public void OnLobbyJoin() {
-		PlayText.gameObject.SetActive(false);
-		ToggleLobbyDialog();
-	}
-
 	public void OnLobbyReady() {
 		AudioManager.Get().PlayMenuSound();
-		LobbyUtility.Get().CmdSignalPlayerReady(LobbyPlayer.GetLocalPlayer().IsHost);
+		LobbyUtility.Get().CmdSignalPlayerReady(matchMaker.PlayingAsHost);
 	}
 
 	public void OnLobbyExit() {
 		AudioManager.Get().PlayMenuSound();
 
 		// Quit match
+		Network.Disconnect();
 
 		ToggleLobbyDialog();
 		ToggleNetworkMenu();

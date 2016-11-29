@@ -31,26 +31,22 @@ public class LobbyUtility : NetworkBehaviour {
 		}
 	}
 
-	public List<LobbyPlayer> Lobby {
-		get {
-			return lobby;
-		}
-	}
-
 	#endregion
 
 
 	#region Private Variables
 
-	private List<LobbyPlayer> lobby = new List<LobbyPlayer>();
+	[SyncVar(hook = "OnHostReadyStatusChanged")]
+	private bool hostReady;
 
-	[SyncVar]
-	private bool hostReady, clientReady;
+	[SyncVar(hook = "OnClientReadyStatusChanged")]
+	private bool clientReady;
 
-	[SyncVar]
-	private bool hostInLobby, clientInLobby;
+	[SyncVar(hook = "OnHostEnteredLobby")]
+	private bool hostInLobby;
 
-	private int countDown = 3;
+	[SyncVar(hook = "OnClientEnteredLobby")]
+	private bool clientInLobby;
 
 	#endregion
 
@@ -61,27 +57,42 @@ public class LobbyUtility : NetworkBehaviour {
 		return FindObjectOfType<LobbyUtility>();
 	}
 
-	public void AddPlayerToLobby(LobbyPlayer player) {
-		// Set player as host or client and update lobby status
-		if (lobby.Count == 0) {
+	// Returns whether the player was host or client
+	public bool OnPlayerEnteredLobby() {
+		// Update lobby status
+		if (!hostInLobby) {
 			hostInLobby = true;
-			player.RpcSetAsHost();
+			return true;
 		}
 		else {
 			clientInLobby = true;
+			return false;
 		}
-
-		// Add player to lobby slots
-		lobby.Add(player);
-
-		// Update lobby UI
-		//RpcUpdateLobbyUI();
 	}
 
-	public IEnumerator CountDown() {
-		yield return new WaitForSeconds(countDown);
+	#endregion
 
-		Debug.Log("Change Scene Now");
+
+	#region SyncVar Hooks
+
+	private void OnHostEnteredLobby(bool newHostInLobby) {
+		hostInLobby = newHostInLobby;
+		MenuManager.Get().UpdateLobbySamurai(newHostInLobby, clientInLobby);
+	}
+
+	private void OnClientEnteredLobby(bool newClientInLobby) {
+		clientInLobby = newClientInLobby;
+		MenuManager.Get().UpdateLobbySamurai(hostInLobby, newClientInLobby);
+	}
+
+	private void OnHostReadyStatusChanged(bool newHostReady) {
+		hostReady = newHostReady;
+		MenuManager.Get().UpdateLobbyReadyBoxes(newHostReady, clientReady);
+	}
+
+	private void OnClientReadyStatusChanged(bool newClientReady) {
+		clientReady = newClientReady;
+		MenuManager.Get().UpdateLobbyReadyBoxes(hostReady, newClientReady);
 	}
 
 	#endregion
@@ -91,7 +102,6 @@ public class LobbyUtility : NetworkBehaviour {
 
 	[Command]
 	public void CmdSignalPlayerReady(bool hostSamurai) {
-
 		// Update lobby ready status
 		if (hostSamurai) {
 			hostReady = true;
@@ -99,25 +109,6 @@ public class LobbyUtility : NetworkBehaviour {
 		else {
 			clientReady = true;
 		}
-
-		// Update lobby UI
-		RpcUpdateLobbyUI();
-
-		// Check if both players are ready
-		if (hostReady && clientReady) {
-			StartCoroutine(CountDown());
-		}
-	}
-
-	#endregion
-
-
-	#region Client RPC's
-
-	[ClientRpc]
-	public void RpcUpdateLobbyUI() {
-		// Update lobby UI on both clients
-		MenuManager.Get().UpdateLobbyDialog();
 	}
 
 	#endregion
