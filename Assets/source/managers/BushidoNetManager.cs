@@ -25,8 +25,12 @@ public class BushidoNetManager : NetworkLobbyManager {
 		return GameObject.FindObjectOfType<BushidoNetManager>();
 	}
 
+	public override void OnLobbyServerPlayersReady() {
+		Debug.Log("Both players ready");
+	}
+
 	public void OnBothPlayersReady() {
-		ServerChangeScene(networkSceneName);
+		ServerChangeScene("NetworkDuel");
 	}
 
 	#endregion

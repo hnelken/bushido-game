@@ -34,6 +34,7 @@ public class LobbyPlayer : NetworkLobbyPlayer {
 	[Command]
 	public void CmdGiveReadySignal() {
 		LobbyUtility.Get().OnPlayerReady(isHost);
+		SendReadyToBeginMessage();
 		ready = true;
 	}
 
