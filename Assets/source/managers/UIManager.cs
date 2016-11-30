@@ -12,9 +12,15 @@ public class UIManager : MonoBehaviour {
 
 	public Image LeftCheckbox, RightCheckbox;					// The left and right checkbox image elements
 	public Image LeftSamurai, RightSamurai;						// The image elements for the left and right samurai
-	public Image Shade, Flash;									// The black and white image elements for visual effects
-	public Image Flag;											// The centerpiece flag image element
-	public Image BG;											// The background image element
+	public Image Shade {										// The black and white image elements for visual effects
+		get {
+			if (!shade) {
+				shade = GameObject.Find("Shade").GetComponent<Image>();
+			}
+			return shade;
+		}
+	}
+	public Image Flag, Flash;									// The centerpiece flag image element
 
 	public GameObject Outline;									// Gameobject containing pre-match ready ui 
 	public Text ReactionTimer, MainText;						// The timer and main text elements
@@ -24,7 +30,8 @@ public class UIManager : MonoBehaviour {
 	
 	
 	#region Private Variables
-	
+
+	private Image shade;
 	private DuelManager manager;								// The required duel manager component
 
 	private bool roundStart, roundEnd, matchEnd;

@@ -5,7 +5,15 @@ public class DuelManager : MonoBehaviour {
 
 	#region Inspector References + Public Properties
 
-	public NetworkUtility Utility;
+	public NetworkUtility Utility {
+		get {
+			if (!utility) {
+				utility = NetworkUtility.Get();
+			}
+			return utility;
+		}
+	}
+	//private NetworkUtility Utility;
 	public Samurai LeftSamurai, RightSamurai;
 	public bool networking;
 
@@ -16,6 +24,8 @@ public class DuelManager : MonoBehaviour {
 	
 	
 	#region Private Variables
+
+	private NetworkUtility utility;
 
 	private const int strikeLimit = 2;						// Number of strikes required to lose a round
 	private int winLimit = 3;							// Number of wins required to win the match
@@ -41,6 +51,8 @@ public class DuelManager : MonoBehaviour {
 	
 	// Initialization
 	void Awake() {
+		//Utility = NetworkUtility.Get();
+
 		// Get UI manager
 		GUI = GetComponent<UIManager>();
 
