@@ -23,18 +23,19 @@ public class MenuManager : MonoBehaviour {
 		}
 	}
 
-	public LobbyManager Lobby {
+	public BushidoMatchMaker MatchMaker {
 		get {
-			if (!lobby) {
-				lobby = LobbyMenu.GetComponent<LobbyManager>();
+			if (!matchMaker) {
+				matchMaker = GetComponent<BushidoMatchMaker>();
 			}
-			return lobby;
+			return matchMaker;
 		}
 	}
 
+	public LobbyManager Lobby;
+
 	#region Private Variables
 
-	private LobbyManager lobby;
 	private AudioManager audioManager;
 	private BushidoMatchMaker matchMaker;
 
@@ -55,17 +56,12 @@ public class MenuManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		matchMaker = GetComponent<BushidoMatchMaker>();
 
 		titleHeight = ((int)-TitleText.preferredHeight * 3) / 4;
 
 		HideTextAlpha(PlayText);
 		HideTextAlpha(GetTextComponentInChild(PlayText));
 		FillShade();
-
-		MultiPlayMenu.SetActive(false);
-		NetworkMenu.SetActive(false);
-		LobbyMenu.SetActive(false);
 
 		shadeFadingOut = true;
 		playTextFading = true;
@@ -120,12 +116,28 @@ public class MenuManager : MonoBehaviour {
 		return FindObjectOfType<MenuManager>();
 	}
 
+	public void OnBothPlayersReady(bool localLobby) {
+		StartCoroutine(CountDown(localLobby));
+	}
+
+	public IEnumerator CountDown(bool localLobby) {
+		yield return new WaitForSeconds(5);
+		Debug.Log("Changing scene");
+
+		if (localLobby) {
+			LeaveMenu("LocalDuel");
+		}
+		else {
+			LeaveMenu("NetworkDuel");
+		}
+	}
+
 	public bool OnNetworkPlayerEnteredLobby() {
-		bool isHost = Lobby.OnPlayerEnteredLobby();
+		Debug.Log("Lobby: " + LobbyMenu.activeSelf);
 		if (!LobbyMenu.activeSelf) {
 			ShowNetworkLobby();
 		}
-		return isHost;
+		return Lobby.OnPlayerEnteredLobby();
 	}
 
 	public void ShowNetworkLobby() {
@@ -198,12 +210,16 @@ public class MenuManager : MonoBehaviour {
 	}
 
 	private void ToggleNetworkLobby() {
-		Lobby.PrepareNetworkLobby();
+		if (!LobbyMenu.activeSelf) {
+			Lobby.PrepareNetworkLobby();
+		}
 		LobbyMenu.SetActive(!LobbyMenu.activeSelf);
 	}
 
 	private void ToggleLocalLobby() {
-		Lobby.PrepareLocalLobby();
+		if (!LobbyMenu.activeSelf) {
+			Lobby.PrepareLocalLobby();
+		}
 		LobbyMenu.SetActive(!LobbyMenu.activeSelf);
 	}
 
@@ -231,7 +247,7 @@ public class MenuManager : MonoBehaviour {
 		AudioManager.Get().PlayMenuSound();
 		localSettings = true;
 
-		// Hide play menu and show info dialog
+		// Hide play menu and show local lobby
 		TogglePlayMenu();
 		ToggleLocalLobby();
 	}
@@ -247,7 +263,7 @@ public class MenuManager : MonoBehaviour {
 
 	public void OnQuickPlayPressed() {
 		AudioManager.Get().PlayMenuSound();
-		matchMaker.QuickPlay();
+		MatchMaker.QuickPlay();
 		ToggleNetworkMenu();
 
 		ChangeTextInChildText("Finding a game", PlayText);
@@ -261,8 +277,6 @@ public class MenuManager : MonoBehaviour {
 
 	public void OnFindGamePressed() {
 		AudioManager.Get().PlayMenuSound();
-
-		//ToggleNetworkMenu();
 	}
 
 	#endregion

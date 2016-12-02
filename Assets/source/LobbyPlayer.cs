@@ -5,7 +5,7 @@ using System.Collections;
 public class LobbyPlayer : NetworkLobbyPlayer {
 
 	[SyncVar]
-	private bool isHost;
+	public bool isHost;
 
 	[SyncVar]
 	private bool ready;
@@ -38,7 +38,6 @@ public class LobbyPlayer : NetworkLobbyPlayer {
 	}
 		
 	public override void OnStartLocalPlayer() {
-		Debug.Log("Local Client");
 		CmdAddPlayerToLobby();
 	}
 

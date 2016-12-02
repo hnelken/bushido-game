@@ -77,6 +77,7 @@ public class LobbyManager : NetworkBehaviour {
 	private bool clientInLobby;
 
 	private bool localLobby;
+	private bool playerIsHost;
 
 	#endregion
 
@@ -88,6 +89,7 @@ public class LobbyManager : NetworkBehaviour {
 		LeftCheckbox.sprite = UncheckedBox;
 		RightCheckbox.sprite = UncheckedBox;
 
+		/*
 		if (!localLobby) {
 			LeftSamurai.enabled = false;
 			RightSamurai.enabled = false;
@@ -95,7 +97,7 @@ public class LobbyManager : NetworkBehaviour {
 		else {
 			LeftSamurai.enabled = true;
 			RightSamurai.enabled = true;
-		}
+		}*/
 	}
 
 	#endregion
@@ -103,16 +105,8 @@ public class LobbyManager : NetworkBehaviour {
 
 	#region Public API
 
-	public IEnumerator CountDown() {
-		yield return new WaitForSeconds(5);
-		Debug.Log("Changing scene");
-
-		if (localLobby) {
-			Menu.LeaveMenu("LocalDuel");
-		}
-		else {
-			Menu.LeaveMenu("NetworkDuel");
-		}
+	public static LobbyManager Get() {
+		return FindObjectOfType<LobbyManager>();
 	}
 
 	// Returns whether the player was host or client
@@ -138,12 +132,6 @@ public class LobbyManager : NetworkBehaviour {
 		}
 	}
 
-	public void GoToLocalScene() {
-		// Set game wins based on UI and begin countdown
-		int.TryParse(BestOfText.text, out BushidoNetManager.Get().matchLimit);
-		StartCoroutine(CountDown());
-	}
-
 	// Prepare the lobby menu for a local lobby
 	public void PrepareLocalLobby() {
 		// Set preferences for local settings
@@ -151,15 +139,13 @@ public class LobbyManager : NetworkBehaviour {
 		bestOfIndex = 1;
 
 		hostInLobby = true;
-		hostReady = false;
-
 		clientInLobby = true;
+
+		hostReady = false;
 		clientReady = false;
 
 		// Update UI
 		UpdateBestOfText();
-		UpdateLobbySamurai();
-		UpdateLobbyReadyBoxes();
 		NetReady.gameObject.SetActive(false);
 		LeftReady.gameObject.SetActive(true);
 		RightReady.gameObject.SetActive(true);
@@ -171,19 +157,32 @@ public class LobbyManager : NetworkBehaviour {
 		localLobby = false;
 		bestOfIndex = 1;
 
-		hostInLobby = false;
-		hostReady = false;
-
-		clientInLobby = false;
-		clientReady = false;
-
 		// Update UI
 		UpdateBestOfText();
-		UpdateLobbySamurai();
-		UpdateLobbyReadyBoxes();
 		NetReady.gameObject.SetActive(true);
 		LeftReady.gameObject.SetActive(false);
 		RightReady.gameObject.SetActive(false);
+	}
+
+	public void ClearReadyStatus() {
+		hostReady = false;
+		clientReady = false;
+
+		if (localLobby) {
+			LeftReady.gameObject.SetActive(true);
+			RightReady.gameObject.SetActive(true);
+			UpdateLobbyReadyBoxes();
+		}
+		else {
+			NetReady.gameObject.SetActive(true);
+			LeftArrow.gameObject.SetActive(true);
+			RightArrow.gameObject.SetActive(true);
+		}
+	}
+
+	[Command]
+	public void CmdClearReadyStatus() {
+		ClearReadyStatus();
 	}
 
 	#endregion
@@ -203,6 +202,7 @@ public class LobbyManager : NetworkBehaviour {
 
 	private void OnHostEnteredLobby(bool newHostInLobby) {
 		hostInLobby = newHostInLobby;
+		Debug.Log("Host entered: " + newHostInLobby);
 		UpdateLobbySamurai();
 	}
 
@@ -218,6 +218,9 @@ public class LobbyManager : NetworkBehaviour {
 
 	public void OnNetworkReady() {
 		Menu.Audio.PlayMenuSound();
+
+		LeftArrow.gameObject.SetActive(false);
+		RightArrow.gameObject.SetActive(false);
 
 		// Find local player and give ready signal
 		foreach (LobbyPlayer player in LobbyPlayer.GetAll()) {
@@ -235,8 +238,6 @@ public class LobbyManager : NetworkBehaviour {
 		hostReady = true;
 
 		// Update UI
-		LeftArrow.gameObject.SetActive(false);
-		RightArrow.gameObject.SetActive(false);
 		LeftReady.gameObject.SetActive(false);
 		UpdateLobbyReadyBoxes();
 	}
@@ -248,8 +249,6 @@ public class LobbyManager : NetworkBehaviour {
 		clientReady = true;
 
 		// Update UI
-		LeftArrow.gameObject.SetActive(false);
-		RightArrow.gameObject.SetActive(false);
 		RightReady.gameObject.SetActive(false);
 		UpdateLobbyReadyBoxes();
 	}
@@ -267,17 +266,25 @@ public class LobbyManager : NetworkBehaviour {
 
 	public void OnLeftPressed() {
 		Menu.Audio.PlayMenuSound();
-		bestOfIndex = (bestOfIndex > 0)
-			? bestOfIndex - 1
-			: bestOfOptions.Length - 1;
+		if (!localLobby) {
+			CmdClearReadyStatus();
+		}
+		else {
+			ClearReadyStatus();
+		}
+		bestOfIndex = (bestOfIndex > 0) ? bestOfIndex - 1 : bestOfOptions.Length - 1;
 		UpdateBestOfText();
 	}
 
 	public void OnRightPressed() {
 		Menu.Audio.PlayMenuSound();
-		bestOfIndex = (bestOfIndex < bestOfOptions.Length - 1) 
-			? bestOfIndex + 1
-			: 0;
+		if (!localLobby) {
+			CmdClearReadyStatus();
+		}
+		else {
+			ClearReadyStatus();
+		}
+		bestOfIndex = (bestOfIndex < bestOfOptions.Length - 1) ? bestOfIndex + 1 : 0;
 		UpdateBestOfText();
 	}
 
@@ -289,6 +296,7 @@ public class LobbyManager : NetworkBehaviour {
 	// Updates the samurai image elements based on presence of players
 	private void UpdateLobbySamurai() {
 		// Enable or disable the samurai images
+		Debug.Log("left: " + hostInLobby);
 		LeftSamurai.enabled = hostInLobby;
 		RightSamurai.enabled = clientInLobby;
 	}
@@ -299,11 +307,31 @@ public class LobbyManager : NetworkBehaviour {
 		LeftCheckbox.sprite = (hostReady) ? CheckedBox : UncheckedBox;
 		RightCheckbox.sprite = (clientReady) ? CheckedBox : UncheckedBox;
 
+		// Update ready buttons
+		if (localLobby) {
+			LeftReady.gameObject.SetActive(!hostReady);
+			RightReady.gameObject.SetActive(!clientReady);
+		}
+		else if (Menu.MatchMaker.PlayingAsHost) {
+			NetReady.gameObject.SetActive(!hostReady);
+		}
+		else {
+			NetReady.gameObject.SetActive(!clientReady);
+		}
+
+
 		// Check if both players are ready
 		if (hostReady && clientReady) {
+			// Turn off arrow buttons in local lobby
+			if (localLobby) {
+				LeftArrow.gameObject.SetActive(false);
+				RightArrow.gameObject.SetActive(false);
+			}
+
 			// Begin countdown to round begin
 			Debug.Log("Countdown to scene launch");
-			StartCoroutine(CountDown());
+			int.TryParse(BestOfText.text, out BushidoNetManager.Get().matchLimit);
+			Menu.OnBothPlayersReady(localLobby);
 		}
 	}
 
