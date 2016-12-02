@@ -38,6 +38,9 @@ public class LobbyPlayer : NetworkLobbyPlayer {
 	}
 		
 	public override void OnStartLocalPlayer() {
+		if (!Menu.LobbyMenu.activeSelf) {
+			Menu.ShowNetworkLobby();
+		}
 		CmdAddPlayerToLobby();
 	}
 

@@ -133,10 +133,6 @@ public class MenuManager : MonoBehaviour {
 	}
 
 	public bool OnNetworkPlayerEnteredLobby() {
-		Debug.Log("Lobby: " + LobbyMenu.activeSelf);
-		if (!LobbyMenu.activeSelf) {
-			ShowNetworkLobby();
-		}
 		return Lobby.OnPlayerEnteredLobby();
 	}
 
