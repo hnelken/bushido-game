@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 public class LobbyUtility : NetworkBehaviour {
 
+	/*
 	#region Public Accessors
 
 	public bool HostReady {
@@ -87,23 +88,23 @@ public class LobbyUtility : NetworkBehaviour {
 
 	private void OnHostEnteredLobby(bool newHostInLobby) {
 		hostInLobby = newHostInLobby;
-		MenuManager.Get().UpdateLobbySamurai(newHostInLobby, clientInLobby);
+		MenuManager.Get().GetLobby(false).UpdateLobbySamurai();
 	}
 
 	private void OnClientEnteredLobby(bool newClientInLobby) {
 		clientInLobby = newClientInLobby;
-		MenuManager.Get().UpdateLobbySamurai(hostInLobby, newClientInLobby);
+		MenuManager.Get().GetLobby(false).UpdateLobbySamurai();
 	}
 
 	private void OnHostReadyStatusChanged(bool newHostReady) {
 		hostReady = newHostReady;
-		MenuManager.Get().UpdateLobbyReadyBoxes(newHostReady, clientReady);
+		MenuManager.Get().GetLobby(false).UpdateLobbyReadyBoxes();
 	}
 
 	private void OnClientReadyStatusChanged(bool newClientReady) {
 		clientReady = newClientReady;
-		MenuManager.Get().UpdateLobbyReadyBoxes(hostReady, newClientReady);
+		MenuManager.Get().GetLobby(false).UpdateLobbyReadyBoxes();
 	}
 
-	#endregion
+	#endregion */
 }

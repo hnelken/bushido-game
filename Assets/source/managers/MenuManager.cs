@@ -10,22 +10,32 @@ using System.Collections.Generic;
  */
 public class MenuManager : MonoBehaviour {
 
-	public Sprite CheckedBox, UncheckedBox;
-
 	public Image Shade;
-	public Image LeftCheckbox, RightCheckbox;
-	public Image LeftLobbySamurai, RightLobbySamurai;
-
-	public Text InfoText;
 	public Text PlayText, TitleText;
-	public Text LocalBestOf, NetworkBestOf;
+	public GameObject MultiPlayMenu, NetworkMenu, LobbyMenu;
 
-	public GameObject PlayMenu, LocalDialog, NetworkDialog, InfoDialog, LobbyDialog;
+	public AudioManager Audio {
+		get {
+			if (!audioManager) {
+				audioManager = AudioManager.Get();
+			}
+			return audioManager;
+		}
+	}
+
+	public LobbyManager Lobby {
+		get {
+			if (!lobby) {
+				lobby = LobbyMenu.GetComponent<LobbyManager>();
+			}
+			return lobby;
+		}
+	}
 
 	#region Private Variables
 
-	private string nextSceneName;
-
+	private LobbyManager lobby;
+	private AudioManager audioManager;
 	private BushidoMatchMaker matchMaker;
 
 	private bool shadeFadingIn, shadeFadingOut;
@@ -33,13 +43,10 @@ public class MenuManager : MonoBehaviour {
 	private bool openAnimsDone;
 	private bool localSettings;
 	private bool leavingMenu;
-	private bool lobbyFull;
-	private bool inLobby;
 	private bool input;
 
 	private int titleHeight;
-	private int bestOfIndex = 0;
-	private string[] bestOfOptions = {"3", "5", "7"};
+	private string nextSceneName;
 
 	#endregion
 
@@ -56,14 +63,9 @@ public class MenuManager : MonoBehaviour {
 		HideTextAlpha(GetTextComponentInChild(PlayText));
 		FillShade();
 
-		PlayMenu.SetActive(false);
-		InfoDialog.SetActive(false);
-		LobbyDialog.SetActive(false);
-		LocalDialog.SetActive(false);
-		NetworkDialog.SetActive(false);
-
-		LeftLobbySamurai.enabled = false;
-		RightLobbySamurai.enabled = false;
+		MultiPlayMenu.SetActive(false);
+		NetworkMenu.SetActive(false);
+		LobbyMenu.SetActive(false);
 
 		shadeFadingOut = true;
 		playTextFading = true;
@@ -73,6 +75,8 @@ public class MenuManager : MonoBehaviour {
 	void Update () {
 
 		CheckForInput();
+
+		/* ---- MANAGE ANIMATIONS EVERY FRAME ---- */
 
 		// Manage shade fading out
 		if (shadeFadingOut) {
@@ -95,8 +99,16 @@ public class MenuManager : MonoBehaviour {
 		else if (leavingMenu) {
 			leavingMenu = false;
 			EventManager.Nullify();
-			SceneManager.LoadScene(nextSceneName);
+
+			// Change scene
+			if (localSettings) {
+				SceneManager.LoadScene(nextSceneName);
+			}
+			else {
+				BushidoNetManager.Get().OnBothPlayersReady();
+			}
 		}
+
 	}
 
 	#endregion
@@ -108,31 +120,34 @@ public class MenuManager : MonoBehaviour {
 		return FindObjectOfType<MenuManager>();
 	}
 
-	public void UpdateLobbySamurai(bool hostInLobby, bool clientInLobby) {
-		LeftLobbySamurai.enabled = hostInLobby;
-		RightLobbySamurai.enabled = clientInLobby;
-		if (!LobbyDialog.activeSelf) {
-			ActivateLobby();
+	public bool OnNetworkPlayerEnteredLobby() {
+		bool isHost = Lobby.OnPlayerEnteredLobby();
+		if (!LobbyMenu.activeSelf) {
+			ShowNetworkLobby();
 		}
+		return isHost;
 	}
 
-	public void UpdateLobbyReadyBoxes(bool hostReady, bool clientReady) {
-		// Left checkbox
-		LeftCheckbox.sprite =
-			(hostReady) 
-			? CheckedBox 
-			: UncheckedBox;
+	public void ShowNetworkLobby() {
+		PlayText.gameObject.SetActive(false);
+		ToggleNetworkLobby();
+	}
 
-		// Right checkbox
-		RightCheckbox.sprite = 
-			(clientReady)
-			? CheckedBox 
-			: UncheckedBox;
+	public void ExitLocalLobby() {
+		ToggleLocalLobby();
+		TogglePlayMenu();
+	}
 
-		// Check if both players are ready
-		if (hostReady && clientReady) {
-			StartCoroutine(CountDown());
+	public void ExitNetworkLobby() {
+		/*
+		// Quit match
+		if (matchMaker.PlayingAsHost) {
+			NetworkManager.singleton.StopHost();
 		}
+		else {
+			NetworkManager.singleton.StopClient();
+		}
+		*/
 	}
 
 	public void LeaveMenu(string sceneName) {
@@ -141,22 +156,10 @@ public class MenuManager : MonoBehaviour {
 		ToggleShade();
 	}
 
-	public IEnumerator CountDown() {
-		yield return new WaitForSeconds(5);
-		Debug.Log("Changing scene");
-
-		BushidoNetManager.Get().OnBothPlayersReady();
-	}
-
 	#endregion
 
 
 	#region Private API
-
-	private void ActivateLobby() {
-		PlayText.gameObject.SetActive(false);
-		ToggleLobbyDialog();
-	}
 
 	private void CheckForInput() {
 		// Check for input on the initial menu
@@ -172,7 +175,7 @@ public class MenuManager : MonoBehaviour {
 
 				// Hide play text and show play menu
 				PlayText.gameObject.SetActive(false);
-				PlayMenu.SetActive(true);
+				MultiPlayMenu.SetActive(true);
 
 				// Prevent further non-button input
 				input = true;
@@ -186,37 +189,22 @@ public class MenuManager : MonoBehaviour {
 			|| Input.GetKeyDown(KeyCode.Space);
 	}
 
-	private void UpdateBestOfText() {
-		if (localSettings) {
-			ChangeTextInChildText(bestOfOptions[bestOfIndex], LocalBestOf);
-		}
-		else {
-			ChangeTextInChildText(bestOfOptions[bestOfIndex], NetworkBestOf);
-		}
-	}
-
-	public void MatchFound() {
-		ChangeTextInChildText("Joining game", PlayText);
-	}
-
 	private void TogglePlayMenu() {
-		PlayMenu.SetActive(!PlayMenu.activeSelf);
-	}
-
-	private void ToggleInfoDialog() {
-		InfoDialog.SetActive(!InfoDialog.activeSelf);
-	}
-
-	private void ToggleLocalMenu() {
-		LocalDialog.SetActive(!LocalDialog.activeSelf);
+		MultiPlayMenu.SetActive(!MultiPlayMenu.activeSelf);
 	}
 
 	private void ToggleNetworkMenu() {
-		NetworkDialog.SetActive(!NetworkDialog.activeSelf);
+		NetworkMenu.SetActive(!NetworkMenu.activeSelf);
 	}
 
-	private void ToggleLobbyDialog() {
-		LobbyDialog.SetActive(!LobbyDialog.activeSelf);
+	private void ToggleNetworkLobby() {
+		Lobby.PrepareNetworkLobby();
+		LobbyMenu.SetActive(!LobbyMenu.activeSelf);
+	}
+
+	private void ToggleLocalLobby() {
+		Lobby.PrepareLocalLobby();
+		LobbyMenu.SetActive(!LobbyMenu.activeSelf);
 	}
 
 	#endregion
@@ -229,7 +217,7 @@ public class MenuManager : MonoBehaviour {
 
 		// Close the menu that was open
 		if (localSettings) {
-			ToggleLocalMenu();
+			ToggleLocalLobby();
 		}
 		else {
 			ToggleNetworkMenu();
@@ -239,38 +227,13 @@ public class MenuManager : MonoBehaviour {
 		TogglePlayMenu();
 	}
 
-	public void OnInfoDialogOk() {
-		AudioManager.Get().PlayMenuSound();
-
-		// Close info dialog and open next menu
-		ToggleInfoDialog();
-
-		if (localSettings) {
-			ToggleLocalMenu();
-		}
-		else {
-			// Toggle lobby dialog
-		}
-	}
-
 	public void OnLocalGameSelect() {
 		AudioManager.Get().PlayMenuSound();
 		localSettings = true;
 
-		// Customize info dialog for local play
-		ChangeTextInChildText("Touch your side\nof the screen\nas soon as you see", InfoText);
-
 		// Hide play menu and show info dialog
 		TogglePlayMenu();
-		ToggleInfoDialog();
-	}
-
-	public void OnLocalMenuConfirm() {
-		AudioManager.Get().PlayMenuSound();
-
-		// Set game wins based on UI
-		int.TryParse(LocalBestOf.text, out BushidoNetManager.Get().matchLimit);
-		LeaveMenu("LocalDuel");
+		ToggleLocalLobby();
 	}
 
 	public void OnNetworkGameSelect() {
@@ -291,39 +254,9 @@ public class MenuManager : MonoBehaviour {
 		PlayText.gameObject.SetActive(true);
 	}
 
-	public void OnLobbyReady() {
-		AudioManager.Get().PlayMenuSound();
-
-		// Find local player and give ready signal
-		foreach (LobbyPlayer player in LobbyPlayer.GetAll()) {
-			if (player.isLocalPlayer) {
-				player.CmdGiveReadySignal();
-				return;
-			}
-		}
-	}
-
-	public void OnLobbyExit() {
-		AudioManager.Get().PlayMenuSound();
-
-		// Quit match
-		if (matchMaker.PlayingAsHost) {
-			NetworkManager.singleton.StopHost();
-		}
-		else {
-			NetworkManager.singleton.StopClient();
-		}
-
-		//ToggleLobbyDialog();
-		//ToggleNetworkMenu();
-	}
-
 	public void OnCreateGameToggle() {
 		AudioManager.Get().PlayMenuSound();
 
-		// Switch between network menu and create game dialog
-		ToggleNetworkMenu();
-		//ToggleCreateGameDialog();
 	}
 
 	public void OnFindGamePressed() {
@@ -332,22 +265,6 @@ public class MenuManager : MonoBehaviour {
 		//ToggleNetworkMenu();
 	}
 
-
-	public void OnLeftPressed() {
-		AudioManager.Get().PlayMenuSound();
-		bestOfIndex = (bestOfIndex > 0)
-			? bestOfIndex - 1
-			: bestOfOptions.Length - 1;
-		UpdateBestOfText();
-	}
-
-	public void OnRightPressed() {
-		AudioManager.Get().PlayMenuSound();
-		bestOfIndex = (bestOfIndex < bestOfOptions.Length - 1) 
-			? bestOfIndex + 1
-			: 0;
-		UpdateBestOfText();
-	}
 	#endregion
 
 

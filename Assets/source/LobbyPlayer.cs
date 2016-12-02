@@ -5,7 +5,7 @@ using System.Collections;
 public class LobbyPlayer : NetworkLobbyPlayer {
 
 	[SyncVar]
-	public bool isHost;
+	private bool isHost;
 
 	[SyncVar]
 	private bool ready;
@@ -22,6 +22,17 @@ public class LobbyPlayer : NetworkLobbyPlayer {
 		}
 	}
 
+	public MenuManager Menu {
+		get {
+			if (!menu) {
+				menu = MenuManager.Get();
+			}
+			return menu;
+		}
+	}
+
+	private MenuManager menu;
+
 	public static LobbyPlayer[] GetAll() {
 		return FindObjectsOfType<LobbyPlayer>();
 	}
@@ -33,13 +44,12 @@ public class LobbyPlayer : NetworkLobbyPlayer {
 
 	[Command]
 	public void CmdGiveReadySignal() {
-		LobbyUtility.Get().OnPlayerReady(isHost);
-		SendReadyToBeginMessage();
+		Menu.Lobby.OnPlayerReady(isHost);
 		ready = true;
 	}
 
 	[Command]
 	public void CmdAddPlayerToLobby() {
-		isHost = LobbyUtility.Get().OnPlayerEnteredLobby();
+		isHost = Menu.OnNetworkPlayerEnteredLobby();
 	}
 }
