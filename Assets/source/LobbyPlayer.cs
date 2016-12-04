@@ -36,6 +36,17 @@ public class LobbyPlayer : NetworkLobbyPlayer {
 	public static LobbyPlayer[] GetAll() {
 		return FindObjectsOfType<LobbyPlayer>();
 	}
+
+	public static LobbyPlayer GetLocalPlayer() {
+		// Find local player and give ready signal
+		foreach (LobbyPlayer player in LobbyPlayer.GetAll()) {
+			if (player.isLocalPlayer) {
+				return player;
+			}
+		}
+		Debug.Log("Local player not found");
+		return null;
+	}
 		
 	public override void OnStartLocalPlayer() {
 		if (!Menu.LobbyMenu.activeSelf) {
@@ -53,5 +64,10 @@ public class LobbyPlayer : NetworkLobbyPlayer {
 	[Command]
 	public void CmdAddPlayerToLobby() {
 		isHost = Menu.OnNetworkPlayerEnteredLobby();
+	}
+
+	[Command]
+	public void CmdChangeBestOfIndex(bool minus) {
+		Menu.Lobby.ChangeBestOfIndex(minus);
 	}
 }
