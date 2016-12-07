@@ -10,7 +10,6 @@ public class UIManager : MonoBehaviour {
 	public Sprite checkedBox, uncheckedBox;						// The sprites for the checkbox states
 	public Sprite idleSprite, attackSprite, tiedSprite;			// The sprites for different player states
 
-	public Image LeftCheckbox, RightCheckbox;					// The left and right checkbox image elements
 	public Image LeftSamurai, RightSamurai;						// The image elements for the left and right samurai
 	public Image Shade {										// The black and white image elements for visual effects
 		get {
@@ -22,7 +21,6 @@ public class UIManager : MonoBehaviour {
 	}
 	public Image Flag, Flash;									// The centerpiece flag image element
 
-	public GameObject Outline;									// Gameobject containing pre-match ready ui 
 	public Text ReactionTimer, MainText;						// The timer and main text elements
 	public Text LeftCount, RightCount;							// The win count text elements
 	
@@ -59,15 +57,11 @@ public class UIManager : MonoBehaviour {
 		rightIdlePosition = RightSamurai.rectTransform.anchoredPosition;
 
 		// Disable all text elements at beginning of round
-		LeftCount.enabled = false;
-		RightCount.enabled = false;
-		MainText.enabled = false;
+		LeftCount.gameObject.SetActive(false);
+		RightCount.gameObject.SetActive(false);
+		MainText.gameObject.SetActive(false);
 
 		Flag.gameObject.SetActive(false);
-
-		if (manager.networking) {
-			Outline.gameObject.SetActive(false);
-		}
 
 		// Set shade over screen and hide flash screen
 		FillShade();
@@ -128,27 +122,11 @@ public class UIManager : MonoBehaviour {
 	
 	#region Public API
 
-	public void SignalPlayerReady(bool leftSamurai) {
-		if (leftSamurai) {
-			LeftCheckbox.sprite = checkedBox;
-		}
-		else {
-			RightCheckbox.sprite = checkedBox;
-		}
-	}
-
-	public void OnBothPlayersReady() {
-		LeftCheckbox.enabled = false;
-		RightCheckbox.enabled = false;
-		Outline.gameObject.SetActive(false);
-	}
-
 	private void UpdateTimer() {
 		// Format and set the time on the timer text element
 		int time = manager.GetCurrentTime();
-		ReactionTimer.text = (time < 10)
-			? "0" + time.ToString()
-			: time.ToString();
+		string timerText = (time < 10) ? "0" + time.ToString() : time.ToString();
+		ChangeTextInChildText(timerText, ReactionTimer);
 	}
 
 	// Toggles the timer activity
@@ -186,19 +164,22 @@ public class UIManager : MonoBehaviour {
 	#region Private API
 
 	private void ChangeTextInChildText(string newText, Text text) {
-		Text child = text.transform.GetChild(0).GetComponentInChildren<Text>();
+		for (int i = 0; i < text.transform.childCount; i++) {
+			Text child = text.transform.GetChild(i).GetComponentInChildren<Text>();
+			child.text = newText;
+		}
 		text.text = newText;
-		child.text = newText;
 	}
 
 	// Update the win count text elements
 	private void RefreshWinCounts(bool leftSamurai) {
 		// Set text elements to show latest win counts
-		LeftCount.text = "P1\n" + manager.LeftSamurai.GetWinCount();
-		RightCount.text = "P2\n" + manager.RightSamurai.GetWinCount();
-
+		ChangeTextInChildText("P1\n" + manager.LeftSamurai.GetWinCount(), LeftCount);
+		ChangeTextInChildText("P2\n" + manager.RightSamurai.GetWinCount(), RightCount);
+		/*
 		LeftCount.color = leftSamurai ? Color.blue : Color.black;
 		RightCount.color = leftSamurai ? Color.black : Color.yellow;
+		*/
 
 	}
 
@@ -311,8 +292,8 @@ public class UIManager : MonoBehaviour {
 		SetPlayerPositions(leftTiePosition, rightTiePosition);
 
 		// Show main text element
-		MainText.text = "Tie!";
-		MainText.enabled = true;
+		ChangeTextInChildText("Tie!", MainText);
+		MainText.gameObject.SetActive(true);
 
 		// Begin fading flash element
 		ToggleFlash();
@@ -339,24 +320,24 @@ public class UIManager : MonoBehaviour {
 
 		// Set the main text element to reflect early strike
 		string player = GetPlayerString(false);
-		MainText.text = player + " struck too early!";
-		MainText.enabled = true;
+		ChangeTextInChildText(player + " struck too early!", MainText);
+		MainText.gameObject.SetActive(true);
 	}
 
 	// Displays UI representing a round win
 	private void ShowWinResult() {
 		// Refresh and display win count text elements
 		RefreshWinCounts(manager.LeftPlayerCausedResult());
-		LeftCount.enabled = true;
-		RightCount.enabled = true;
+		LeftCount.gameObject.SetActive(true);
+		RightCount.gameObject.SetActive(true);
 
 		// Change the sprite color of the player who lost the round
 		ShowPlayerLoss(true);
 
 		// Set main text element to reflect round win
 		string player = GetPlayerString(true);
-		MainText.text = player + " wins!";
-		MainText.enabled = true;
+		ChangeTextInChildText(player + " wins!", MainText);
+		MainText.gameObject.SetActive(true);
 	}
 
 	// Sets the color of the player that lost to black
@@ -378,16 +359,16 @@ public class UIManager : MonoBehaviour {
 	private void ShowMatchWin() {
 		// Set main text element to reflect match win
 		string player = GetPlayerString(true);
-		MainText.text = player + " wins the match!";
-		MainText.enabled = true;
+		ChangeTextInChildText(player + " wins the match!", MainText);
+		MainText.gameObject.SetActive(true);
 	}
 
 	// Clears the UI elements for a new round
 	private void ClearForNewRound() {
 		// Disables text elements
-		LeftCount.enabled = false;
-		RightCount.enabled = false;
-		MainText.enabled = false;
+		LeftCount.gameObject.SetActive(false);
+		RightCount.gameObject.SetActive(false);
+		MainText.gameObject.SetActive(false);
 
 		// Set player sprites and positions to show idle state
 		LeftSamurai.sprite = idleSprite;
@@ -397,7 +378,7 @@ public class UIManager : MonoBehaviour {
 		SetPlayerPositions(leftIdlePosition, rightIdlePosition);
 
 		// Sets timer text to default
-		ReactionTimer.text = "00";
+		ChangeTextInChildText("00", ReactionTimer);
 	}
 
 	#endregion
