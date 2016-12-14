@@ -32,15 +32,7 @@ public class LocalInput : MonoBehaviour {
 		CheckInput();
 
 		// Submit reaction inputs from either player
-		if (!manager.BothPlayersReady()) {
-			if (leftPlayerInput) {
-				manager.SignalPlayerReady(true);
-			}
-			if (rightPlayerInput) {
-				manager.SignalPlayerReady(false);
-			}
-		}
-		else if (manager.WaitingForInput()) {
+		if (manager.WaitingForInput()) {
 			int reactionTime = DuelManager.Get().GetCurrentTime();
 			if (leftPlayerInput) {
 				manager.TriggerReaction(true, reactionTime);

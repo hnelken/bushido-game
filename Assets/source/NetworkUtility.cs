@@ -14,11 +14,6 @@ public class NetworkUtility : NetworkBehaviour {
 	#region Server Commands
 
 	[Command]
-	public void CmdSetStartTime() {
-		RpcSetStartTime(Time.realtimeSinceStartup);
-	}
-
-	[Command]
 	public void CmdSetRandomWaitTime() {
 		RpcSetRandomWaitTime(Random.Range(4, 7));
 	}

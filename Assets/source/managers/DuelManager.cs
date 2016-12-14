@@ -43,7 +43,7 @@ public class DuelManager : MonoBehaviour {
 	private int reactTime;									// The time at which the first valid input was received
 	private int tieTime;									// The time at which the potentially tying input was received
 	private int currTime;
-	private int latency;
+
 	#endregion
 	
 	
@@ -51,13 +51,12 @@ public class DuelManager : MonoBehaviour {
 	
 	// Initialization
 	void Awake() {
-		//Utility = NetworkUtility.Get();
 
 		// Get UI manager
 		GUI = GetComponent<UIManager>();
 
 		// Get match limit from net manager
-		winLimit = BushidoNetManager.Get().matchLimit;
+		//winLimit = BushidoNetManager.Get().matchLimit;
 
 		LeftSamurai.SetManager(this);
 		RightSamurai.SetManager(this);
@@ -65,6 +64,8 @@ public class DuelManager : MonoBehaviour {
 		// Set event listeners
 		EventManager.GameStart += BeginRound;
 		EventManager.GameReset += ResetGame;
+
+		StartCoroutine(WaitAndStartRound());
 	}
 
 	void Update() {
@@ -96,7 +97,6 @@ public class DuelManager : MonoBehaviour {
 	}
 
 	public void TriggerGameStart() {
-		GUI.OnBothPlayersReady();
 		GUI.ToggleShadeForRoundStart();
 		AudioManager.Get().StartMusic();
 	}
@@ -114,9 +114,7 @@ public class DuelManager : MonoBehaviour {
 
 		AudioManager.Get().PlayPopSound();
 	}
-
-
-
+		
 	// Signal a player reaction during a round
 	// - leftSamurai: A boolean representing which player triggered this event
 	public void TriggerReaction(bool leftSamurai, int reactionTime) {
@@ -152,37 +150,6 @@ public class DuelManager : MonoBehaviour {
 			waitingForTie = false;
 			tyingInput = true;
 		}
-	}
-
-	public bool SignalPlayerReady(bool leftSamurai) {
-
-		if (networking && !BothPlayersInMatch()) {
-			return false;
-		}
-
-		if (leftSamurai) {
-			LeftSamurai.SignalPlayerReady();
-		}
-		else {
-			RightSamurai.SignalPlayerReady();
-		}
-
-		AudioManager.Get().PlayMenuSound();
-
-		// Check the players checkbox
-		GUI.SignalPlayerReady(leftSamurai);
-
-		if (BothPlayersReady()) {
-
-			// Delay the beginning of the round
-			StartCoroutine(WaitAndStartRound());
-		}
-
-		return true;
-	}
-
-	public bool BothPlayersReady() {
-		return LeftSamurai.IsPlayerReady() && RightSamurai.IsPlayerReady();
 	}
 
 	// Returns whether or not input will count as a reaction
