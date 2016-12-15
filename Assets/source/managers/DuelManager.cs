@@ -258,33 +258,6 @@ public class DuelManager : MonoBehaviour {
 			StartCoroutine(WaitAndRestartGame());
 		}
 	}
-	
-	// Signal that a player's input was fastest and counts as a win
-	// - leftSamurai: A boolean representing which player triggered this event
-	private void TriggerWin(bool leftSamurai) {
-		// Set the round result following the win
-		leftPlayerCausedResult = leftSamurai;
-
-		AudioManager.Get().PlayHitSound();
-
-		// Signal the win to the system
-		EventManager.TriggerGameWin();
-		
-		// Show the winner after a delay
-		StartCoroutine(WaitAndShowWinner());
-	}
-	
-	// Signal that the players tied
-	private void TriggerTie() {
-
-		AudioManager.Get().PlayTieSound();
-
-		// Signal the tie to the system
-		EventManager.TriggerGameTie();
-		
-		// Reset for a new round after a delay
-		StartCoroutine(WaitAndRestartGame());
-	}
 
 	private void UpdateCurrentTime() {
 		currTime = GetReactionTime();
@@ -342,28 +315,6 @@ public class DuelManager : MonoBehaviour {
 			}
 		}
 	}
-	
-	// Determines the result of a round with no strike after a slight delay to wait for tying input
-	public IEnumerator WaitForTyingInput(bool leftSamurai) {
-		yield return new WaitForSeconds(0.1f);
-
-		Debug.Log("First: " + reactTime + " - Second: " + tieTime);
-		
-		// Check if there was a tying input of equal reaction time
-		if (tyingInput && reactTime >= tieTime) {// && reactTime == tieTime) {
-			if (reactTime > tieTime) {
-				TriggerWin(!leftSamurai);
-			}
-			else {
-				// Players tied
-				TriggerTie();
-			}
-		}
-		else {
-			// No tie, winner is delared
-			TriggerWin(leftSamurai);
-		}
-	}
 
 	public IEnumerator WaitAndShowReaction(bool leftSamurai) {
 		AudioManager.Get().PlayHitSound();
@@ -399,16 +350,6 @@ public class DuelManager : MonoBehaviour {
 
 		// Show round result and prepare to restart game
 		EventManager.TriggerGameResult();
-		StartCoroutine(WaitAndRestartGame());
-	}
-	
-	// Triggers the "show win result" event after 3 seconds
-	public IEnumerator WaitAndShowWinner() {
-		yield return new WaitForSeconds(2);
-		
-		EventManager.TriggerWinResult();
-		
-		// Reset for new round after some time
 		StartCoroutine(WaitAndRestartGame());
 	}
 	

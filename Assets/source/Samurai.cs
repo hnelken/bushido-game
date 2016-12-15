@@ -29,9 +29,7 @@ public class Samurai : MonoBehaviour {
 		displayName = (leftSamurai) ? "Player 1" : "Player 2";
 		
 		// Set event listeners
-		EventManager.GameWin += SetPlayerAttack;
 		EventManager.GameStrike += PlayerStriked;
-		EventManager.WinResult += RoundEnded;
 		EventManager.GameResult += RoundEnded;
 	}
 	

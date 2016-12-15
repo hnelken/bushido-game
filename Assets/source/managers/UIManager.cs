@@ -70,10 +70,6 @@ public class UIManager : MonoBehaviour {
 		// Set event listeners
 		EventManager.GameStart += ToggleShade;
 
-		EventManager.GameTie += ShowTie;
-		EventManager.GameWin += ShowAttack;
-		EventManager.WinResult += ShowWinResult;
-
 		EventManager.GameReset += ClearForNewRound;
 		EventManager.GameOver += ShowMatchWin;
 
