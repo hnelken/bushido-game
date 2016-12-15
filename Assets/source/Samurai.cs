@@ -32,6 +32,7 @@ public class Samurai : MonoBehaviour {
 		EventManager.GameWin += SetPlayerAttack;
 		EventManager.GameStrike += PlayerStriked;
 		EventManager.WinResult += RoundEnded;
+		EventManager.GameResult += RoundEnded;
 	}
 	
 	#endregion
@@ -110,6 +111,9 @@ public class Samurai : MonoBehaviour {
 	
 	// Sets the players color to show the loss state
 	private void RoundEnded() {
+		if (WonLastRound()) {
+			winCount++;
+		}
 		strikeCount = 0;
 	}
 	

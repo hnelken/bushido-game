@@ -69,12 +69,17 @@ public class UIManager : MonoBehaviour {
 		
 		// Set event listeners
 		EventManager.GameStart += ToggleShade;
+
 		EventManager.GameTie += ShowTie;
 		EventManager.GameWin += ShowAttack;
-		EventManager.GameStrike += ShowStrike;
 		EventManager.WinResult += ShowWinResult;
+
 		EventManager.GameReset += ClearForNewRound;
 		EventManager.GameOver += ShowMatchWin;
+
+		EventManager.GameResult += ShowResult;
+		EventManager.GameStrike += ShowStrike;
+		EventManager.GameReaction += ShowAttack;
 	}
 	
 	// Update is called once per frame
@@ -172,15 +177,10 @@ public class UIManager : MonoBehaviour {
 	}
 
 	// Update the win count text elements
-	private void RefreshWinCounts(bool leftSamurai) {
+	private void RefreshWinCounts() {
 		// Set text elements to show latest win counts
 		ChangeTextInChildText("P1\n" + manager.LeftSamurai.GetWinCount(), LeftCount);
 		ChangeTextInChildText("P2\n" + manager.RightSamurai.GetWinCount(), RightCount);
-		/*
-		LeftCount.color = leftSamurai ? Color.blue : Color.black;
-		RightCount.color = leftSamurai ? Color.black : Color.yellow;
-		*/
-
 	}
 
 	// Returns the display name of the player that caused the given result
@@ -327,7 +327,7 @@ public class UIManager : MonoBehaviour {
 	// Displays UI representing a round win
 	private void ShowWinResult() {
 		// Refresh and display win count text elements
-		RefreshWinCounts(manager.LeftPlayerCausedResult());
+		RefreshWinCounts();
 		LeftCount.gameObject.SetActive(true);
 		RightCount.gameObject.SetActive(true);
 
@@ -338,6 +338,36 @@ public class UIManager : MonoBehaviour {
 		string player = GetPlayerString(true);
 		ChangeTextInChildText(player + " wins!", MainText);
 		MainText.gameObject.SetActive(true);
+	}
+
+	private void ShowResult() {
+		// Refresh and display win count text elements
+		RefreshWinCounts();
+		LeftCount.gameObject.SetActive(true);
+		RightCount.gameObject.SetActive(true);
+
+		if (manager.ResultWasTie()) {
+			// Change the sprite color of both players
+			ShowPlayersTied();
+
+			// Set main text element to reflect tie
+			ChangeTextInChildText("Tie!", MainText);
+		}
+		else {
+			// Change the sprite color of the player who lost the round
+			ShowPlayerLoss(true);
+
+			// Set main text element to reflect round win
+			string player = GetPlayerString(true);
+			ChangeTextInChildText(player + " wins!", MainText);
+		}
+
+		MainText.gameObject.SetActive(true);
+	}
+		
+	private void ShowPlayersTied() {
+		LeftSamurai.color = Color.black;
+		RightSamurai.color = Color.black;
 	}
 
 	// Sets the color of the player that lost to black
