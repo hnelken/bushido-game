@@ -37,6 +37,7 @@ public class DuelManager : MonoBehaviour {
 	private bool playerStrike;								// True if a player has committed a strike
 	private bool tyingInput;								// True if there was tying input
 	private bool flagPopped;								// True if the flag is showing
+	private bool timeRanOut;
 
 	private float randomWait;								// The random wait time
 	private float startTime;								// The time at which the centerpiece icon was displayed
@@ -44,6 +45,7 @@ public class DuelManager : MonoBehaviour {
 	private int reactTime;									// The time at which the first valid input was received
 	private int tieTime;									// The time at which the potentially tying input was received
 	private int currTime;
+	private int maxTime = 100;
 
 	#endregion
 	
@@ -57,7 +59,7 @@ public class DuelManager : MonoBehaviour {
 		GUI = GetComponent<UIManager>();
 
 		// Get match limit from net manager
-		//winLimit = BushidoNetManager.Get().matchLimit;
+		winLimit = BushidoNetManager.Get().matchLimit;
 
 		LeftSamurai.SetManager(this);
 		RightSamurai.SetManager(this);
@@ -72,6 +74,9 @@ public class DuelManager : MonoBehaviour {
 	void Update() {
 		if (flagPopped) {
 			UpdateCurrentTime();
+			if (waitingForInput && !timeRanOut) {
+				CheckForTimeout();
+			}
 		}
 	}
 	
@@ -106,7 +111,6 @@ public class DuelManager : MonoBehaviour {
 		// No strike, record time of flag pop and start timer
 		startTime = Time.realtimeSinceStartup;
 
-
 		GUI.ToggleTimer();
 
 		// "Pop" the flag 
@@ -127,6 +131,8 @@ public class DuelManager : MonoBehaviour {
 				// Stop the updating of the timer UI element
 				GUI.ToggleTimer();
 
+				GUI.ToggleFlag();
+
 				// Flash a white screen
 				GUI.ShowFlash();
 				
@@ -138,7 +144,6 @@ public class DuelManager : MonoBehaviour {
 				waitingForInput = false;
 				waitingForTie = true;
 				StartCoroutine(WaitAndShowReaction(leftSamurai));
-				//StartCoroutine(WaitForTyingInput(leftSamurai));
 			}
 			else {
 				// The flag was not out, input is a strike.
@@ -186,6 +191,23 @@ public class DuelManager : MonoBehaviour {
 	
 	#region Private API
 
+	private void CheckForTimeout() {
+		if (currTime >= maxTime) {
+			AudioManager.Get().PlayStrikeSound();
+
+			waitingForInput = false;
+			timeRanOut = true;
+			resultWasTie = true;
+
+			// Stop GUI
+			GUI.ToggleTimer();
+
+			// Show round result and prepare to restart game
+			EventManager.TriggerGameResult();
+			StartCoroutine(WaitAndRestartGame());
+		}
+	}
+
 	// Enables input and begins the randomly timed wait before popping the flag
 	private void BeginRound() {
 		// Delayed negation of strike status to avoid UI issues
@@ -210,10 +232,13 @@ public class DuelManager : MonoBehaviour {
 		flagPopped = false;
 		waitingForInput = false;
 		waitingForTie = false;
+		resultWasTie = false;
+		timeRanOut = false;
 		startTime = 0;
 		reactTime = 0;
 		tieTime = 0;
 		currTime = 0;
+
 
 		// Start delayed wait before round start
 		StartCoroutine(WaitAndStartRound());
@@ -261,6 +286,9 @@ public class DuelManager : MonoBehaviour {
 
 	private void UpdateCurrentTime() {
 		currTime = GetReactionTime();
+		if (!timeRanOut) {
+			GUI.UpdateTimer();
+		}
 	}
 	
 	// Checks if either player has enough wins to claim the match

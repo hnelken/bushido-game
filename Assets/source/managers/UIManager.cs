@@ -8,7 +8,7 @@ public class UIManager : MonoBehaviour {
 	#region Editor References + Public Properties
 
 	public Sprite checkedBox, uncheckedBox;						// The sprites for the checkbox states
-	public Sprite idleSprite, attackSprite;			// The sprites for different player states
+	public Sprite idleSprite, attackSprite;						// The sprites for different player states
 
 	public Image LeftSamurai, RightSamurai;						// The image elements for the left and right samurai
 	public Image Shade {										// The black and white image elements for visual effects
@@ -78,9 +78,9 @@ public class UIManager : MonoBehaviour {
 	// Update is called once per frame
 	void Update() {
 		// Update the timer if its active
-		if (timing) {
-			UpdateTimer();
-		}
+		//if (timing) {
+		//	UpdateTimer();
+		//}
 
 		// Flash
 
@@ -120,7 +120,7 @@ public class UIManager : MonoBehaviour {
 	
 	#region Public API
 
-	private void UpdateTimer() {
+	public void UpdateTimer() {
 		// Format and set the time on the timer text element
 		int time = manager.GetCurrentTime();
 		string timerText = (time < 10) ? "0" + time.ToString() : time.ToString();
@@ -276,8 +276,6 @@ public class UIManager : MonoBehaviour {
 
 	// Displays UI representing a valid attack
 	private void ShowAttack() {
-		// Hide the flag
-		ToggleFlag();
 
 		// Sets the players sprite and position to show the attacking state
 		LeftSamurai.sprite = attackSprite;
@@ -365,6 +363,11 @@ public class UIManager : MonoBehaviour {
 		LeftSamurai.color = Color.white;
 		RightSamurai.color = Color.yellow;
 		SetPlayerPositions(leftIdlePosition, rightIdlePosition);
+
+		// Hide flag if not already hidden
+		if (Flag.isActiveAndEnabled) {
+			ToggleFlag();
+		}
 
 		// Sets timer text to default
 		ChangeTextInChildText("00", ReactionTimer);
