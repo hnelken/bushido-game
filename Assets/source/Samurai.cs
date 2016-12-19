@@ -83,12 +83,7 @@ public class Samurai : MonoBehaviour {
 	// Checks if this player won the last complete round
 	private bool WonLastRound() {
 		// Player's side must match player that caused result
-		if (manager.LeftPlayerCausedResult()) {
-			return leftSamurai;
-		}
-		else {
-			return !leftSamurai;
-		}
+		return (manager.LeftPlayerCausedResult()) ? leftSamurai : !leftSamurai;
 	}
 	
 	// Sets the players color to show the strikeout state

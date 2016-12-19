@@ -8,7 +8,7 @@ public class UIManager : MonoBehaviour {
 	#region Editor References + Public Properties
 
 	public Sprite checkedBox, uncheckedBox;						// The sprites for the checkbox states
-	public Sprite idleSprite, attackSprite, tiedSprite;			// The sprites for different player states
+	public Sprite idleSprite, attackSprite;			// The sprites for different player states
 
 	public Image LeftSamurai, RightSamurai;						// The image elements for the left and right samurai
 	public Image Shade {										// The black and white image elements for visual effects
@@ -32,15 +32,12 @@ public class UIManager : MonoBehaviour {
 	private Image shade;
 	private DuelManager manager;								// The required duel manager component
 
+	private bool timing;										// True if the timer is active, false otherwise
 	private bool roundStart, roundEnd, matchEnd;
 	private bool shadeFadingIn, shadeFadingOut;
 	private bool flashFadingOut, flashShouldFade;
 
-	private bool timing;										// True if the timer is active, false otherwise
-
 	private Vector3 leftIdlePosition, rightIdlePosition;		// Default idle position of players
-	private Vector3 leftTiePosition = new Vector2(-100, -50);	// Default position of left sprite during a tie
-	private Vector3 rightTiePosition = new Vector2(100, -50);	// Default position of right sprite during a tie
 	
 	#endregion
 	
@@ -277,24 +274,6 @@ public class UIManager : MonoBehaviour {
 
 	#region Game Event Listeners
 
-	// Displays UI representing a tied round
-	private void ShowTie() {
-		// Hide the flag
-		ToggleFlag();
-
-		// Set samurai sprites and positions to show the tied state
-		LeftSamurai.sprite = tiedSprite;
-		RightSamurai.sprite = tiedSprite;
-		SetPlayerPositions(leftTiePosition, rightTiePosition);
-
-		// Show main text element
-		ChangeTextInChildText("Tie!", MainText);
-		MainText.gameObject.SetActive(true);
-
-		// Begin fading flash element
-		ToggleFlash();
-	}
-
 	// Displays UI representing a valid attack
 	private void ShowAttack() {
 		// Hide the flag
@@ -317,22 +296,6 @@ public class UIManager : MonoBehaviour {
 		// Set the main text element to reflect early strike
 		string player = GetPlayerString(false);
 		ChangeTextInChildText(player + " struck too early!", MainText);
-		MainText.gameObject.SetActive(true);
-	}
-
-	// Displays UI representing a round win
-	private void ShowWinResult() {
-		// Refresh and display win count text elements
-		RefreshWinCounts();
-		LeftCount.gameObject.SetActive(true);
-		RightCount.gameObject.SetActive(true);
-
-		// Change the sprite color of the player who lost the round
-		ShowPlayerLoss(true);
-
-		// Set main text element to reflect round win
-		string player = GetPlayerString(true);
-		ChangeTextInChildText(player + " wins!", MainText);
 		MainText.gameObject.SetActive(true);
 	}
 
@@ -360,7 +323,7 @@ public class UIManager : MonoBehaviour {
 
 		MainText.gameObject.SetActive(true);
 	}
-		
+
 	private void ShowPlayersTied() {
 		LeftSamurai.color = Color.black;
 		RightSamurai.color = Color.black;
