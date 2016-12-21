@@ -46,6 +46,7 @@ public class MenuManager : MonoBehaviour {
 	private bool leavingMenu;
 	private bool input;
 
+	private int countDown;
 	private int titleHeight;
 	private string nextSceneName;
 
@@ -56,11 +57,9 @@ public class MenuManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-
 		titleHeight = ((int)-TitleText.preferredHeight * 3) / 4;
 
 		HideTextAlpha(PlayText);
-		HideTextAlpha(GetTextComponentInChild(PlayText));
 		FillShade();
 
 		shadeFadingOut = true;
@@ -116,19 +115,25 @@ public class MenuManager : MonoBehaviour {
 		return FindObjectOfType<MenuManager>();
 	}
 
-	public void OnBothPlayersReady(bool localLobby) {
-		StartCoroutine(CountDown(localLobby));
+	public void OnBothPlayersReady() {
+		countDown = 5;
+		Lobby.UpdateLobbyText(countDown);
+		InvokeRepeating("CountDown", 1, 1);
 	}
 
-	public IEnumerator CountDown(bool localLobby) {
-		yield return new WaitForSeconds(5);
-		Debug.Log("Changing scene");
+	public void CountDown() {
 
-		if (localLobby) {
-			LeaveMenu("LocalDuel");
+		if (countDown > 0) {
+			countDown -= 1;
+			Lobby.UpdateLobbyText(countDown);
 		}
-		else {
-			LeaveMenu("NetworkDuel");
+		if (countDown == 0) {
+			if (localSettings) {
+				LeaveMenu("LocalDuel");
+			}
+			else {
+				LeaveMenu("NetworkDuel");
+			}
 		}
 	}
 
@@ -137,7 +142,7 @@ public class MenuManager : MonoBehaviour {
 	}
 
 	public void ShowNetworkLobby() {
-		PlayText.gameObject.SetActive(false);
+		PlayText.enabled = false;
 		ToggleNetworkLobby();
 	}
 
@@ -175,14 +180,14 @@ public class MenuManager : MonoBehaviour {
 			if (!openAnimsDone) {
 				// Fast forward title animation and begin animating play text
 				TitleText.rectTransform.anchoredPosition = new Vector2(0, titleHeight);
-				PlayText.gameObject.SetActive(true);
+				PlayText.enabled = true;
 				openAnimsDone = true;
 			}
 			else {
 				AudioManager.Get().PlayMenuSound();
 
 				// Hide play text and show play menu
-				PlayText.gameObject.SetActive(false);
+				PlayText.enabled = false;
 				MultiPlayMenu.SetActive(true);
 
 				// Prevent further non-button input
@@ -209,6 +214,7 @@ public class MenuManager : MonoBehaviour {
 		if (!LobbyMenu.activeSelf) {
 			Lobby.PrepareNetworkLobby();
 		}
+		TitleText.gameObject.SetActive(LobbyMenu.activeSelf);
 		LobbyMenu.SetActive(!LobbyMenu.activeSelf);
 	}
 
@@ -216,6 +222,7 @@ public class MenuManager : MonoBehaviour {
 		if (!LobbyMenu.activeSelf) {
 			Lobby.PrepareLocalLobby();
 		}
+		TitleText.gameObject.SetActive(LobbyMenu.activeSelf);
 		LobbyMenu.SetActive(!LobbyMenu.activeSelf);
 	}
 
@@ -262,8 +269,8 @@ public class MenuManager : MonoBehaviour {
 		MatchMaker.QuickPlay();
 		ToggleNetworkMenu();
 
-		ChangeTextInChildText("Finding a game", PlayText);
-		PlayText.gameObject.SetActive(true);
+		PlayText.text = "Finding a game";
+		PlayText.enabled = true;
 	}
 
 	public void OnCreateGameToggle() {
@@ -333,16 +340,6 @@ public class MenuManager : MonoBehaviour {
 
 	#region Text Animations
 
-	private Text GetTextComponentInChild(Text text) {
-		return text.transform.GetChild(0).GetComponentInChildren<Text>();
-	}
-
-	private void ChangeTextInChildText(string newText, Text text) {
-		Text child = GetTextComponentInChild(text);
-		text.text = newText;
-		child.text = newText;
-	}
-
 	private void AnimateTitle() {
 		var titleY = TitleText.rectTransform.anchoredPosition.y;
 		if (titleY > titleHeight) {
@@ -350,7 +347,7 @@ public class MenuManager : MonoBehaviour {
 		}
 		else {
 			TitleText.rectTransform.anchoredPosition = new Vector2(0, titleHeight);
-			PlayText.gameObject.SetActive(true);
+			PlayText.enabled = true;
 			openAnimsDone = true;
 		}
 	}
@@ -358,11 +355,9 @@ public class MenuManager : MonoBehaviour {
 	private void AnimatePlayText() {
 		if (playTextFading) {
 			FadeTextAlpha(PlayText);
-			FadeTextAlpha(GetTextComponentInChild(PlayText));
 		}
 		else {
 			RaiseTextAlpha(PlayText);
-			RaiseTextAlpha(GetTextComponentInChild(PlayText));
 		}
 	}
 
