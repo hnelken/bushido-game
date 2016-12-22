@@ -5,7 +5,6 @@ using System.Collections;
 public class NetworkInput : NetworkBehaviour {
 	
 	private bool localPlayerInput;			// True if local player input this frame
-	private bool playerReady;				// True if the player has given the ready signal
 	
 	// Update is called once per frame
 	void Update () {
@@ -15,35 +14,21 @@ public class NetworkInput : NetworkBehaviour {
 		
 		// Check for touch or keyboard input
 		if (TouchInput() || Input.GetKeyDown(KeyCode.Space)) {
-			if (playerReady) {
-				CmdTriggerReaction(isServer, Time.realtimeSinceStartup);
-			}
-			else {
-				CmdSignalPlayerReady(isServer);
-			}
+			int reactionTime = DuelManager.Get().GetCurrentTime();
+			CmdTriggerReaction(isServer, reactionTime);
 		}
 	}
 
 
 	#region Private API
 
- 	[Command]
-	private void CmdSignalPlayerReady(bool hostSamurai) {
-		RpcSignalPlayerReady(hostSamurai);
-	}
-	
-	[ClientRpc]
-	private void RpcSignalPlayerReady(bool hostSamurai) {
-		playerReady = DuelManager.Get().SignalPlayerReady(hostSamurai);
-	}
-
 	[Command]
-	private void CmdTriggerReaction(bool hostSamurai, float reactionTime) {
-		RpcTriggerReaction(hostSamurai, reactionTime);
+	private void CmdTriggerReaction(bool hostSamurai, int inputTime) {
+		RpcTriggerReaction(hostSamurai, inputTime);
 	}
 	
 	[ClientRpc]
-	private void RpcTriggerReaction(bool hostSamurai, float reactionTime) {
+	private void RpcTriggerReaction(bool hostSamurai, int reactionTime) {
 		DuelManager.Get().TriggerReaction(hostSamurai, reactionTime);
 	}
 

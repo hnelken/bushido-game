@@ -1,20 +1,54 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using System.Collections.Generic;
 
 /*
  * This class is the manager for the main menu of the game
  */
 public class MenuManager : MonoBehaviour {
 
-	public Text PlayText, PlayText2, TitleText;
+	public Image Shade;
+	public Text PlayText, TitleText;
+	public GameObject MultiPlayMenu, NetworkMenu, LobbyMenu;
+
+	public AudioManager Audio {
+		get {
+			if (!audioManager) {
+				audioManager = AudioManager.Get();
+			}
+			return audioManager;
+		}
+	}
+
+	public BushidoMatchMaker MatchMaker {
+		get {
+			if (!matchMaker) {
+				matchMaker = GetComponent<BushidoMatchMaker>();
+			}
+			return matchMaker;
+		}
+	}
+
+	public LobbyManager Lobby;
 
 	#region Private Variables
 
-	private bool alphaFading;
-	private bool opened;
-	private bool input;					// True if input was received this frame
+	private AudioManager audioManager;
+	private BushidoMatchMaker matchMaker;
+
+	private bool shadeFadingIn, shadeFadingOut;
+	private bool playTextFading;
+	private bool openAnimsDone;
+	private bool localSettings;
+	private bool leavingMenu;
+	private bool input;
+
+	private int countDown;
+	private int titleHeight;
+	private string nextSceneName;
 
 	#endregion
 
@@ -23,10 +57,13 @@ public class MenuManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		HideAlpha(PlayText);
-		HideAlpha(PlayText2);
+		titleHeight = ((int)-TitleText.preferredHeight * 3) / 4;
 
-		alphaFading = true;
+		HideTextAlpha(PlayText);
+		FillShade();
+
+		shadeFadingOut = true;
+		playTextFading = true;
 	}
 	
 	// Update is called once per frame
@@ -34,12 +71,102 @@ public class MenuManager : MonoBehaviour {
 
 		CheckForInput();
 
-		if (!opened) {
+		/* ---- MANAGE ANIMATIONS EVERY FRAME ---- */
+
+		// Manage shade fading out
+		if (shadeFadingOut) {
+			FadeShadeAlpha();
+		}
+		// Once shade is gone, animate title
+		else if (!openAnimsDone) {
 			AnimateTitle();
 		}
+		// After title is steady, animate play text
 		else {
 			AnimatePlayText();
 		}
+
+		// Manage shade fading in
+		if (shadeFadingIn) {
+			RaiseShadeAlpha();
+		}
+		// After shade is black, leave menu
+		else if (leavingMenu) {
+			leavingMenu = false;
+			EventManager.Nullify();
+
+			// Change scene
+			if (localSettings) {
+				SceneManager.LoadScene(nextSceneName);
+			}
+			else {
+				BushidoNetManager.Get().OnBothPlayersReady();
+			}
+		}
+
+	}
+
+	#endregion
+
+
+	#region Public API
+
+	public static MenuManager Get() {
+		return FindObjectOfType<MenuManager>();
+	}
+
+	public void OnBothPlayersReady() {
+		countDown = 5;
+		Lobby.UpdateLobbyText(countDown);
+		InvokeRepeating("CountDown", 1, 1);
+	}
+
+	public void CountDown() {
+
+		if (countDown > 0) {
+			countDown -= 1;
+			Lobby.UpdateLobbyText(countDown);
+		}
+		if (countDown == 0) {
+			if (localSettings) {
+				LeaveMenu("LocalDuel");
+			}
+			else {
+				LeaveMenu("NetworkDuel");
+			}
+		}
+	}
+
+	public bool OnNetworkPlayerEnteredLobby() {
+		return Lobby.OnPlayerEnteredLobby();
+	}
+
+	public void ShowNetworkLobby() {
+		PlayText.enabled = false;
+		ToggleNetworkLobby();
+	}
+
+	public void ExitLocalLobby() {
+		ToggleLocalLobby();
+		TogglePlayMenu();
+	}
+
+	public void ExitNetworkLobby() {
+		/*
+		// Quit match
+		if (matchMaker.PlayingAsHost) {
+			NetworkManager.singleton.StopHost();
+		}
+		else {
+			NetworkManager.singleton.StopClient();
+		}
+		*/
+	}
+
+	public void LeaveMenu(string sceneName) {
+		nextSceneName = sceneName;
+		leavingMenu = true;
+		ToggleShade();
 	}
 
 	#endregion
@@ -47,50 +174,194 @@ public class MenuManager : MonoBehaviour {
 
 	#region Private API
 
+	private void CheckForInput() {
+		// Check for input on the initial menu
+		if (!input && ReceivedInput()) {
+			if (!openAnimsDone) {
+				// Fast forward title animation and begin animating play text
+				TitleText.rectTransform.anchoredPosition = new Vector2(0, titleHeight);
+				PlayText.enabled = true;
+				openAnimsDone = true;
+			}
+			else {
+				AudioManager.Get().PlayMenuSound();
+
+				// Hide play text and show play menu
+				PlayText.enabled = false;
+				MultiPlayMenu.SetActive(true);
+
+				// Prevent further non-button input
+				input = true;
+			}
+		}
+	}
+
+	// Checks for any input this frame (touch or spacebar)
+	private bool ReceivedInput() {
+		return (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) 
+			|| Input.GetKeyDown(KeyCode.Space);
+	}
+
+	private void TogglePlayMenu() {
+		MultiPlayMenu.SetActive(!MultiPlayMenu.activeSelf);
+	}
+
+	private void ToggleNetworkMenu() {
+		NetworkMenu.SetActive(!NetworkMenu.activeSelf);
+	}
+
+	private void ToggleNetworkLobby() {
+		if (!LobbyMenu.activeSelf) {
+			Lobby.PrepareNetworkLobby();
+		}
+		TitleText.gameObject.SetActive(LobbyMenu.activeSelf);
+		LobbyMenu.SetActive(!LobbyMenu.activeSelf);
+	}
+
+	private void ToggleLocalLobby() {
+		if (!LobbyMenu.activeSelf) {
+			Lobby.PrepareLocalLobby();
+		}
+		TitleText.gameObject.SetActive(LobbyMenu.activeSelf);
+		LobbyMenu.SetActive(!LobbyMenu.activeSelf);
+	}
+
+	#endregion
+
+
+	#region ButtonEvents
+
+	public void OnGameMenuExit() {
+		AudioManager.Get().PlayMenuSound();
+
+		// Close the menu that was open
+		if (localSettings) {
+			ToggleLocalLobby();
+		}
+		else {
+			ToggleNetworkMenu();
+		}
+
+		// Bring up the play menu
+		TogglePlayMenu();
+	}
+
+	public void OnLocalGameSelect() {
+		AudioManager.Get().PlayMenuSound();
+		localSettings = true;
+
+		// Hide play menu and show local lobby
+		TogglePlayMenu();
+		ToggleLocalLobby();
+	}
+
+	public void OnNetworkGameSelect() {
+		AudioManager.Get().PlayMenuSound();
+		localSettings = false;
+
+		// Hide play menu and show info dialog
+		TogglePlayMenu();
+		ToggleNetworkMenu();
+	}
+
+	public void OnQuickPlayPressed() {
+		AudioManager.Get().PlayMenuSound();
+		MatchMaker.QuickPlay();
+		ToggleNetworkMenu();
+
+		PlayText.text = "Finding a game";
+		PlayText.enabled = true;
+	}
+
+	public void OnCreateGameToggle() {
+		AudioManager.Get().PlayMenuSound();
+
+	}
+
+	public void OnFindGamePressed() {
+		AudioManager.Get().PlayMenuSound();
+	}
+
+	#endregion
+
+
+	#region Shade Animations
+
+	private void ToggleShade() {
+		if (!Shade.enabled) {
+			Shade.enabled = true;
+			shadeFadingIn = true;
+			shadeFadingOut = false;
+		}
+		else {
+			shadeFadingOut = true;
+			shadeFadingIn = false;
+		}
+	}
+
+	private void RaiseShadeAlpha() {
+		var color = Shade.color;
+		var limit = 1;
+		if (color.a < limit) {
+			SetShadeAlpha(color, color.a + .02f);
+		}
+		else {
+			SetShadeAlpha(color, limit);
+			shadeFadingIn = false;
+		}
+	}
+
+	private void FadeShadeAlpha() {
+		var color = Shade.color;
+		if (color.a > 0) {
+			SetShadeAlpha(color, color.a - .02f);
+		}
+		else {
+			SetShadeAlpha(color, 0);
+			shadeFadingOut = false;
+			Shade.enabled = false;
+		}
+	}
+
+	private void FillShade() {
+		Shade.enabled = true;
+		var color = Shade.color;
+		color.a = 1;
+		Shade.color = color;
+	}
+
+	private void SetShadeAlpha(Color color, float alphaValue) {
+		color.a = alphaValue;
+		Shade.color = color;
+	}
+
+	#endregion
+
+
+	#region Text Animations
+
 	private void AnimateTitle() {
 		var titleY = TitleText.rectTransform.anchoredPosition.y;
-		if (titleY > -100) {
+		if (titleY > titleHeight) {
 			TitleText.rectTransform.anchoredPosition = new Vector2(0, titleY - 5);
 		}
 		else {
-			TitleText.rectTransform.anchoredPosition = new Vector2(0, -100);
+			TitleText.rectTransform.anchoredPosition = new Vector2(0, titleHeight);
 			PlayText.enabled = true;
-			PlayText2.enabled = true;
-			opened = true;
+			openAnimsDone = true;
 		}
 	}
 
 	private void AnimatePlayText() {
-		if (alphaFading) {
-			FadeAlpha(PlayText);
-			FadeAlpha(PlayText2);
+		if (playTextFading) {
+			FadeTextAlpha(PlayText);
 		}
 		else {
-			RaiseAlpha(PlayText);
-			RaiseAlpha(PlayText2);
+			RaiseTextAlpha(PlayText);
 		}
 	}
 
-	private void CheckForInput() {
-		// Check for input on the initial menu
-		if (!input && ReceivedInput()) {
-			if (!opened) {
-				TitleText.rectTransform.anchoredPosition = new Vector2(0, -100);
-				PlayText.enabled = true;
-				opened = true;
-			}
-			else {
-				// Register input this frame
-				input = true;
-
-				// Nullify event listeners and load the local duel scene
-				EventManager.Nullify();
-				SceneManager.LoadScene("LocalDuel");
-			}
-		}
-	}
-
-	private void RaiseAlpha(Text text) {
+	private void RaiseTextAlpha(Text text) {
 		var color = text.color;
 		if (color.a < 1) {
 			color.a += 0.03f;
@@ -99,11 +370,11 @@ public class MenuManager : MonoBehaviour {
 		else {
 			color.a = 1;
 			text.color = color;
-			alphaFading = true;
+			playTextFading = true;
 		}
 	}
 
-	private void FadeAlpha(Text text) {
+	private void FadeTextAlpha(Text text) {
 		var color = text.color;
 		if (color.a > 0) {
 			color.a -= 0.03f;
@@ -112,20 +383,14 @@ public class MenuManager : MonoBehaviour {
 		else {
 			color.a = 0;
 			text.color = color;
-			alphaFading = false;
+			playTextFading = false;
 		}
 	}
 
-	private void HideAlpha(Text text) {
+	private void HideTextAlpha(Text text) {
 		var color = text.color;
 		color.a = 0;
 		text.color = color;
-	}
-
-	// Checks for any input this frame (touch or spacebar)
-	private bool ReceivedInput() {
-		return (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) 
-			|| Input.GetKeyDown(KeyCode.Space);
 	}
 
 	#endregion

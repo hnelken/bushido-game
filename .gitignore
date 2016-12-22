@@ -6,6 +6,7 @@
 *.sln
 *.userprefs
 *.csproj
+/obj
 /Library
 /Library/*
 Temp/*

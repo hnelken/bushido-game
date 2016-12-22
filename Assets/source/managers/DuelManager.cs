@@ -1,37 +1,52 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using System.Collections;
 
 public class DuelManager : MonoBehaviour {
 
 	#region Inspector References + Public Properties
 
-	public NetworkRNG Generator;
+	public NetworkUtility Utility {
+		get {
+			if (!utility) {
+				utility = NetworkUtility.Get();
+			}
+			return utility;
+		}
+	}
+	//private NetworkUtility Utility;
 	public Samurai LeftSamurai, RightSamurai;
 	public bool networking;
+
+	[HideInInspector]
+	public UIManager GUI;									// The manager of all UI elements
 
 	#endregion
 	
 	
 	#region Private Variables
 
-	private const int strikeLimit = 2;						// Number of strikes required to lose a round
-	private const int winLimit = 3;							// Number of wins required to win the match
+	private NetworkUtility utility;
 
+	private const int strikeLimit = 2;						// Number of strikes required to lose a round
+	private int winLimit = 3;							// Number of wins required to win the match
+
+	private bool resultWasTie;
 	private bool leftPlayerCausedResult; 					// True if the left samurai caused the latest round result
 	private bool waitingForInput;							// True from when round starts until after first input
 	private bool waitingForTie;								// True when waiting for tying input after first input
 	private bool playerStrike;								// True if a player has committed a strike
 	private bool tyingInput;								// True if there was tying input
 	private bool flagPopped;								// True if the flag is showing
+	private bool timeRanOut;
 
 	private float randomWait;								// The random wait time
 	private float startTime;								// The time at which the centerpiece icon was displayed
-	private float reactTime;								// The time at which the first valid input was received
-	private float tieTime;									// The time at which the potentially tying input was received
-	
-	private UIManager gui;								// The manager of all UI elements
-	
+
+	private int reactTime;									// The time at which the first valid input was received
+	private int tieTime;									// The time at which the potentially tying input was received
+	private int currTime;
+	private int maxTime = 100;
+
 	#endregion
 	
 	
@@ -39,8 +54,12 @@ public class DuelManager : MonoBehaviour {
 	
 	// Initialization
 	void Awake() {
+
 		// Get UI manager
-		gui = GetComponent<UIManager>();
+		GUI = GetComponent<UIManager>();
+
+		// Get match limit from net manager
+		winLimit = BushidoNetManager.Get().matchLimit;
 
 		LeftSamurai.SetManager(this);
 		RightSamurai.SetManager(this);
@@ -48,6 +67,17 @@ public class DuelManager : MonoBehaviour {
 		// Set event listeners
 		EventManager.GameStart += BeginRound;
 		EventManager.GameReset += ResetGame;
+
+		StartCoroutine(WaitAndStartRound());
+	}
+
+	void Update() {
+		if (flagPopped) {
+			UpdateCurrentTime();
+			if (waitingForInput && !timeRanOut) {
+				CheckForTimeout();
+			}
+		}
 	}
 	
 	#endregion
@@ -64,53 +94,56 @@ public class DuelManager : MonoBehaviour {
 		StartCoroutine(WaitAndPopFlag());
 	}
 
-	public bool IsReadyToDuel() {
-		return LeftSamurai.IsPlayerReady() && RightSamurai.IsPlayerReady();
+	public void SetStartTime(float time) {
+		startTime = time;
 	}
 
-	public bool SignalPlayerReady(bool leftSamurai) {
+	public void SetCurrentTime(int time) {
+		currTime = time;
+	}
 
-		if (networking && !BothPlayersInMatch()) {
-			return false;
-		}
+	public void TriggerGameStart() {
+		GUI.ToggleShadeForRoundStart();
+		AudioManager.Get().StartMusic();
+	}
 
-		if (leftSamurai) {
-			Debug.Log("Left Player Ready");
-			LeftSamurai.SignalPlayerReady();
-		}
-		else {
-			Debug.Log("Right Player Ready");
-			RightSamurai.SignalPlayerReady();
-		}
+	public void PopFlag() {
+		// No strike, record time of flag pop and start timer
+		startTime = Time.realtimeSinceStartup;
+
+		GUI.ToggleTimer();
+
+		// "Pop" the flag 
+		GUI.ToggleFlag();
+		flagPopped = true;
+
+		AudioManager.Get().PlayPopSound();
+	}
 		
-		if (IsReadyToDuel()) {
-			// Delay the beginning of the round
-			StartCoroutine(WaitAndStartRound());
-		}
-
-		return true;
-	}
-
 	// Signal a player reaction during a round
 	// - leftSamurai: A boolean representing which player triggered this event
-	public void TriggerReaction(bool leftSamurai, float reactionTime) {
-
+	public void TriggerReaction(bool leftSamurai, int reactionTime) {
 		// Check if the input is valid
 		if (waitingForInput){
 			
 			// Check if the player was early or not
 			if (flagPopped) {
 				// Stop the updating of the timer UI element
-				gui.ToggleTimer();
+				GUI.ToggleTimer();
+
+				GUI.ToggleFlag();
+
+				// Flash a white screen
+				GUI.ShowFlash();
 				
 				// Flag was out, reaction counts. Save reaction time.
-				reactTime = GetReactionTime(reactionTime);
+				reactTime = reactionTime;
 				flagPopped = false;
-				
+
 				// Set all further input as tying input and wait to call the round.
 				waitingForInput = false;
 				waitingForTie = true;
-				StartCoroutine(WaitForTyingInput(leftSamurai));
+				StartCoroutine(WaitAndShowReaction(leftSamurai));
 			}
 			else {
 				// The flag was not out, input is a strike.
@@ -120,24 +153,32 @@ public class DuelManager : MonoBehaviour {
 		// Check if input counts as a tie
 		else if (waitingForTie) {
 			// Get time of tying reaction
-			tieTime = GetReactionTime(reactionTime);
+			tieTime = reactionTime;
 			waitingForTie = false;
 			tyingInput = true;
 		}
-	}
-
-	public float GetStartTime() {
-		return startTime;
 	}
 
 	// Returns whether or not input will count as a reaction
 	public bool WaitingForInput() {
 		return waitingForInput;
 	}
-	
+
+	public bool ResultWasTie() {
+		return resultWasTie;
+	}
+
+	public float GetStartTime() {
+		return startTime;
+	}
+
+	public int GetCurrentTime() {
+		return currTime;
+	}
+
 	// Calculates the rounded-off reaction time since the flag popped
-	public int GetReactionTime(float reactionTime) {
-		return (int)((100 * (reactionTime - startTime)) / 2);
+	public int GetReactionTime() {
+		return (int)((100 * (Time.realtimeSinceStartup - startTime)) / 2);
 	}
 	
 	// Returns which player caused the last round result
@@ -150,6 +191,23 @@ public class DuelManager : MonoBehaviour {
 	
 	#region Private API
 
+	private void CheckForTimeout() {
+		if (currTime >= maxTime) {
+			AudioManager.Get().PlayStrikeSound();
+
+			waitingForInput = false;
+			timeRanOut = true;
+			resultWasTie = true;
+
+			// Stop GUI
+			GUI.ToggleTimer();
+
+			// Show round result and prepare to restart game
+			EventManager.TriggerGameResult();
+			StartCoroutine(WaitAndRestartGame());
+		}
+	}
+
 	// Enables input and begins the randomly timed wait before popping the flag
 	private void BeginRound() {
 		// Delayed negation of strike status to avoid UI issues
@@ -160,7 +218,7 @@ public class DuelManager : MonoBehaviour {
 
 		if (networking) {
 			// Get random wait time
-			Generator.CmdRandomWaitTime();
+			Utility.CmdSetRandomWaitTime();
 		}
 		else {
 			StartCoroutine(WaitAndPopFlag());
@@ -174,24 +232,30 @@ public class DuelManager : MonoBehaviour {
 		flagPopped = false;
 		waitingForInput = false;
 		waitingForTie = false;
+		resultWasTie = false;
+		timeRanOut = false;
+		startTime = 0;
 		reactTime = 0;
 		tieTime = 0;
-		
+		currTime = 0;
+
+
 		// Start delayed wait before round start
 		StartCoroutine(WaitAndStartRound());
 	}
 	
 	// Signal that a player's input was too early
 	// - leftSamurai: A boolean representing which player triggered this event
-	private void TriggerStrike(bool leftSamurai) 
-	{
+	private void TriggerStrike(bool leftSamurai) {
 		// Set the round result following the strike
 		leftPlayerCausedResult = leftSamurai;
 		
 		// Halt input and register early reaction
 		waitingForInput = false;
 		playerStrike = true;
-		
+
+		AudioManager.Get().PlayStrikeSound();
+
 		// Signal player strike to system
 		EventManager.TriggerGameStrike();
 		
@@ -202,7 +266,8 @@ public class DuelManager : MonoBehaviour {
 			leftPlayerCausedResult = false;
 			
 			// Show resulting winner after a delay
-			StartCoroutine(WaitAndShowWinner());
+			StartCoroutine(WaitAndShowResult(false, true));
+			//StartCoroutine(WaitAndShowWinner());
 		}
 		else if (RightSamurai.StrikeOut(strikeLimit, LeftSamurai)) {
 			// Change the result to be a win
@@ -210,42 +275,26 @@ public class DuelManager : MonoBehaviour {
 			leftPlayerCausedResult = true;
 			
 			// Show resulting winner after a delay
-			StartCoroutine(WaitAndShowWinner());
+			StartCoroutine(WaitAndShowResult(false, true));
+			//StartCoroutine(WaitAndShowWinner());
 		}
 		else {
 			// Neither player struck out, just reset round
 			StartCoroutine(WaitAndRestartGame());
 		}
 	}
-	
-	// Signal that a player's input was fastest and counts as a win
-	// - leftSamurai: A boolean representing which player triggered this event
-	private void TriggerWin(bool leftSamurai) 
-	{
-		// Set the round result following the win
-		leftPlayerCausedResult = leftSamurai;
-		
-		// Signal the win to the system
-		EventManager.TriggerGameWin();
-		
-		// Show the winner after a delay
-		StartCoroutine(WaitAndShowWinner());
-	}
-	
-	// Singal that the players tied
-	private void TriggerTie()
-	{
-		// Signal the tie to the system
-		EventManager.TriggerGameTie();
-		
-		// Reset for a new round after a delay
-		StartCoroutine(WaitAndRestartGame());
+
+	private void UpdateCurrentTime() {
+		currTime = GetReactionTime();
+		if (!timeRanOut) {
+			GUI.UpdateTimer();
+		}
 	}
 	
 	// Checks if either player has enough wins to claim the match
 	private bool MatchWon() {
-		return LeftSamurai.GetWinCount() >= winLimit
-			|| RightSamurai.GetWinCount() >= winLimit;
+		return LeftSamurai.GetWinCount() > winLimit / 2
+			|| RightSamurai.GetWinCount() > winLimit / 2;
 	}
 
 	// Checks if both players have entered the room
@@ -258,56 +307,77 @@ public class DuelManager : MonoBehaviour {
 	
 	#region Delayed Routines
 	
-	// Triggers the "game start" event after 2 seconds
+	// Triggers the "game start" event after 2 second
 	public IEnumerator WaitAndStartRound() {
+
 		yield return new WaitForSeconds(2);
-		
-		EventManager.TriggerGameStart();
+
+		if (networking) {
+			if (Utility.isServer) {
+				Utility.RpcTriggerGameStart();
+			}
+		}
+		else {
+			TriggerGameStart();
+		}
 	}
 	
 	// Displays the flag after a randomized wait time
 	public IEnumerator WaitAndPopFlag() {
 
 		if (!networking) {
-			randomWait = Random.Range(3, 6);
+			randomWait = Random.Range(4, 7);
 		}
 
 		yield return new WaitForSeconds(randomWait);
 		
 		// Only pop flag if the player has not struck early
 		if (!playerStrike) {
-			// No strike, record time of flag pop and start timer
-			startTime = Time.realtimeSinceStartup;
-			gui.ToggleTimer();
-			
-			// "Pop" the flag 
-			gui.ToggleFlag();
-			flagPopped = true;
+			if (networking) {
+				if (Utility.isServer) {
+					Utility.RpcPopFlag();
+				}
+			}
+			else {
+				PopFlag();
+			}
 		}
 	}
-	
-	// Determines the result of a round with no strike after a slight delay to wait for tying input
-	public IEnumerator WaitForTyingInput(bool leftSamurai) {
-		yield return new WaitForSeconds(0.02f);
-		
-		// Check if there was a tying input of equal reaction time
-		if (tyingInput && reactTime == tieTime) {
-			// Players tied
-			TriggerTie();
+
+	public IEnumerator WaitAndShowReaction(bool leftSamurai) {
+		AudioManager.Get().PlayHitSound();
+
+		yield return new WaitForSeconds(0.1f);
+
+		// Signal the win to the system
+		EventManager.TriggerGameReaction();
+
+		// Show the winner after a delay
+		StartCoroutine(WaitAndShowResult(leftSamurai, false));
+	}
+
+	public IEnumerator WaitAndShowResult(bool leftSamurai, bool resultWasStrike) {
+		yield return new WaitForSeconds(3);
+
+		// Check if the round was a tie
+		if (!tyingInput || reactTime != tieTime) {
+			resultWasTie = false;
+
+			if (!resultWasStrike) {
+				if (leftSamurai) {
+					leftPlayerCausedResult = (reactTime > tieTime);
+				}
+				else {
+					leftPlayerCausedResult = (reactTime < tieTime);
+				}
+			}
 		}
 		else {
-			// No tie, winner is delared
-			TriggerWin(leftSamurai);
+			resultWasTie = true;
 		}
-	}
-	
-	// Triggers the "show win result" event after 3 seconds
-	public IEnumerator WaitAndShowWinner() {
-		yield return new WaitForSeconds(3);
-		
-		EventManager.TriggerWinResult();
-		
-		// Reset for new round after some time
+
+		// Show round result and prepare to restart game
+		EventManager.TriggerGameResult();
 		StartCoroutine(WaitAndRestartGame());
 	}
 	
@@ -326,16 +396,15 @@ public class DuelManager : MonoBehaviour {
 		else {
 			// No player has won the match
 			// Trigger the "reset for new round" event
-			EventManager.TriggerGameReset();
+			GUI.ToggleShadeForRoundEnd();
 		}
 	}
 	
 	// Leaves the duel scene after 4 seconds
 	public IEnumerator WaitAndEndGame() {
 		yield return new WaitForSeconds(4);
-		
-		EventManager.Nullify();
-		SceneManager.LoadScene("Menu");
+
+		GUI.ToggleShadeForMatchEnd();
 	}
 	
 	#endregion
