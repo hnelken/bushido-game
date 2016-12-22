@@ -10,7 +10,33 @@ public class UIManager : MonoBehaviour {
 	public Sprite checkedBox, uncheckedBox;						// The sprites for the checkbox states
 	public Sprite idleSprite, attackSprite;						// The sprites for different player states
 
-	public Image LeftSamurai, RightSamurai;						// The image elements for the left and right samurai
+	public Image LeftSamurai {									// The image elements for the left and right samurai
+		get {
+			if (!leftSamurai) {
+				leftSamurai = GameObject.Find("LeftSamurai").GetComponent<Image>();
+			}
+			return leftSamurai;
+		}
+	}
+
+	public Image RightSamurai {
+		get {
+			if (!rightSamurai) {
+				rightSamurai = GameObject.Find("RightSamurai").GetComponent<Image>();
+			}
+			return rightSamurai;
+		}
+	}
+
+	public GameObject Flag {
+		get {
+			if (!flag) {
+				flag = GameObject.Find("Flag");
+			}
+			return flag;
+		}
+	}
+
 	public Image Shade {										// The black and white image elements for visual effects
 		get {
 			if (!shade) {
@@ -19,7 +45,15 @@ public class UIManager : MonoBehaviour {
 			return shade;
 		}
 	}
-	public Image Flag, Flash;									// The centerpiece flag image element
+
+	public Image Flash {
+		get {
+			if (!flash) {
+				flash = GameObject.Find("Flash").GetComponent<Image>();
+			}
+			return flash;
+		}
+	}
 
 	public Text ReactionTimer, MainText;						// The timer and main text elements
 	public Text LeftCount, RightCount;							// The win count text elements
@@ -29,7 +63,10 @@ public class UIManager : MonoBehaviour {
 	
 	#region Private Variables
 
-	private Image shade;
+	private GameObject flag;
+	private Image shade, flash;
+	private Image leftSamurai, rightSamurai;
+
 	private DuelManager manager;								// The required duel manager component
 
 	private bool timing;										// True if the timer is active, false otherwise
@@ -58,7 +95,7 @@ public class UIManager : MonoBehaviour {
 		RightCount.gameObject.SetActive(false);
 		MainText.gameObject.SetActive(false);
 
-		Flag.gameObject.SetActive(false);
+		Flag.SetActive(false);
 
 		// Set shade over screen and hide flash screen
 		FillShade();
@@ -134,7 +171,7 @@ public class UIManager : MonoBehaviour {
 	
 	// Toggles the display of the centerpiece flag UI element
 	public void ToggleFlag() {
-		Flag.gameObject.SetActive(!Flag.isActiveAndEnabled);
+		Flag.SetActive(!Flag.activeSelf);
 	}
 
 	public void ShowFlash() {
@@ -365,7 +402,7 @@ public class UIManager : MonoBehaviour {
 		SetPlayerPositions(leftIdlePosition, rightIdlePosition);
 
 		// Hide flag if not already hidden
-		if (Flag.isActiveAndEnabled) {
+		if (Flag.activeSelf) {
 			ToggleFlag();
 		}
 
