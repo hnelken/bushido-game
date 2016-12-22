@@ -28,6 +28,7 @@ public class LobbyManager : NetworkBehaviour {
 	public Button LeftArrow, RightArrow;				// The left and right arrow button elements
 
 	public Text BestOfText;								// The text element displaying the number of matches to be played
+	public Text LobbyText;								// The text element displaying the status of the lobby
 
 	#endregion
 
@@ -167,6 +168,37 @@ public class LobbyManager : NetworkBehaviour {
 		RightReady.gameObject.SetActive(false);
 	}
 
+	public void ClearReadyStatus() {
+		hostReady = false;
+		clientReady = false;
+
+		if (localLobby) {
+			UpdateLobbyReadyStatus();
+		}
+	}
+
+	public void UpdateLobbyText(int countdown) {
+		if (!LobbyText.enabled) {
+			LobbyText.enabled = true;
+		}
+		LobbyText.text = "Game starting in  " + countdown;
+	}
+
+	public void ChangeBestOfIndex(bool minus) {
+		ClearReadyStatus();
+
+		if (minus) {
+			bestOfIndex = (bestOfIndex > 0) ? bestOfIndex - 1 : bestOfOptions.Length - 1;
+		}
+		else {
+			bestOfIndex = (bestOfIndex < bestOfOptions.Length - 1) ? bestOfIndex + 1 : 0;
+		}
+
+		if (localLobby) {
+			UpdateBestOfText();
+		}
+	}
+
 	#endregion
 
 
@@ -271,30 +303,6 @@ public class LobbyManager : NetworkBehaviour {
 
 	#region Private API
 
-	void ClearReadyStatus() {
-		hostReady = false;
-		clientReady = false;
-
-		if (localLobby) {
-			UpdateLobbyReadyStatus();
-		}
-	}
-
-	public void ChangeBestOfIndex(bool minus) {
-		ClearReadyStatus();
-
-		if (minus) {
-			bestOfIndex = (bestOfIndex > 0) ? bestOfIndex - 1 : bestOfOptions.Length - 1;
-		}
-		else {
-			bestOfIndex = (bestOfIndex < bestOfOptions.Length - 1) ? bestOfIndex + 1 : 0;
-		}
-
-		if (localLobby) {
-			UpdateBestOfText();
-		}
-	}
-
 	// Updates the samurai image elements based on presence of players
 	private void UpdateLobbySamurai() {
 		// Enable or disable the samurai images
@@ -347,26 +355,16 @@ public class LobbyManager : NetworkBehaviour {
 			// Begin countdown to round begin
 			Debug.Log("Countdown to scene launch");
 			int.TryParse(BestOfText.text, out BushidoNetManager.Get().matchLimit);
-			Menu.OnBothPlayersReady(localLobby);
+			Menu.OnBothPlayersReady();
 		}
 	}
 
 	// Updates "best of" match number text from options array
 	private void UpdateBestOfText() {
-		ChangeTextInChildText(bestOfOptions[bestOfIndex], BestOfText);
+		BestOfText.text = bestOfOptions[bestOfIndex];
 	}
 
-	// Changes text for a label and its child (shadow) label
-	private void ChangeTextInChildText(string newText, Text text) {
-		Text child = GetTextComponentInChild(text);
-		text.text = newText;
-		child.text = newText;
-	}
 
-	// Returns the child text component of a text component
-	private Text GetTextComponentInChild(Text text) {
-		return text.transform.GetChild(0).GetComponentInChildren<Text>();
-	}
 
 	#endregion
 }

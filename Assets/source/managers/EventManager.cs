@@ -8,10 +8,10 @@ public static class EventManager {
 
 	#region Event Declarations
 
-	public delegate void GameEvent();									// Event listeners must be void and take no parameters
-	public static event GameEvent GameStart, WinResult, GameReset;		// These events cover the lifecycle of the duel
-	public static event GameEvent GameWin, GameStrike, GameTie;			// Only one of these events occurs each round
-	public static event GameEvent GameOver;								// Occurs at the end of a match when the win cap is reached
+	public delegate void GameEvent();								// Event listeners must be void and take no parameters
+	public static event GameEvent GameStart, GameReset;				// Events for the lifecycle of the duel
+	public static event GameEvent GameStrike, GameReaction;			// Events for user reactions, early or not
+	public static event GameEvent GameResult, GameOver;				// Events for round or match end
 	#endregion
 
 
@@ -23,13 +23,6 @@ public static class EventManager {
 			GameStart();
 		}
 	}
-	
-	// Triggers "show win result" event
-	public static void TriggerWinResult() {
-		if (WinResult != null) {
-			WinResult();
-		}
-	}
 
 	// Triggers "game reset" event
 	public static void TriggerGameReset() {
@@ -38,10 +31,15 @@ public static class EventManager {
 		}
 	}
 
-	// Triggers "game won" event
-	public static void TriggerGameWin() {
-		if (GameWin != null) {
-			GameWin();
+	public static void TriggerGameReaction() {
+		if (GameReaction != null) {
+			GameReaction();
+		}
+	}
+
+	public static void TriggerGameResult() {
+		if (GameResult != null) {
+			GameResult();
 		}
 	}
 
@@ -49,13 +47,6 @@ public static class EventManager {
 	public static void TriggerGameStrike() {
 		if (GameStrike != null) {
 			GameStrike();
-		}
-	}
-	
-	// Triggers "game tied" event
-	public static void TriggerGameTie() {
-		if (GameTie != null) {
-			GameTie();
 		}
 	}
 
@@ -68,13 +59,11 @@ public static class EventManager {
 
 	// Empties event responses for loading a new scene
 	public static void Nullify() {
-		GameStart = null;
-		WinResult = null;
-		GameReset = null;
-		GameWin = null;
-		GameTie = null;
-		GameStrike = null;
 		GameOver = null;
+		GameStart = null;
+		GameReset = null;
+		GameStrike = null;
+		GameReaction = null;
 	}
 
 	#endregion
