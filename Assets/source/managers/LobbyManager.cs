@@ -145,14 +145,14 @@ public class LobbyManager : NetworkBehaviour {
 		hostInLobby = true;
 		clientInLobby = true;
 
-		hostReady = false;
-		clientReady = false;
+		ClearReadyStatus();
 
 		// Update UI
 		UpdateBestOfText();
 		NetReady.gameObject.SetActive(false);
 		LeftReady.gameObject.SetActive(true);
 		RightReady.gameObject.SetActive(true);
+		LobbyText.enabled = false;
 	}
 
 	// Prepare the lobby menu for a network lobby
@@ -166,6 +166,7 @@ public class LobbyManager : NetworkBehaviour {
 		NetReady.gameObject.SetActive(true);
 		LeftReady.gameObject.SetActive(false);
 		RightReady.gameObject.SetActive(false);
+		LobbyText.enabled = false;
 	}
 
 	public void ClearReadyStatus() {
@@ -269,6 +270,10 @@ public class LobbyManager : NetworkBehaviour {
 	public void OnLobbyExit() {
 		Menu.Audio.PlayMenuSound();
 
+		// Stop count down if it was in progress
+		LobbyText.enabled = false;
+		Menu.CancelCountDown();
+
 		if (localLobby) {
 			Menu.ExitLocalLobby();
 		}
@@ -363,8 +368,6 @@ public class LobbyManager : NetworkBehaviour {
 	private void UpdateBestOfText() {
 		BestOfText.text = bestOfOptions[bestOfIndex];
 	}
-
-
 
 	#endregion
 }

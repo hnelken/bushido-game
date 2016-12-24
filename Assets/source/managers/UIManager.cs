@@ -418,9 +418,9 @@ public class UIManager : MonoBehaviour {
 	// Clears the UI elements for a new round
 	private void ClearForNewRound() {
 		// Disables text elements
-		LeftCount.gameObject.SetActive(false);
-		RightCount.gameObject.SetActive(false);
-		MainText.gameObject.SetActive(false);
+		LeftCount.enabled = false;
+		RightCount.enabled = false;
+		MainText.enabled = false;
 
 		// Set player sprites and positions to show idle state
 		LeftSamurai.sprite = idleSprite;

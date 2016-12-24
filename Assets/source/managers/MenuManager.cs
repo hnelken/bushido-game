@@ -40,6 +40,7 @@ public class MenuManager : MonoBehaviour {
 	private BushidoMatchMaker matchMaker;
 
 	private bool shadeFadingIn, shadeFadingOut;
+	private bool cancelSceneChange;
 	private bool playTextFading;
 	private bool openAnimsDone;
 	private bool localSettings;
@@ -118,22 +119,36 @@ public class MenuManager : MonoBehaviour {
 	public void OnBothPlayersReady() {
 		countDown = 5;
 		Lobby.UpdateLobbyText(countDown);
-		InvokeRepeating("CountDown", 1, 1);
+		StartCoroutine(CountDown());
 	}
 
-	public void CountDown() {
+	public void CancelCountDown() {
+		cancelSceneChange = true;
+	}
+
+	public IEnumerator CountDown() {
+
+		yield return new WaitForSeconds(1);
 
 		if (countDown > 0) {
 			countDown -= 1;
 			Lobby.UpdateLobbyText(countDown);
 		}
-		if (countDown == 0) {
+
+		if (cancelSceneChange) {
+			cancelSceneChange = false;
+			countDown = 0;
+		}
+		else if (countDown == 0) {
 			if (localSettings) {
 				LeaveMenu("LocalDuel");
 			}
 			else {
 				LeaveMenu("NetworkDuel");
 			}
+		}
+		else {
+			StartCoroutine(CountDown());
 		}
 	}
 
