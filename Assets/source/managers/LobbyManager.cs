@@ -27,6 +27,7 @@ public class LobbyManager : NetworkBehaviour {
 	public Button LeftReady, RightReady, NetReady;		// The left, right, and center ready button elements
 	public Button LeftArrow, RightArrow;				// The left and right arrow button elements
 
+	public Text LeftText, RightText;
 	public Text BestOfText;								// The text element displaying the number of matches to be played
 	public Text LobbyText;								// The text element displaying the status of the lobby
 
@@ -92,16 +93,6 @@ public class LobbyManager : NetworkBehaviour {
 	void Start() {
 		LeftCheckbox.sprite = UncheckedBox;
 		RightCheckbox.sprite = UncheckedBox;
-
-		/*
-		if (!localLobby) {
-			LeftSamurai.enabled = false;
-			RightSamurai.enabled = false;
-		}
-		else {
-			LeftSamurai.enabled = true;
-			RightSamurai.enabled = true;
-		}*/
 	}
 
 	#endregion
@@ -145,14 +136,15 @@ public class LobbyManager : NetworkBehaviour {
 		hostInLobby = true;
 		clientInLobby = true;
 
-		ClearReadyStatus();
-
 		// Update UI
+		ClearReadyStatus();
 		UpdateBestOfText();
+		LobbyText.enabled = false;
+		LeftText.text = "Player 1";
+		RightText.text = "Player 2";
 		NetReady.gameObject.SetActive(false);
 		LeftReady.gameObject.SetActive(true);
 		RightReady.gameObject.SetActive(true);
-		LobbyText.enabled = false;
 	}
 
 	// Prepare the lobby menu for a network lobby
@@ -163,10 +155,10 @@ public class LobbyManager : NetworkBehaviour {
 
 		// Update UI
 		UpdateBestOfText();
+		LobbyText.enabled = false;
 		NetReady.gameObject.SetActive(true);
 		LeftReady.gameObject.SetActive(false);
 		RightReady.gameObject.SetActive(false);
-		LobbyText.enabled = false;
 	}
 
 	public void ClearReadyStatus() {
@@ -314,6 +306,8 @@ public class LobbyManager : NetworkBehaviour {
 		Debug.Log("left: " + hostInLobby);
 		LeftSamurai.enabled = hostInLobby;
 		RightSamurai.enabled = clientInLobby;
+		LeftText.text = (hostInLobby) ? "Player 1" : "Waiting for\nplayer";
+		RightText.text = (clientInLobby) ? "Player 2" : "Waiting for\nplayer";
 	}
 
 	// Updates the lobby ready checkbox images based on player ready status
