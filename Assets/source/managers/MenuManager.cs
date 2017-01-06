@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
@@ -58,6 +58,7 @@ public class MenuManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		PhotonNetwork.ConnectUsingSettings("1");
 		titleHeight = ((int)-TitleText.preferredHeight * 3) / 4;
 
 		HideTextAlpha(PlayText);
