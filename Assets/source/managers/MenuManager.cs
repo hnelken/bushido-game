@@ -9,11 +9,18 @@ using System.Collections.Generic;
  * This class is the manager for the main menu of the game
  */
 public class MenuManager : MonoBehaviour {
+	
+	#region Editor References
 
-	public Image Shade;
-	public Text PlayText, TitleText;
-	public GameObject MultiPlayMenu, NetworkMenu, LobbyMenu;
+	public Image Shade;											// The black image used for fading in and out of scenes
+	public Text PlayText, TitleText;							// The opening screen text elements
+	public GameObject MultiPlayMenu, NetworkMenu, LobbyMenu;	// The parent objects for the menu segments
 
+	public LobbyManager Lobby;									// Reference to the lobby manager object
+
+	#endregion
+
+	// Safe reference to the source of all game audio
 	public AudioManager Audio {
 		get {
 			if (!audioManager) {
@@ -23,6 +30,7 @@ public class MenuManager : MonoBehaviour {
 		}
 	}
 
+	// Safe reference to the match maker for net games
 	public BushidoMatchMaker MatchMaker {
 		get {
 			if (!matchMaker) {
@@ -32,24 +40,23 @@ public class MenuManager : MonoBehaviour {
 		}
 	}
 
-	public LobbyManager Lobby;
 
 	#region Private Variables
 
-	private AudioManager audioManager;
-	private BushidoMatchMaker matchMaker;
+	private AudioManager audioManager;				// Unsafe reference to audio source
+	private BushidoMatchMaker matchMaker;			// Unsafe reference to the match maker
 
-	private bool shadeFadingIn, shadeFadingOut;
-	private bool cancelSceneChange;
-	private bool playTextFading;
-	private bool openAnimsDone;
-	private bool localSettings;
-	private bool leavingMenu;
-	private bool input;
+	private bool shadeFadingIn, shadeFadingOut;		// Status of fade-in/fade-out animations
+	private bool playTextFading;					// Status of "tap-to-play" text fading animation
+	private bool cancelSceneChange;					// True if a match-start-countdown was canceled
+	private bool openAnimsDone;						// True if the opening title descent has finished
+	private bool localSettings;						// True if a local-play menu is open, false if a net-play menu is open
+	private bool leavingMenu;						// True if a game is about to begin and the menu scene must be left
+	private bool input;								// True if input has been received that should skip the opening animations
 
-	private int countDown;
-	private int titleHeight;
-	private string nextSceneName;
+	private int countDown;							// The remaining seconds in the countdown to leave the menu scene
+	private int titleHeight;						// The pixel height of the title text object for animation purposes
+	private string nextSceneName;					// The string name of the scene the menu should transition to next
 
 	#endregion
 
@@ -58,12 +65,17 @@ public class MenuManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		// Connect to photon network
 		PhotonNetwork.ConnectUsingSettings("1");
+
+		// Record the height of the title text object at runtime
 		titleHeight = ((int)-TitleText.preferredHeight * 3) / 4;
 
+		// Set the alpha of UI elements for opening
 		HideTextAlpha(PlayText);
 		FillShade();
 
+		// Set status of UI animations
 		shadeFadingOut = true;
 		playTextFading = true;
 	}
@@ -71,10 +83,120 @@ public class MenuManager : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
-		CheckForInput();
+		// Check if the user wants to skip the opening animations
+		if (!input) {
+			CheckForInput();
+		}
 
-		/* ---- MANAGE ANIMATIONS EVERY FRAME ---- */
+		// Manage opening and leaving animations
+		ManageOpeningAnimations();
+		ManageLeavingAnimations();
 
+	}
+
+	#endregion
+
+
+	#region Public API
+
+	// Used to gain a reliable reference to this manager
+	public static MenuManager Get() {
+		return FindObjectOfType<MenuManager>();
+	}
+
+	// Triggered when both lobby players are ready to begin a match
+	public void OnBothPlayersReady() {
+		// Start counting down from 5
+		countDown = 5;
+		Lobby.UpdateLobbyText(countDown);
+		StartCoroutine(CountDown());
+	}
+
+	// Used to cancel an in-progress countdown
+	public void CancelCountDown() {
+		cancelSceneChange = true;
+	}
+
+	// Called once every second during a countdown
+	public IEnumerator CountDown() {
+
+		yield return new WaitForSeconds(1);
+
+		// Count down one second and update UI
+		if (countDown > 0) {
+			countDown -= 1;
+			Lobby.UpdateLobbyText(countDown);
+		}
+
+		CheckCountDownStatus();
+	}
+
+	// Triggered when a network player enters the lobby
+	// Returns true if the player is the host, false if the client
+	public bool OnNetworkPlayerEnteredLobby() {
+		return Lobby.OnPlayerEnteredLobby();
+	}
+
+	// Manage UI to show a network lobby
+	public void ShowNetworkLobby() {
+		PlayText.enabled = false;
+		ToggleNetworkLobby();
+	}
+
+	// Manage UI to leave a local lobby
+	public void ExitLocalLobby() {
+		ToggleLocalLobby();
+		TogglePlayMenu();
+	}
+
+	// Manage leaving a network lobby
+	public void ExitNetworkLobby() {
+		/*
+		// Quit match
+		if (matchMaker.PlayingAsHost) {
+			NetworkManager.singleton.StopHost();
+		}
+		else {
+			NetworkManager.singleton.StopClient();
+		}
+		*/
+	}
+
+	// Begins the animations that lead to desired scene change
+	public void LeaveMenu(string sceneName) {
+		nextSceneName = sceneName;
+		leavingMenu = true;
+		ToggleShade();
+	}
+
+	#endregion
+
+
+	#region Private API
+
+	private void CheckCountDownStatus() {
+		// Check if the countdown has been canceled
+		if (cancelSceneChange) {
+			cancelSceneChange = false;
+			countDown = 0;
+		}
+		// Not canceled, check if countdown is over
+		else if (countDown == 0) {
+			// Launch the appropriate game scene
+			if (localSettings) {
+				LeaveMenu("LocalDuel");
+			}
+			else {
+				LeaveMenu("NetworkDuel");
+			}
+		}
+		else {
+			// Not canceled or complete, continue count down
+			StartCoroutine(CountDown());
+		}
+	}
+
+	private void ManageOpeningAnimations() {
 		// Manage shade fading out
 		if (shadeFadingOut) {
 			FadeShadeAlpha();
@@ -87,7 +209,9 @@ public class MenuManager : MonoBehaviour {
 		else {
 			AnimatePlayText();
 		}
+	}
 
+	private void ManageLeavingAnimations() {
 		// Manage shade fading in
 		if (shadeFadingIn) {
 			RaiseShadeAlpha();
@@ -105,94 +229,11 @@ public class MenuManager : MonoBehaviour {
 				BushidoNetManager.Get().OnBothPlayersReady();
 			}
 		}
-
 	}
-
-	#endregion
-
-
-	#region Public API
-
-	public static MenuManager Get() {
-		return FindObjectOfType<MenuManager>();
-	}
-
-	public void OnBothPlayersReady() {
-		countDown = 5;
-		Lobby.UpdateLobbyText(countDown);
-		StartCoroutine(CountDown());
-	}
-
-	public void CancelCountDown() {
-		cancelSceneChange = true;
-	}
-
-	public IEnumerator CountDown() {
-
-		yield return new WaitForSeconds(1);
-
-		if (countDown > 0) {
-			countDown -= 1;
-			Lobby.UpdateLobbyText(countDown);
-		}
-
-		if (cancelSceneChange) {
-			cancelSceneChange = false;
-			countDown = 0;
-		}
-		else if (countDown == 0) {
-			if (localSettings) {
-				LeaveMenu("LocalDuel");
-			}
-			else {
-				LeaveMenu("NetworkDuel");
-			}
-		}
-		else {
-			StartCoroutine(CountDown());
-		}
-	}
-
-	public bool OnNetworkPlayerEnteredLobby() {
-		return Lobby.OnPlayerEnteredLobby();
-	}
-
-	public void ShowNetworkLobby() {
-		PlayText.enabled = false;
-		ToggleNetworkLobby();
-	}
-
-	public void ExitLocalLobby() {
-		ToggleLocalLobby();
-		TogglePlayMenu();
-	}
-
-	public void ExitNetworkLobby() {
-		/*
-		// Quit match
-		if (matchMaker.PlayingAsHost) {
-			NetworkManager.singleton.StopHost();
-		}
-		else {
-			NetworkManager.singleton.StopClient();
-		}
-		*/
-	}
-
-	public void LeaveMenu(string sceneName) {
-		nextSceneName = sceneName;
-		leavingMenu = true;
-		ToggleShade();
-	}
-
-	#endregion
-
-
-	#region Private API
 
 	private void CheckForInput() {
 		// Check for input on the initial menu
-		if (!input && ReceivedInput()) {
+		if (ReceivedInput()) {
 			if (!openAnimsDone) {
 				// Fast forward title animation and begin animating play text
 				TitleText.rectTransform.anchoredPosition = new Vector2(0, titleHeight);
@@ -203,6 +244,7 @@ public class MenuManager : MonoBehaviour {
 				AudioManager.Get().PlayMenuSound();
 
 				// Hide play text and show play menu
+				playTextFading = false;
 				PlayText.enabled = false;
 				MultiPlayMenu.SetActive(true);
 
