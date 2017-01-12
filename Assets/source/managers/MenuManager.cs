@@ -228,6 +228,7 @@ public class MenuManager : MonoBehaviour {
 
 	private void ToggleNetworkLobby() {
 		if (!LobbyMenu.activeSelf) {
+			cancelSceneChange = false;
 			Lobby.PrepareNetworkLobby();
 		}
 		TitleText.gameObject.SetActive(LobbyMenu.activeSelf);
@@ -236,6 +237,7 @@ public class MenuManager : MonoBehaviour {
 
 	private void ToggleLocalLobby() {
 		if (!LobbyMenu.activeSelf) {
+			cancelSceneChange = false;
 			Lobby.PrepareLocalLobby();
 		}
 		TitleText.gameObject.SetActive(LobbyMenu.activeSelf);
