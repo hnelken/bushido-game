@@ -68,7 +68,7 @@ public class DuelManager : MonoBehaviour {
 		EventManager.GameStart += BeginRound;
 		EventManager.GameReset += ResetGame;
 
-		StartCoroutine(WaitAndStartRound());
+		Get().StartCoroutine(WaitAndStartRound());
 	}
 
 	void Update() {
@@ -91,7 +91,7 @@ public class DuelManager : MonoBehaviour {
 
 	public void SetWaitTime(float waitTime) {
 		randomWait = waitTime;
-		StartCoroutine(WaitAndPopFlag());
+		Get().StartCoroutine(WaitAndPopFlag());
 	}
 
 	public void SetStartTime(float time) {
@@ -143,7 +143,7 @@ public class DuelManager : MonoBehaviour {
 				// Set all further input as tying input and wait to call the round.
 				waitingForInput = false;
 				waitingForTie = true;
-				StartCoroutine(WaitAndShowReaction(leftSamurai));
+				Get().StartCoroutine(WaitAndShowReaction(leftSamurai));
 			}
 			else {
 				// The flag was not out, input is a strike.
@@ -204,7 +204,7 @@ public class DuelManager : MonoBehaviour {
 
 			// Show round result and prepare to restart game
 			EventManager.TriggerGameResult();
-			StartCoroutine(WaitAndRestartGame());
+			Get().StartCoroutine(WaitAndRestartGame());
 		}
 	}
 
@@ -221,7 +221,7 @@ public class DuelManager : MonoBehaviour {
 			Utility.CmdSetRandomWaitTime();
 		}
 		else {
-			StartCoroutine(WaitAndPopFlag());
+			Get().StartCoroutine(WaitAndPopFlag());
 		}
 	}
 	
@@ -241,7 +241,7 @@ public class DuelManager : MonoBehaviour {
 
 
 		// Start delayed wait before round start
-		StartCoroutine(WaitAndStartRound());
+		Get().StartCoroutine(WaitAndStartRound());
 	}
 	
 	// Signal that a player's input was too early
@@ -266,8 +266,8 @@ public class DuelManager : MonoBehaviour {
 			leftPlayerCausedResult = false;
 			
 			// Show resulting winner after a delay
-			StartCoroutine(WaitAndShowResult(false, true));
-			//StartCoroutine(WaitAndShowWinner());
+			Get().StartCoroutine(WaitAndShowResult(false, true));
+			//Get().StartCoroutine(WaitAndShowWinner());
 		}
 		else if (RightSamurai.StrikeOut(strikeLimit, LeftSamurai)) {
 			// Change the result to be a win
@@ -275,12 +275,12 @@ public class DuelManager : MonoBehaviour {
 			leftPlayerCausedResult = true;
 			
 			// Show resulting winner after a delay
-			StartCoroutine(WaitAndShowResult(false, true));
-			//StartCoroutine(WaitAndShowWinner());
+			Get().StartCoroutine(WaitAndShowResult(false, true));
+			//Get().StartCoroutine(WaitAndShowWinner());
 		}
 		else {
 			// Neither player struck out, just reset round
-			StartCoroutine(WaitAndRestartGame());
+			Get().StartCoroutine(WaitAndRestartGame());
 		}
 	}
 
@@ -353,7 +353,7 @@ public class DuelManager : MonoBehaviour {
 		EventManager.TriggerGameReaction();
 
 		// Show the winner after a delay
-		StartCoroutine(WaitAndShowResult(leftSamurai, false));
+		Get().StartCoroutine(WaitAndShowResult(leftSamurai, false));
 	}
 
 	public IEnumerator WaitAndShowResult(bool leftSamurai, bool resultWasStrike) {
@@ -378,7 +378,7 @@ public class DuelManager : MonoBehaviour {
 
 		// Show round result and prepare to restart game
 		EventManager.TriggerGameResult();
-		StartCoroutine(WaitAndRestartGame());
+		Get().StartCoroutine(WaitAndRestartGame());
 	}
 	
 	// Resets for a new round after 4 seconds
@@ -391,7 +391,7 @@ public class DuelManager : MonoBehaviour {
 			EventManager.TriggerGameOver();
 			
 			// Leave the duel scene after a delay
-			StartCoroutine(WaitAndEndGame());
+			Get().StartCoroutine(WaitAndEndGame());
 		}
 		else {
 			// No player has won the match

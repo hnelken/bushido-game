@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.Collections;
@@ -6,7 +6,7 @@ using System.Collections;
 public class UIManager : MonoBehaviour {
 
 	#region Editor References + Public Properties
-
+	public Color blueColor, yellowColor;
 	public Sprite checkedBox, uncheckedBox;						// The sprites for the checkbox states
 	public Sprite idleSprite, attackSprite;						// The sprites for different player states
 
@@ -397,13 +397,13 @@ public class UIManager : MonoBehaviour {
 		// Check if the round ended in a win or a strike
 		if (roundWon) {
 			// Round was won, change the color of the losing player to black
-			LeftSamurai.color = (manager.LeftPlayerCausedResult()) ? Color.white : Color.black;
-			RightSamurai.color = (manager.LeftPlayerCausedResult()) ? Color.black : Color.yellow;
+			LeftSamurai.color = (manager.LeftPlayerCausedResult()) ? blueColor : Color.black;
+			RightSamurai.color = (manager.LeftPlayerCausedResult()) ? Color.black : yellowColor;
 		}
 		else {
 			// Round was not won, change color of player that struck early to black
-			LeftSamurai.color = (manager.LeftPlayerCausedResult()) ? Color.black : Color.white;
-			RightSamurai.color = (manager.LeftPlayerCausedResult()) ? Color.yellow : Color.black;
+			LeftSamurai.color = (manager.LeftPlayerCausedResult()) ? Color.black : blueColor;
+			RightSamurai.color = (manager.LeftPlayerCausedResult()) ? yellowColor : Color.black;
 		}
 	}
 
@@ -418,15 +418,15 @@ public class UIManager : MonoBehaviour {
 	// Clears the UI elements for a new round
 	private void ClearForNewRound() {
 		// Disables text elements
-		LeftCount.gameObject.SetActive(false);
-		RightCount.gameObject.SetActive(false);
-		MainText.gameObject.SetActive(false);
+		LeftCount.enabled = false;
+		RightCount.enabled = false;
+		MainText.enabled = false;
 
 		// Set player sprites and positions to show idle state
 		LeftSamurai.sprite = idleSprite;
 		RightSamurai.sprite = idleSprite;
-		LeftSamurai.color = Color.white;
-		RightSamurai.color = Color.yellow;
+		LeftSamurai.color = blueColor;
+		RightSamurai.color = yellowColor;
 		SetPlayerPositions(leftIdlePosition, rightIdlePosition);
 
 		// Hide flag if not already hidden
