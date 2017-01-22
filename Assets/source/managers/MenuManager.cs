@@ -48,13 +48,11 @@ public class MenuManager : MonoBehaviour {
 
 	private bool shadeFadingIn, shadeFadingOut;		// Status of fade-in/fade-out animations
 	private bool playTextFading;					// Status of "tap-to-play" text fading animation
-	private bool cancelSceneChange;					// True if a match-start-countdown was canceled
 	private bool openAnimsDone;						// True if the opening title descent has finished
 	private bool localMenuOpen;						// True if a local-play menu is open, false if a net-play menu is open
 	private bool leavingMenu;						// True if a game is about to begin and the menu scene must be left
 	private bool pastOpenMenu;						// True if the opening menu is no longer showing
 
-	private int countDown;							// The remaining seconds in the countdown to leave the menu scene
 	private int titleHeight;						// The pixel height of the title text object for animation purposes
 	private string nextSceneName;					// The string name of the scene the menu should transition to next
 
@@ -70,6 +68,9 @@ public class MenuManager : MonoBehaviour {
 
 		// Record the height of the title text object at runtime
 		titleHeight = ((int)-TitleText.preferredHeight * 3) / 4;
+
+		// Enable lobby manager
+		Lobby.gameObject.SetActive(true);
 
 		// Set the alpha of UI elements for opening
 		SetPlayTextAlpha(PlayText.color, 0);
@@ -105,33 +106,6 @@ public class MenuManager : MonoBehaviour {
 		return FindObjectOfType<MenuManager>();
 	}
 
-	// Triggered when both lobby players are ready to begin a match
-	public void OnBothPlayersReady() {
-		// Start counting down from 5
-		countDown = 5;
-		Lobby.UpdateLobbyText(countDown);
-		StartCoroutine(CountDown());
-	}
-
-	// Used to cancel an in-progress countdown
-	public void CancelCountDown() {
-		cancelSceneChange = true;
-	}
-
-	// Called once every second during a countdown
-	public IEnumerator CountDown() {
-
-		yield return new WaitForSeconds(1);
-
-		// Count down one second and update UI
-		if (countDown > 0) {
-			countDown -= 1;
-			Lobby.UpdateLobbyText(countDown);
-		}
-
-		CheckCountDownStatus();
-	}
-
 	// Triggered when a network player enters the lobby
 	// Returns true if the player is the host, false if the client
 	public bool OnNetworkPlayerEnteredLobby() {
@@ -164,8 +138,8 @@ public class MenuManager : MonoBehaviour {
 	}
 
 	// Begins the animations that lead to desired scene change
-	public void LeaveMenu(string sceneName) {
-		nextSceneName = sceneName;
+	public void LeaveMenu() {
+		nextSceneName = localMenuOpen ? "LocalDuel" : "NetworkDuel";
 		leavingMenu = true;
 		ToggleShade();
 	}
@@ -174,29 +148,6 @@ public class MenuManager : MonoBehaviour {
 
 
 	#region Private API
-
-	// Determines the status of the countdown after the counter changes
-	private void CheckCountDownStatus() {
-		// Check if the countdown has been canceled
-		if (cancelSceneChange) {
-			cancelSceneChange = false;
-			countDown = 0;
-		}
-		// Not canceled, check if countdown is over
-		else if (countDown == 0) {
-			// Launch the appropriate game scene
-			if (localMenuOpen) {
-				LeaveMenu("LocalDuel");
-			}
-			else {
-				LeaveMenu("NetworkDuel");
-			}
-		}
-		else {
-			// Not canceled or complete, continue count down
-			StartCoroutine(CountDown());
-		}
-	}
 
 	// Handle animating UI elements during opening sequence
 	private void ManageOpeningAnimations() {
@@ -284,7 +235,6 @@ public class MenuManager : MonoBehaviour {
 	private void ToggleNetworkLobby() {
 		// Prepare network lobby if menu is not visible
 		if (!LobbyMenu.activeSelf) {
-			cancelSceneChange = false;
 			Lobby.PrepareNetworkLobby();
 		}
 		ToggleLobbyMenu();
@@ -294,7 +244,6 @@ public class MenuManager : MonoBehaviour {
 	private void ToggleLocalLobby() {
 		// Prepare local lobby if menu is not visible
 		if (!LobbyMenu.activeSelf) {
-			cancelSceneChange = false;
 			Lobby.PrepareLocalLobby();
 		}
 		ToggleLobbyMenu();

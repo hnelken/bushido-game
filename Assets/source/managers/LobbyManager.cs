@@ -60,6 +60,9 @@ public class LobbyManager : NetworkBehaviour {
 		}
 	}
 
+	private bool countingDown;
+	private int countDown;
+
 	private bool localLobby;
 	private bool playerIsHost;
 
@@ -139,7 +142,6 @@ public class LobbyManager : NetworkBehaviour {
 		// Update UI
 		ClearReadyStatus();
 		UpdateBestOfText();
-		LobbyText.enabled = false;
 		LeftText.text = "Player 1";
 		RightText.text = "Player 2";
 		NetReady.gameObject.SetActive(false);
@@ -155,7 +157,6 @@ public class LobbyManager : NetworkBehaviour {
 
 		// Update UI
 		UpdateBestOfText();
-		LobbyText.enabled = false;
 		NetReady.gameObject.SetActive(true);
 		LeftReady.gameObject.SetActive(false);
 		RightReady.gameObject.SetActive(false);
@@ -168,13 +169,6 @@ public class LobbyManager : NetworkBehaviour {
 		if (localLobby) {
 			UpdateLobbyReadyStatus();
 		}
-	}
-
-	public void UpdateLobbyText(int countdown) {
-		if (!LobbyText.enabled) {
-			LobbyText.enabled = true;
-		}
-		LobbyText.text = "Game starting in  " + countdown;
 	}
 
 	public void ChangeBestOfIndex(bool minus) {
@@ -259,21 +253,6 @@ public class LobbyManager : NetworkBehaviour {
 		UpdateLobbyReadyStatus();
 	}
 
-	public void OnLobbyExit() {
-		Menu.Audio.PlayMenuSound();
-
-		// Stop count down if it was in progress
-		LobbyText.enabled = false;
-		Menu.CancelCountDown();
-
-		if (localLobby) {
-			Menu.ExitLocalLobby();
-		}
-		else {
-			Menu.ExitNetworkLobby();
-		}
-	}
-
 	public void OnLeftPressed() {
 		Menu.Audio.PlayMenuSound();
 
@@ -292,6 +271,21 @@ public class LobbyManager : NetworkBehaviour {
 		}
 		else {
 			ChangeBestOfIndex(false);
+		}
+	}
+
+	public void OnLobbyExit() {
+		Menu.Audio.PlayMenuSound();
+
+		// Stop count down if it was in progress
+		LobbyText.enabled = false;
+		countingDown = false;
+
+		if (localLobby) {
+			Menu.ExitLocalLobby();
+		}
+		else {
+			Menu.ExitNetworkLobby();
 		}
 	}
 
@@ -354,8 +348,48 @@ public class LobbyManager : NetworkBehaviour {
 			// Begin countdown to round begin
 			Debug.Log("Countdown to scene launch");
 			int.TryParse(BestOfText.text, out BushidoNetManager.Get().matchLimit);
-			Menu.OnBothPlayersReady();
+			OnBothPlayersReady();
 		}
+	}
+
+	// Triggered when both lobby players are ready to begin a match
+	private void OnBothPlayersReady() {
+		// Start counting down from 5
+		countDown = 5;
+		countingDown = true;
+		UpdateLobbyText(countDown);
+		StartCoroutine(CountDown());
+	}
+
+	private IEnumerator CountDown() {
+
+		yield return new WaitForSeconds(1);
+
+		if (countingDown) {
+			countDown -= 1;
+			UpdateLobbyText(countDown);
+			CheckCountDownStatus();
+		}
+	}
+
+	// Determines the status of the countdown after the counter changes
+	private void CheckCountDownStatus() {
+
+		// Not canceled, check if countdown is over
+		if (countDown == 0) {
+			Menu.LeaveMenu();
+		}
+		else {
+			// Not canceled or complete, continue count down
+			StartCoroutine(CountDown());
+		}
+	}
+
+	private void UpdateLobbyText(int countdown) {
+		if (!LobbyText.enabled) {
+			LobbyText.enabled = true;
+		}
+		LobbyText.text = "Game starting in  " + countdown;
 	}
 
 	// Updates "best of" match number text from options array
