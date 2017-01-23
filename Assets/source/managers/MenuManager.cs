@@ -59,7 +59,7 @@ public class MenuManager : MonoBehaviour {
 	#endregion
 
 
-	#region State Functions
+	#region Behaviour API
 
 	// Use this for initialization
 	void Start () {
