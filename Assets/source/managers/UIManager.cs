@@ -150,11 +150,7 @@ public class UIManager : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update() {
-		// Update the timer if its active
-		//if (timing) {
-		//	UpdateTimer();
-		//}
-
+		
 		// Flash
 
 		if (flashFadingOut) {
@@ -196,13 +192,26 @@ public class UIManager : MonoBehaviour {
 	public void UpdateTimer() {
 		// Format and set the time on the timer text element
 		int time = manager.GetCurrentTime();
-		string timerText = (time < 10) ? "0" + time.ToString() : time.ToString();
+		string timerText = (time < 10) 
+			? "0" + time.ToString() 
+			: time.ToString();
 		ReactionTimer.text = timerText;
 	}
 
 	// Toggles the timer activity
 	public void ToggleTimer() {
 		timing = !timing;
+	}
+
+	// Stop the timer at a desired time
+	public void StopTimer(int time) {
+		timing = false;
+
+		// Format time as string
+		string timerText = (time < 10) 
+			? "0" + time.ToString() 
+			: time.ToString();
+		ReactionTimer.text = timerText;
 	}
 	
 	// Toggles the display of the centerpiece flag UI element

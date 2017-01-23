@@ -13,6 +13,8 @@ public class Samurai : MonoBehaviour {
 	#region Private Variables
 	
 	private DuelManager manager;				// The duel manager monitoring this player
+
+	private int bestTime;						// This samurai's best reaction time of the game
 	private int winCount;						// The number of round wins this player has this match
 	private int strikeCount;					// The number of strikes this player has in the current round
 
@@ -26,7 +28,10 @@ public class Samurai : MonoBehaviour {
 	
 	// Initialization
 	void Start () {
+		// Set initial best time
+		bestTime = -1;
 
+		// Set display name for each samurai
 		displayName = (leftSamurai) ? "Player 1" : "Player 2";
 		
 		// Set event listeners
@@ -38,6 +43,18 @@ public class Samurai : MonoBehaviour {
 	
 	
 	#region Public API
+
+	public int BestTime {
+		get {
+			return bestTime;
+		}
+	}
+
+	public int WinCount {
+		get {
+			return winCount;
+		}
+	}
 	
 	// Returns whether a player has struck out following the last round
 	public bool StrikeOut(int strikeLimit, Samurai opponent) {
@@ -56,6 +73,16 @@ public class Samurai : MonoBehaviour {
 	// Sets the manager for the duel this player is in
 	public void SetManager(DuelManager _manager) {
 		manager = _manager;
+	}
+
+	// Compare a reaction time with the current best
+	public void RecordReactionTime(int time) {
+		if (bestTime == -1) {
+			bestTime = time;
+		}
+		else {
+			bestTime = (time < bestTime) ? time : bestTime;
+		}
 	}
 	
 	// Returns the display name for this player

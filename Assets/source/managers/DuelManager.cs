@@ -129,8 +129,9 @@ public class DuelManager : MonoBehaviour {
 			// Check if the player was early or not
 			if (flagPopped) {
 				// Stop the updating of the timer UI element
-				GUI.ToggleTimer();
+				GUI.StopTimer(reactionTime);
 
+				// Hide the "!" flag
 				GUI.ToggleFlag();
 
 				// Flash a white screen
@@ -143,6 +144,10 @@ public class DuelManager : MonoBehaviour {
 				// Set all further input as tying input and wait to call the round.
 				waitingForInput = false;
 				waitingForTie = true;
+
+				// Compare time against samurai's current best
+				RecordReactionTime(leftSamurai, reactionTime);
+
 				Get().StartCoroutine(WaitAndShowReaction(leftSamurai));
 			}
 			else {
@@ -156,6 +161,9 @@ public class DuelManager : MonoBehaviour {
 			tieTime = reactionTime;
 			waitingForTie = false;
 			tyingInput = true;
+
+			// Compare time against samurai's current best
+			RecordReactionTime(leftSamurai, reactionTime);
 		}
 	}
 
@@ -175,11 +183,6 @@ public class DuelManager : MonoBehaviour {
 	public int GetCurrentTime() {
 		return currTime;
 	}
-
-	// Calculates the rounded-off reaction time since the flag popped
-	public int GetReactionTime() {
-		return (int)((100 * (Time.realtimeSinceStartup - startTime)) / 2);
-	}
 	
 	// Returns which player caused the last round result
 	public bool LeftPlayerCausedResult() {
@@ -190,6 +193,15 @@ public class DuelManager : MonoBehaviour {
 	
 	
 	#region Private API
+
+	private void RecordReactionTime(bool leftSamurai, int time) {
+		if (leftSamurai) {
+			LeftSamurai.RecordReactionTime(time);
+		}
+		else {
+			RightSamurai.RecordReactionTime(time);
+		}
+	}
 
 	private void CheckForTimeout() {
 		if (currTime >= maxTime) {
@@ -289,6 +301,11 @@ public class DuelManager : MonoBehaviour {
 		if (!timeRanOut) {
 			GUI.UpdateTimer();
 		}
+	}
+
+	// Calculates the rounded-off reaction time since the flag popped
+	private int GetReactionTime() {
+		return (int)((100 * (Time.realtimeSinceStartup - startTime)) / 2);
 	}
 	
 	// Checks if either player has enough wins to claim the match
@@ -403,6 +420,11 @@ public class DuelManager : MonoBehaviour {
 	// Leaves the duel scene after 4 seconds
 	public IEnumerator WaitAndEndGame() {
 		yield return new WaitForSeconds(4);
+
+		// Set match results
+		BushidoNetManager.Get().SetMatchResults(
+			LeftSamurai.WinCount, RightSamurai.WinCount,
+			LeftSamurai.BestTime, RightSamurai.BestTime);
 
 		GUI.ToggleShadeForMatchEnd();
 	}
