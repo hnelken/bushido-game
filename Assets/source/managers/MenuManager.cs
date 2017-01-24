@@ -12,8 +12,9 @@ public class MenuManager : MonoBehaviour {
 	
 	#region Editor References
 
-	public Image Shade;											// The black image used for fading in and out of scenes
-	public Text PlayText, TitleText;							// The opening screen text elements
+	public Text TitleText;										// The title text element
+	public GlowingText PlayText;								// The glowing "tap-to-play" text element
+	public FadingShade Shade;									// The black image used for fading in and out of scenes
 	public GameObject MultiPlayMenu, NetworkMenu, LobbyMenu;	// The parent objects for the menu segments
 
 	public LobbyManager Lobby;									// Reference to the lobby manager object
@@ -46,14 +47,10 @@ public class MenuManager : MonoBehaviour {
 	private AudioManager audioManager;				// Unsafe reference to audio source
 	private BushidoMatchMaker matchMaker;			// Unsafe reference to the match maker
 
-	private bool shadeFadingIn, shadeFadingOut;		// Status of fade-in/fade-out animations
-	private bool playTextFading;					// Status of "tap-to-play" text fading animation
-	private bool openAnimsDone;						// True if the opening title descent has finished
 	private bool localMenuOpen;						// True if a local-play menu is open, false if a net-play menu is open
 	private bool leavingMenu;						// True if a game is about to begin and the menu scene must be left
 	private bool pastOpenMenu;						// True if the opening menu is no longer showing
 
-	private int titleHeight;						// The pixel height of the title text object for animation purposes
 	private string nextSceneName;					// The string name of the scene the menu should transition to next
 
 	#endregion
@@ -66,20 +63,12 @@ public class MenuManager : MonoBehaviour {
 		// Connect to photon network
 		PhotonNetwork.ConnectUsingSettings("1");
 
-		// Record the height of the title text object at runtime
-		titleHeight = ((int)-TitleText.preferredHeight * 3) / 4;
-
 		// Enable lobby manager
 		Lobby.gameObject.SetActive(true);
 
-		// Set the alpha of UI elements for opening
-		SetPlayTextAlpha(PlayText.color, 0);
-		SetShadeAlpha(Shade.color, 1);
-		Shade.enabled = true;
-
-		// Set status of UI animations
-		shadeFadingOut = true;
-		playTextFading = true;
+		// Initialize some UI elements
+		Shade.Initialize();
+		PlayText.enabled = false;
 	}
 	
 	// Update is called once per frame
@@ -87,13 +76,14 @@ public class MenuManager : MonoBehaviour {
 
 		// Check if the user wants to skip the opening animations
 		if (!pastOpenMenu) {
+			if (Shade.IsHidden && !PlayText.enabled) {
+				PlayText.Initialize();
+			}
 			CheckForInput();
 		}
 
-		// Manage opening and leaving animations
-		ManageOpeningAnimations();
+		// Manage leaving animations
 		ManageLeavingAnimations();
-
 	}
 
 	#endregion
@@ -141,7 +131,7 @@ public class MenuManager : MonoBehaviour {
 	public void LeaveMenu() {
 		nextSceneName = localMenuOpen ? "LocalDuel" : "NetworkDuel";
 		leavingMenu = true;
-		ToggleShade();
+		Shade.Toggle();
 	}
 
 	#endregion
@@ -149,30 +139,10 @@ public class MenuManager : MonoBehaviour {
 
 	#region Private API
 
-	// Handle animating UI elements during opening sequence
-	private void ManageOpeningAnimations() {
-		// Manage shade fading out
-		if (shadeFadingOut) {
-			FadeShadeAlpha();
-		}
-		// Once shade is gone, animate title
-		else if (!openAnimsDone) {
-			AnimateTitle();
-		}
-		// After title is steady, animate play text
-		else if (!pastOpenMenu) {
-			AnimatePlayText();
-		}
-	}
-
 	// Handle animating UI elements when leaving menu scene
 	private void ManageLeavingAnimations() {
-		// Manage shade fading in
-		if (shadeFadingIn) {
-			RaiseShadeAlpha();
-		}
 		// After shade is black, leave menu
-		else if (leavingMenu) {
+		if (!Shade.IsHidden && leavingMenu) {
 			leavingMenu = false;
 
 			// Clear event listeners
@@ -192,11 +162,7 @@ public class MenuManager : MonoBehaviour {
 	private void CheckForInput() {
 		if (ReceivedInput()) {
 			// Input will either skip title slide or open main menu
-			if (!openAnimsDone) {
-				// Fast forward title animation and begin animating play text
-				FinishOpeningAnimations();
-			}
-			else {
+			if (Shade.IsHidden) {
 				AudioManager.Get().PlayMenuSound();
 
 				// Hide play text and show play menu
@@ -299,134 +265,6 @@ public class MenuManager : MonoBehaviour {
 	// Trigger nearby matchmaking process and open lobby
 	public void OnNearbyGamePressed() {
 		// TODO: use local discovery to find nearby opponent
-	}
-
-	#endregion
-
-
-	#region Shade Animations
-
-	// Trigger shade animation fading in or out
-	private void ToggleShade() {
-		if (!Shade.enabled) {
-			// Fade shade in
-			Shade.enabled = true;
-			shadeFadingIn = true;
-			shadeFadingOut = false;
-		}
-		else {
-			// Fade shade out
-			shadeFadingOut = true;
-			shadeFadingIn = false;
-		}
-	}
-
-	// Handle shade fading in
-	private void RaiseShadeAlpha() {
-		var color = Shade.color;
-		var limit = 1;
-
-		// Raise alpha to 1 then stop
-		if (color.a < limit) {
-			SetShadeAlpha(color, color.a + .02f);
-		}
-		else {
-			SetShadeAlpha(color, limit);
-			shadeFadingIn = false;
-		}
-	}
-
-	// Handle shade fading out
-	private void FadeShadeAlpha() {
-		var color = Shade.color;
-
-		// Fade alpha to 0 then stop
-		if (color.a > 0) {
-			SetShadeAlpha(color, color.a - .02f);
-		}
-		else {
-			SetShadeAlpha(color, 0);
-			shadeFadingOut = false;
-			Shade.enabled = false;
-		}
-	}
-
-	// Set shade alpha to specified value
-	private void SetShadeAlpha(Color color, float alphaValue) {
-		color.a = alphaValue;
-		Shade.color = color;
-	}
-
-	#endregion
-
-
-	#region Text Animations
-
-	// Skip title slide animation
-	private void FinishOpeningAnimations() {
-		// Set title UI element to desired height, toggle flashing "play" text element
-		TitleText.rectTransform.anchoredPosition = new Vector2(0, titleHeight);
-		PlayText.enabled = true;
-		openAnimsDone = true;
-	}
-
-	// Handle title slide animation
-	private void AnimateTitle() {
-		// Get title height
-		var titleY = TitleText.rectTransform.anchoredPosition.y;
-
-		// Slide title to desired height and stop
-		if (titleY > titleHeight) {
-			TitleText.rectTransform.anchoredPosition = new Vector2(0, titleY - 5);
-		}
-		else {
-			FinishOpeningAnimations();
-		}
-	}
-
-	// Handle flashing "play" animation
-	private void AnimatePlayText() {
-		// Fade text in or out (back and forth)
-		if (playTextFading) {
-			FadeTextAlpha(PlayText);
-		}
-		else {
-			RaiseTextAlpha(PlayText);
-		}
-	}
-
-	// Handle "play" text fading in
-	private void RaiseTextAlpha(Text text) {
-		var color = text.color;
-
-		// Raise text alpha to 1 then stop
-		if (color.a < 1) {
-			SetPlayTextAlpha(color, color.a + .03f);
-		}
-		else {
-			SetPlayTextAlpha(color, 1);
-			playTextFading = true;
-		}
-	}
-
-	// Handle "play" text fading out
-	private void FadeTextAlpha(Text text) {
-		var color = text.color;
-
-		// Fade text alpha to 0 then stop
-		if (color.a > 0) {
-			SetPlayTextAlpha(color, color.a - .03f);
-		}
-		else {
-			SetPlayTextAlpha(color, 0);
-			playTextFading = false;
-		}
-	}
-
-	// Set play text alpha to desired value
-	private void SetPlayTextAlpha(Color color, float alphaValue) {
-		color.a = alphaValue;
-		PlayText.color = color;
 	}
 
 	#endregion
