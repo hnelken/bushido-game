@@ -74,16 +74,20 @@ public class MenuManager : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
-		// Check if the user wants to skip the opening animations
+		// Handle interactions before opening menu is past
 		if (!pastOpenMenu) {
+			// Enable glowing "tap-to-play" text when shade is gone
 			if (Shade.IsHidden && !PlayText.enabled) {
 				PlayText.Initialize();
 			}
+
+			// Check for input that exits opening menu
 			CheckForInput();
 		}
-
-		// Manage leaving animations
-		ManageLeavingAnimations();
+		else {
+			// Check if the scene is being exited
+			CheckForMenuExit();
+		}
 	}
 
 	#endregion
@@ -140,7 +144,7 @@ public class MenuManager : MonoBehaviour {
 	#region Private API
 
 	// Handle animating UI elements when leaving menu scene
-	private void ManageLeavingAnimations() {
+	private void CheckForMenuExit() {
 		// After shade is black, leave menu
 		if (!Shade.IsHidden && leavingMenu) {
 			leavingMenu = false;
