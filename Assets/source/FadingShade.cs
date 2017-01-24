@@ -4,7 +4,7 @@ using System.Collections;
 
 public class FadingShade : Image {
 
-	public bool IsHidden;
+	public bool IsHidden, IsBusy;
 	private bool fadingIn, fadingOut;
 	
 	// Manage animations
@@ -19,14 +19,19 @@ public class FadingShade : Image {
 		}
 	}
 
-	// Initialize the shade for a scene entry
-	public void Initialize() {
+	public void Fill() {
 		// Set shade to full color
 		SetAlphaValue(1);
 		enabled = true;
+	}
+
+	// Initialize the shade for a scene entry
+	public void Initialize() {
+		// Set shade to full color
+		Fill();
 
 		// Begin fading out
-		fadingOut = true;
+		Toggle();
 	}
 
 	// Trigger animation fading in or out
@@ -42,6 +47,7 @@ public class FadingShade : Image {
 			fadingOut = true;
 			fadingIn = false;
 		}
+		IsBusy = true;
 	}
 
 	// Handle fading in
@@ -57,7 +63,10 @@ public class FadingShade : Image {
 			// Clamp alpha and stop fading
 			SetAlphaValue(limit);
 			fadingIn = false;
+
+			// Set public status
 			IsHidden = false;
+			IsBusy = false;
 		}
 	}
 
@@ -75,7 +84,10 @@ public class FadingShade : Image {
 			SetAlphaValue(limit);
 			fadingOut = false;
 			enabled = false;
+
+			// Set public status
 			IsHidden = true;
+			IsBusy = false;
 		}
 	}
 

@@ -6,6 +6,7 @@ using System.Collections;
 public class UIManager : MonoBehaviour {
 
 	#region Editor References + Public Properties
+
 	public Color blueColor, yellowColor;
 	public Sprite checkedBox, uncheckedBox;						// The sprites for the checkbox states
 	public Sprite idleSprite, attackSprite;						// The sprites for different player states
@@ -37,10 +38,10 @@ public class UIManager : MonoBehaviour {
 		}
 	}
 
-	public Image Shade {										// The black and white image elements for visual effects
+	public FadingShade Shade {										// The black and white image elements for visual effects
 		get {
 			if (!shade) {
-				shade = GameObject.Find("Shade").GetComponent<Image>();
+				shade = GameObject.Find("Shade").GetComponent<FadingShade>();
 			}
 			return shade;
 		}
@@ -99,15 +100,14 @@ public class UIManager : MonoBehaviour {
 	private Text timer, mainText;
 	private Text leftCount, rightCount;
 
-	private Image flag;
-	private Image shade, flash;
+	private Image flag, flash;
+	private FadingShade shade;
 	private Image leftSamurai, rightSamurai;
 
 	private DuelManager manager;								// The required duel manager component
 
 	private bool timing;										// True if the timer is active, false otherwise
 	private bool roundStart, roundEnd, matchEnd;
-	private bool shadeFadingIn, shadeFadingOut;
 	private bool flashFadingOut, flashShouldFade;
 
 	private Vector3 leftIdlePosition, rightIdlePosition;		// Default idle position of players
@@ -134,11 +134,11 @@ public class UIManager : MonoBehaviour {
 		Flag.enabled = false;
 
 		// Set shade over screen and hide flash screen
-		FillShade();
+		Shade.Fill();
 		Flash.enabled = false;
 		
 		// Set event listeners
-		EventManager.GameStart += ToggleShade;
+		EventManager.GameStart += Shade.Toggle;
 
 		EventManager.GameReset += ClearForNewRound;
 		EventManager.GameOver += ShowMatchWin;
@@ -159,13 +159,13 @@ public class UIManager : MonoBehaviour {
 
 
 		// Shade
-
+		/*
 		if (shadeFadingOut) {
 			FadeShadeAlpha();
 		}
-
-		if (shadeFadingIn) {
-			RaiseShadeAlpha();
+*/
+		if (Shade.IsHidden) {
+			//RaiseShadeAlpha();
 		}
 		else if (roundStart) {
 			roundStart = false;
@@ -225,17 +225,17 @@ public class UIManager : MonoBehaviour {
 
 	public void ToggleShadeForRoundStart() {
 		roundStart = true;
-		ToggleShade();
+		Shade.Toggle();
 	}
 
 	public void ToggleShadeForRoundEnd() {
 		roundEnd = true;
-		ToggleShade();
+		Shade.Toggle();
 	}
 
 	public void ToggleShadeForMatchEnd() {
 		matchEnd = true;
-		ToggleShade();
+		Shade.Toggle();
 	}
 	
 	#endregion
@@ -271,51 +271,6 @@ public class UIManager : MonoBehaviour {
 		graphic.color = color;
 	}
 
-	#endregion
-
-
-	#region Shade Animations
-
-	private void ToggleShade() {
-		if (!Shade.enabled) {
-			Shade.enabled = true;
-			shadeFadingIn = true;
-			shadeFadingOut = false;
-		}
-		else {
-			shadeFadingOut = true;
-			shadeFadingIn = false;
-		}
-	}
-
-	private void FillShade() {
-		Shade.enabled = true;
-		SetGraphicAlpha(Shade, 1);
-	}
-
-	private void FadeShadeAlpha() {
-		var alpha = Shade.color.a;
-		if (alpha > 0) {
-			SetGraphicAlpha(Shade, alpha - .03f);
-		}
-		else {
-			SetGraphicAlpha(Shade, 0);
-			Shade.enabled = false;
-			shadeFadingOut = false;
-		}
-	}
-
-	private void RaiseShadeAlpha() {
-		var alpha = Shade.color.a;
-		if (alpha < 1) {
-			SetGraphicAlpha(Shade, alpha + .03f);
-		}
-		else {
-			SetGraphicAlpha(Shade, 1);
-			shadeFadingIn = false;
-		}
-	}
-	
 	#endregion
 
 
