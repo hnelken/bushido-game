@@ -424,7 +424,8 @@ public class DuelManager : MonoBehaviour {
 		// Set match results
 		BushidoNetManager.Get().SetMatchResults(
 			LeftSamurai.WinCount, RightSamurai.WinCount,
-			LeftSamurai.BestTime, RightSamurai.BestTime);
+			LeftSamurai.BestTime, RightSamurai.BestTime,
+			networking);
 
 		GUI.ToggleShadeForMatchEnd();
 	}

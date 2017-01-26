@@ -157,7 +157,7 @@ public class MenuManager : MonoBehaviour {
 				SceneManager.LoadScene(nextSceneName);
 			}
 			else {
-				BushidoNetManager.Get().OnBothPlayersReady();
+				BushidoNetManager.Get().LaunchNetworkDuel();
 			}
 		}
 	}

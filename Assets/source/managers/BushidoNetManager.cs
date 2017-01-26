@@ -18,6 +18,7 @@ public class BushidoNetManager : NetworkLobbyManager {
 	public struct MatchResults {
 		int leftWins, rightWins;
 		int leftBest, rightBest;
+		bool networked;
 
 		public int LeftWins {
 			get { return leftWins; }
@@ -35,11 +36,16 @@ public class BushidoNetManager : NetworkLobbyManager {
 			get { return rightBest; }
 		}
 
-		public MatchResults(int _leftWins, int _rightWins, int _leftBest, int _rightBest) {
+		public bool Networked {
+			get { return networked; }
+		}
+
+		public MatchResults(int _leftWins, int _rightWins, int _leftBest, int _rightBest, bool _networked) {
 			leftWins = _leftWins;
 			rightWins = _rightWins;
 			leftBest = _leftBest;
 			rightBest = _rightBest;
+			networked = _networked;
 		}
 	}
 
@@ -55,8 +61,8 @@ public class BushidoNetManager : NetworkLobbyManager {
 
 	#region Public API
 
-	public void SetMatchResults(int leftWins, int rightWins, int leftBest, int rightBest) {
-		results = new MatchResults(leftWins, rightWins, leftBest, rightBest);
+	public void SetMatchResults(int leftWins, int rightWins, int leftBest, int rightBest, bool networked) {
+		results = new MatchResults(leftWins, rightWins, leftBest, rightBest, networked);
 	}
 
 	public override void OnLobbyClientExit ()
@@ -73,7 +79,7 @@ public class BushidoNetManager : NetworkLobbyManager {
 		Debug.Log("Both players ready");
 	}
 
-	public void OnBothPlayersReady() {
+	public void LaunchNetworkDuel() {
 		ServerChangeScene("NetworkDuel");
 	}
 
