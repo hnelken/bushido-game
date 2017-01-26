@@ -74,6 +74,7 @@ public class UIManager : MonoBehaviour {
 		}
 	}
 
+	/*
 	public Text LeftCount {
 		get {
 			if (!leftCount) {
@@ -90,7 +91,7 @@ public class UIManager : MonoBehaviour {
 			}
 			return rightCount;
 		}
-	}
+	} */
 	
 	#endregion
 	
@@ -104,6 +105,7 @@ public class UIManager : MonoBehaviour {
 	private FadingShade shade;
 	private Image leftSamurai, rightSamurai;
 
+	private WinCountManager winCount;							// The win count UI manager
 	private DuelManager manager;								// The required duel manager component
 
 	private bool timing;										// True if the timer is active, false otherwise
@@ -121,14 +123,15 @@ public class UIManager : MonoBehaviour {
 	void Start() {
 		// Get required manager component
 		manager = GetComponent<DuelManager>();
+		winCount = GetComponent<WinCountManager>();
 
 		// Set idle positions based on initial image positions
 		leftIdlePosition = LeftSamurai.rectTransform.anchoredPosition;
 		rightIdlePosition = RightSamurai.rectTransform.anchoredPosition;
 
 		// Disable all text elements at beginning of round
-		LeftCount.enabled = false;
-		RightCount.enabled = false;
+		//.enabled = false;
+		//RightCount.enabled = false;
 		MainText.enabled = false;
 
 		Flag.enabled = false;
@@ -246,8 +249,8 @@ public class UIManager : MonoBehaviour {
 	// Update the win count text elements
 	private void RefreshWinCounts() {
 		// Set text elements to show latest win counts
-		LeftCount.text = "P1\n" + manager.LeftSamurai.GetWinCount();
-		RightCount.text = "P2\n" + manager.RightSamurai.GetWinCount();
+		//LeftCount.text = "P1\n" + manager.LeftSamurai.GetWinCount();
+		//RightCount.text = "P2\n" + manager.RightSamurai.GetWinCount();
 	}
 
 	// Returns the display name of the player that caused the given result
@@ -329,8 +332,8 @@ public class UIManager : MonoBehaviour {
 	private void ShowResult() {
 		// Refresh and display win count text elements
 		RefreshWinCounts();
-		LeftCount.gameObject.SetActive(true);
-		RightCount.gameObject.SetActive(true);
+		//LeftCount.enabled = true;
+		//RightCount.enabled = true;
 
 		if (manager.ResultWasTie()) {
 			// Change the sprite color of both players
@@ -361,6 +364,7 @@ public class UIManager : MonoBehaviour {
 		// Check if the round ended in a win or a strike
 		if (roundWon) {
 			// Round was won, change the color of the losing player to black
+			winCount.SignalWin(manager.LeftPlayerCausedResult());
 			LeftSamurai.color = (manager.LeftPlayerCausedResult()) ? blueColor : Color.black;
 			RightSamurai.color = (manager.LeftPlayerCausedResult()) ? Color.black : yellowColor;
 		}
@@ -382,8 +386,8 @@ public class UIManager : MonoBehaviour {
 	// Clears the UI elements for a new round
 	private void ClearForNewRound() {
 		// Disables text elements
-		LeftCount.enabled = false;
-		RightCount.enabled = false;
+		//LeftCount.enabled = false;
+		//RightCount.enabled = false;
 		MainText.enabled = false;
 
 		// Set player sprites and positions to show idle state
