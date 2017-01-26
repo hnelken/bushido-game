@@ -166,6 +166,9 @@ public class LobbyManager : NetworkBehaviour {
 		hostReady = false;
 		clientReady = false;
 
+		LeftArrow.gameObject.SetActive(true);
+		RightArrow.gameObject.SetActive(true);
+
 		if (localLobby) {
 			UpdateLobbyReadyStatus();
 		}
