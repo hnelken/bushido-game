@@ -6,7 +6,7 @@ using System.Collections;
 public class PostGameManager : MonoBehaviour {
 
 	public GameObject RematchButton;
-	public Text MainText;
+	public Text MainText, LeftWinner, RightWinner;
 	public Text LeftWins, RightWins;
 	public Text LeftBest, RightBest;
 	public Image LeftCheckbox, RightCheckbox;
@@ -53,17 +53,25 @@ public class PostGameManager : MonoBehaviour {
 		// Get match results from net manager
 		var netManager = BushidoNetManager.Get();
 
-		if (netManager) {
 		// Change UI to show number of wins for each player
-		LeftWins.text = "" + netManager.Results.LeftWins;
-		RightWins.text = "" + netManager.Results.RightWins;
+		int leftWins = netManager.Results.LeftWins;
+		int rightWins = netManager.Results.RightWins;
+		LeftWins.text = "" + leftWins;
+		RightWins.text = "" + rightWins;
+		if (leftWins > rightWins) {
+			LeftWinner.enabled = true;
+			RightWinner.enabled = false;
+		}
+		else {
+			LeftWinner.enabled = false;
+			RightWinner.enabled = true;
+		}
 
 		// Change UI to show the best reaction time of each player
 		int leftBest = netManager.Results.LeftBest;
 		int rightBest = netManager.Results.RightBest;
 		LeftBest.text = (leftBest == -1) ? "xx" : "" + leftBest;
 		RightBest.text = (rightBest == -1) ? "xx" : "" + rightBest;
-		}
 
 		networked = netManager.Results.Networked;
 		if (!networked) {
