@@ -66,7 +66,10 @@ public class PostGameManager : MonoBehaviour {
 		}
 
 		networked = netManager.Results.Networked;
-		Debug.Log(networked);
+		if (!networked) {
+			LeftCheckbox.enabled = false;
+			RightCheckbox.enabled = false;
+		}
 	}
 
 	void Update() {
