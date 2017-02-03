@@ -350,7 +350,7 @@ public class LobbyManager : NetworkBehaviour {
 
 			// Begin countdown to round begin
 			Debug.Log("Countdown to scene launch");
-			int.TryParse(BestOfText.text, out BushidoNetManager.Get().matchLimit);
+			BushidoNetManager.Get().SetMatchLimit(BestOfText.text);
 			OnBothPlayersReady();
 		}
 	}

@@ -249,7 +249,7 @@ public class MenuManager : MonoBehaviour {
 		}
 		else {
 			// Stop any running broadcasts
-			//BushidoNetManager.Get().discovery.StopBroadcast();
+			BushidoNetManager.Get().Discovery.ExitBroadcast();
 
 			// Close the nearby game menu and show net-game menu
 			ToggleNearbyMenu();
@@ -285,6 +285,7 @@ public class MenuManager : MonoBehaviour {
 		// Find opponent via quick play matchaking
 		MatchMaker.QuickPlay();
 		ToggleNetworkMenu();
+		ToggleExitButton();
 
 		// Setup UI to show matchmaking process
 		PlayText.text = "Finding a game";
@@ -303,12 +304,20 @@ public class MenuManager : MonoBehaviour {
 	}
 
 	public void OnStartNearbyGamePressed() {
-		BushidoNetManager.Get().discovery.StartNearbyGame();
-
+		// Begin broadcasting on local network
+		BushidoNetManager.Get().Discovery.StartNearbyGame();
+		ToggleNearbyMenu();
+		ToggleExitButton();
 	}
 
 	public void OnFindNearbyGamePressed() {
-		BushidoNetManager.Get().discovery.FindNearbyGame();
+		BushidoNetManager.Get().Discovery.FindNearbyGame();
+		ToggleNearbyMenu();
+		ToggleExitButton();
+
+		// Setup UI to show search process
+		PlayText.text = "Finding a game nearby";
+		PlayText.enabled = true;
 	}
 
 	#endregion

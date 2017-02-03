@@ -9,14 +9,21 @@ public class BushidoNetManager : NetworkLobbyManager {
 
 	#region Public Accessors
 
-	public BushidoDiscovery discovery;
+	public BushidoDiscovery Discovery;				// The network discovery component for nearby games
 
-	public int matchLimit;
+	// The last match limit set in a lobby
+	public int MatchLimit {
+		get {
+			return matchLimit;
+		}
+	}
 
+	// The results struct from the last complete game
 	public MatchResults Results {
 		get { return results; }
 	}
 
+	// The struct representing the results of a complete match
 	public struct MatchResults {
 		int leftWins, rightWins;
 		int leftBest, rightBest;
@@ -57,6 +64,7 @@ public class BushidoNetManager : NetworkLobbyManager {
 	#region Private Variables
 
 	private MatchResults results;
+	private int matchLimit;
 
 	#endregion
 
@@ -75,6 +83,10 @@ public class BushidoNetManager : NetworkLobbyManager {
 
 	public override void OnLobbyServerPlayersReady() {
 		Debug.Log("Both players ready");
+	}
+
+	public void SetMatchLimit(string limitText) {
+		int.TryParse(limitText, out matchLimit);
 	}
 
 	public void SetMatchResults(int leftWins, int rightWins, int leftBest, int rightBest, bool networked) {
