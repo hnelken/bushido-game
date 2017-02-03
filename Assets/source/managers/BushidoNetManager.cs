@@ -9,6 +9,8 @@ public class BushidoNetManager : NetworkLobbyManager {
 
 	#region Public Accessors
 
+	public BushidoDiscovery discovery;
+
 	public int matchLimit;
 
 	public MatchResults Results {
@@ -61,8 +63,8 @@ public class BushidoNetManager : NetworkLobbyManager {
 
 	#region Public API
 
-	public void SetMatchResults(int leftWins, int rightWins, int leftBest, int rightBest, bool networked) {
-		results = new MatchResults(leftWins, rightWins, leftBest, rightBest, networked);
+	public static BushidoNetManager Get() {
+		return GameObject.FindObjectOfType<BushidoNetManager>();
 	}
 
 	public override void OnLobbyClientExit ()
@@ -71,12 +73,12 @@ public class BushidoNetManager : NetworkLobbyManager {
 		Debug.Log("Client left lobby");
 	}
 
-	public static BushidoNetManager Get() {
-		return GameObject.FindObjectOfType<BushidoNetManager>();
-	}
-
 	public override void OnLobbyServerPlayersReady() {
 		Debug.Log("Both players ready");
+	}
+
+	public void SetMatchResults(int leftWins, int rightWins, int leftBest, int rightBest, bool networked) {
+		results = new MatchResults(leftWins, rightWins, leftBest, rightBest, networked);
 	}
 
 	public void LaunchNetworkDuel() {
