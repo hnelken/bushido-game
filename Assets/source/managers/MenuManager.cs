@@ -232,6 +232,15 @@ public class MenuManager : MonoBehaviour {
 		ToggleLobbyMenu();
 	}
 
+	private void QuickPlay() {
+		// Find opponent via quick play matchaking
+		MatchMaker.QuickPlay();
+
+		// Setup UI to show matchmaking process
+		PlayText.text = "Finding a game";
+		PlayText.enabled = true;
+	}
+
 	#endregion
 
 
@@ -272,24 +281,30 @@ public class MenuManager : MonoBehaviour {
 		AudioManager.Get().PlayMenuSound();
 		localMenuOpen = false;
 
+		// Hide multiplay menu and show network lobby
+		TogglePlayMenu();
+		QuickPlay();
+
+		/* 
+		 * --UNCOMMENT WHEN NEARBY GAME FEATURE IS AVAILABLE--
+		 * 
 		// Hide multiplay menu and show network game menu
 		TogglePlayMenu();
 		ToggleNetworkMenu();
 		ToggleExitButton();
+		*/
 	}
 
 	// Trigger quick play matchmaking and open lobby
 	public void OnQuickPlayPressed() {
 		AudioManager.Get().PlayMenuSound();
 
-		// Find opponent via quick play matchaking
-		MatchMaker.QuickPlay();
+		// Setup UI to show matchmaking process
 		ToggleNetworkMenu();
 		ToggleExitButton();
 
-		// Setup UI to show matchmaking process
-		PlayText.text = "Finding a game";
-		PlayText.enabled = true;
+		// Find opponent via quick play matchaking
+		QuickPlay();
 	}
 
 	// Trigger nearby matchmaking process and open lobby
