@@ -88,15 +88,9 @@ public class WinCountManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		LeftIcon1.enabled = false;
-		LeftIcon2.enabled = false;
-		LeftIcon3.enabled = false;
-		LeftIcon4.enabled = false;
-
-		RightIcon1.enabled = false;
-		RightIcon2.enabled = false;
-		RightIcon3.enabled = false;
-		RightIcon4.enabled = false;
+		leftCount = 0;
+		rightCount = 0;
+		RefreshCircles();
 	}
 
 	public void SignalWin(bool leftWon) {
@@ -110,41 +104,23 @@ public class WinCountManager : MonoBehaviour {
 
 	private void SignalLeftWin() {
 		leftCount++;
-		switch (leftCount) {
-		case 1:
-			LeftIcon1.enabled = true;
-			break;
-		case 2:
-			LeftIcon2.enabled = true;
-			break;
-		case 3:
-			LeftIcon3.enabled = true;
-			break;
-		case 4:
-			LeftIcon4.enabled = true;
-			break;
-		default:
-			break;
-		}
+		RefreshCircles();
 	}
 
 	private void SignalRightWin() {
 		rightCount++;
-		switch (rightCount) {
-		case 1:
-			RightIcon1.enabled = true;
-			break;
-		case 2:
-			RightIcon2.enabled = true;
-			break;
-		case 3:
-			RightIcon3.enabled = true;
-			break;
-		case 4:
-			RightIcon4.enabled = true;
-			break;
-		default:
-			break;
-		}
+		RefreshCircles();
+	}
+
+	private void RefreshCircles() {
+		LeftIcon1.enabled = leftCount > 0;
+		LeftIcon2.enabled = leftCount > 1;
+		LeftIcon3.enabled = leftCount > 2;
+		LeftIcon4.enabled = leftCount > 3;
+
+		RightIcon1.enabled = rightCount > 0;
+		RightIcon2.enabled = rightCount > 1;
+		RightIcon3.enabled = rightCount > 2;
+		RightIcon4.enabled = rightCount > 3;
 	}
 }

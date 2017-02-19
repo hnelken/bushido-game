@@ -59,7 +59,7 @@ public class DuelManager : MonoBehaviour {
 		GUI = GetComponent<UIManager>();
 
 		// Get match limit from net manager
-		winLimit = BushidoNetManager.Get().matchLimit;
+		winLimit = BushidoNetManager.Get().MatchLimit;
 
 		LeftSamurai.SetManager(this);
 		RightSamurai.SetManager(this);
