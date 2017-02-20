@@ -4,7 +4,7 @@ using System.Collections;
 
 public class NetworkInput : NetworkBehaviour {
 	
-	private bool localPlayerInput;			// True if local player input this frame
+	//private bool localPlayerInput;			// True if local player input this frame
 	
 	// Update is called once per frame
 	void Update () {

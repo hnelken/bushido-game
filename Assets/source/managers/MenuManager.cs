@@ -60,8 +60,6 @@ public class MenuManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		// Connect to photon network
-		PhotonNetwork.ConnectUsingSettings("1");
 
 		// Enable lobby manager
 		Lobby.gameObject.SetActive(true);
