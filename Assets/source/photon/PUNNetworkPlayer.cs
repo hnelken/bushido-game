@@ -7,7 +7,6 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	#region Public Accessors
 
 	public bool IsHost { get { return isHost; } }
-	public bool IsReady { get { return isReady; } }
 
 	#endregion
 
@@ -16,7 +15,6 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 
 	private bool inGame;					// True if this player is in a game
 	private bool isHost;					// True if this player created the current room
-	private bool isReady;					// True if this player is ready to leave the lobby
 	private bool inputReceived;				// True if input has been received this round during gameplay
 
 	#endregion
@@ -44,11 +42,9 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info) {
 		if (stream.isWriting) {
 			stream.SendNext(isHost);
-			stream.SendNext(isReady);
 		}
 		else {
 			this.isHost = (bool) stream.ReceiveNext();
-			this.isReady = (bool) stream.ReceiveNext();
 		}
 	}
 
@@ -65,27 +61,6 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	// Set this player as host
 	public void SetAsHost() {
 		this.isHost = true;
-	}
-
-	#endregion
-
-
-	#region Button Events
-
-	// Signal this player as ready to leave the lobby
-	public void SignalPlayerReady() {
-		this.isReady = true;
-		SignalReady(this.isHost);
-	}
-
-	// Increase win limit on all clients
-	public void IncreaseWinLimit() {
-		ChangeBestOfIndex(false);
-	}
-
-	// Decrease win limit on all clients
-	public void DecreaseWinLimit() {
-		ChangeBestOfIndex(true);
 	}
 
 	#endregion
@@ -123,16 +98,6 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	[PunRPC]	// RPC to trigger reaction from this player on all clients
 	void TriggerReaction(bool hostSamurai, int reactionTime) {
 		DuelManager.Get().TriggerReaction(hostSamurai, reactionTime);
-	}
-
-	[PunRPC]	// RPC to signal this player as ready
-	void SignalReady(bool playerIsHost) {
-		MenuManager.Get().Lobby.OnPlayerReady(isHost);
-	}
-
-	[PunRPC]	// RPC to change the "best of" number in the lobby
-	void ChangeBestOfIndex(bool minus) {
-		MenuManager.Get().Lobby.ChangeBestOfIndex(minus);
 	}
 
 	#endregion

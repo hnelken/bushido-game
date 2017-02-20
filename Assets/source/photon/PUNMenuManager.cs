@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
@@ -8,21 +8,29 @@ using System.Collections.Generic;
 /*
  * This class is the manager for the main menu of the game
  */
-public class MenuManager : MonoBehaviour {
-	
+public class PUNMenuManager : MonoBehaviour {
+
 	#region Editor References
 
-	public Text TitleText;										// The title text element
-	public GlowingText PlayText;								// The glowing "tap-to-play" text element
-	public FadingShade Shade;									// The black image used for fading in and out of scenes
-	public GameObject MultiPlayMenu, NetworkMenu, LobbyMenu;	// The parent objects for the menu segments
-
-	public LobbyManager Lobby;									// Reference to the lobby manager object
+	public Text TitleText;							// The title text element
+	public GlowingText PlayText;					// The glowing "tap-to-play" text element
+	public FadingShade Shade;						// The black image used for fading in and out of scenes
+	public GameObject MultiPlayMenu, LobbyMenu;		// The parent objects for the menu segments
 
 	#endregion
 
+
+	#region Private Variables
+
+	private bool localMenuOpen;						// True if a local-play menu is open, false if a net-play menu is open
+	private bool leavingMenu;						// True if a game is about to begin and the menu scene must be left
+	private bool pastOpenMenu;						// True if the opening menu is no longer showing
+
+	private string nextSceneName;					// The string name of the scene the menu should transition to next
+
 	// Safe reference to the source of all game audio
-	public AudioManager Audio {
+	private AudioManager audioManager;
+	private AudioManager Audio {
 		get {
 			if (!audioManager) {
 				audioManager = AudioManager.Get();
@@ -32,26 +40,26 @@ public class MenuManager : MonoBehaviour {
 	}
 
 	// Safe reference to the match maker for net games
-	public BushidoMatchMaker MatchMaker {
+	private PUNQuickPlay matchMaker;
+	private PUNQuickPlay MatchMaker {
 		get {
 			if (!matchMaker) {
-				matchMaker = GetComponent<BushidoMatchMaker>();
+				matchMaker = GetComponent<PUNQuickPlay>();
 			}
 			return matchMaker;
 		}
 	}
 
-
-	#region Private Variables
-
-	private AudioManager audioManager;				// Unsafe reference to audio source
-	private BushidoMatchMaker matchMaker;			// Unsafe reference to the match maker
-
-	private bool localMenuOpen;						// True if a local-play menu is open, false if a net-play menu is open
-	private bool leavingMenu;						// True if a game is about to begin and the menu scene must be left
-	private bool pastOpenMenu;						// True if the opening menu is no longer showing
-
-	private string nextSceneName;					// The string name of the scene the menu should transition to next
+	// Safe reference to the manager for the lobby UI
+	private PUNLobbyManager lobby;
+	private PUNLobbyManager Lobby {
+		get {
+			if (!lobby) {
+				lobby = GetComponent<PUNLobbyManager>();
+			}
+			return lobby;
+		}
+	}
 
 	#endregion
 
@@ -61,14 +69,11 @@ public class MenuManager : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
-		// Enable lobby manager
-		Lobby.gameObject.SetActive(true);
-
 		// Initialize some UI elements
 		Shade.Initialize();
 		PlayText.enabled = false;
 	}
-	
+
 	// Update is called once per frame
 	void Update () {
 
@@ -94,13 +99,13 @@ public class MenuManager : MonoBehaviour {
 	#region Public API
 
 	// Used to gain a reliable reference to this manager
-	public static MenuManager Get() {
-		return FindObjectOfType<MenuManager>();
+	public static PUNMenuManager Get() {
+		return FindObjectOfType<PUNMenuManager>();
 	}
 
 	// Triggered when a network player enters the lobby
 	// Returns true if the player is the host, false if the client
-	public bool OnNetworkPlayerEnteredLobby() {
+	public bool OnNetworkPlayerEnteredLobby(bool playerIsHost) {
 		return Lobby.OnPlayerEnteredLobby();
 	}
 
@@ -188,11 +193,6 @@ public class MenuManager : MonoBehaviour {
 		MultiPlayMenu.SetActive(!MultiPlayMenu.activeSelf);
 	}
 
-	// Toggle visibility of network match menu
-	private void ToggleNetworkMenu() {
-		NetworkMenu.SetActive(!NetworkMenu.activeSelf);
-	}
-
 	// Toggle visibility of lobby menu
 	private void ToggleLobbyMenu() {
 		TitleText.gameObject.SetActive(LobbyMenu.activeSelf);
@@ -222,15 +222,6 @@ public class MenuManager : MonoBehaviour {
 
 	#region ButtonEvents
 
-	// Close the network match menu
-	public void OnNetworkMenuExit() {
-		AudioManager.Get().PlayMenuSound();
-
-		// Close the network menu and show multi-play menu
-		ToggleNetworkMenu();
-		TogglePlayMenu();
-	}
-
 	// Open the local game lobby
 	public void OnLocalGameSelect() {
 		AudioManager.Get().PlayMenuSound();
@@ -246,27 +237,13 @@ public class MenuManager : MonoBehaviour {
 		AudioManager.Get().PlayMenuSound();
 		localMenuOpen = false;
 
-		// Hide multiplay menu and show network game menu
+		// Setup UI to show matchmaking process
 		TogglePlayMenu();
-		ToggleNetworkMenu();
-	}
-
-	// Trigger quick play matchmaking and open lobby
-	public void OnQuickPlayPressed() {
-		AudioManager.Get().PlayMenuSound();
+		PlayText.text = "Finding a game";
+		PlayText.enabled = true;
 
 		// Find opponent via quick play matchaking
 		MatchMaker.QuickPlay();
-		ToggleNetworkMenu();
-
-		// Setup UI to show matchmaking process
-		PlayText.text = "Finding a game";
-		PlayText.enabled = true;
-	}
-
-	// Trigger nearby matchmaking process and open lobby
-	public void OnNearbyGamePressed() {
-		// TODO: use local discovery to find nearby opponent
 	}
 
 	#endregion

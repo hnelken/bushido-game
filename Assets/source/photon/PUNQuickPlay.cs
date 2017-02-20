@@ -4,21 +4,57 @@ using System.Collections;
 
 public class PUNQuickPlay : Photon.PunBehaviour {
 
+	#region Private Variables
+
+	private bool readyToPlay;		// True if the player has successfully joined a lobby and can search for a room 
 	private bool playerIsHost;		// True if the local player created the room they are joining
 
+	#endregion
+
+
+	#region Behaviour API
 	// Use this for initialization
 	void Start() {
 		// Connect to photon network
 		PhotonNetwork.ConnectUsingSettings("0.1");
 	}
 
+	/*
 	void OnGUI() {
 		GUILayout.Label(PhotonNetwork.connectionStateDetailed.ToString());
 	}
+	*/
+
+	#endregion
+
+
+	#region Public API
+
+	public static PUNQuickPlay Get() {
+		return GameObject.FindObjectOfType<PUNQuickPlay>();
+	}
+
+	public void QuickPlay() {
+		// Try quickly joining a random room as client
+		this.playerIsHost = false;
+		PhotonNetwork.JoinRandomRoom();
+	}
+		
+	public bool LocalPlayerIsHost() {
+		return playerIsHost;
+	}
+
+	public bool ReadyToPlay() {
+		return readyToPlay;
+	}
+
+	#endregion
+
+
+	#region PunBehaviour API
 
 	public override void OnJoinedLobby() {
-		// Try quickly joining a random room
-		PhotonNetwork.JoinRandomRoom();
+		this.readyToPlay = true;
 	}
 
 	public override void OnPhotonRandomJoinFailed(object[] codeAndMsg) {
@@ -35,9 +71,15 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 		PUNNetworkPlayer player = playerObject.GetComponent<PUNNetworkPlayer>();
 		player.enabled = true;
 
-		// Set the player as host if they made the room
+		// Set the player as host or client
 		if (this.playerIsHost) {
 			player.SetAsHost();
+			PUNMenuManager.Get().ShowNetworkLobby();
 		}
+
+		// Signal to the lobby that a player has entered
+		PUNMenuManager.Get().OnNetworkPlayerEnteredLobby(this.playerIsHost);
 	}
+
+	#endregion
 }
