@@ -103,22 +103,10 @@ public class PUNMenuManager : MonoBehaviour {
 		return FindObjectOfType<PUNMenuManager>();
 	}
 
-	// Triggered when a network player enters the lobby
-	// Returns true if the player is the host, false if the client
-	public void OnNetworkPlayerEnteredLobby(bool playerIsHost) {
-		if (!playerIsHost) {
-		//	Lobby.OnClientEnterLobby();
-		}
-		else {
-			
-		}
-		Lobby.OnPlayerEnteredLobby(playerIsHost);
-	}
-
 	// Manage UI to show a network lobby
-	public void ShowNetworkLobby() {
+	public void ShowNetworkLobby(bool asHost) {
 		PlayText.enabled = false;
-		ToggleNetworkLobby();
+		ToggleNetworkLobby(asHost);
 	}
 
 	// Manage UI to leave a local lobby
@@ -206,10 +194,10 @@ public class PUNMenuManager : MonoBehaviour {
 	}
 
 	// Prepare network lobby and toggle menu
-	private void ToggleNetworkLobby() {
+	private void ToggleNetworkLobby(bool asHost) {
 		// Prepare network lobby if menu is not visible
 		if (!LobbyMenu.activeSelf) {
-			Lobby.PrepareNetworkLobby();
+			Lobby.PrepareNetworkLobby(asHost);
 		}
 		ToggleLobbyMenu();
 	}

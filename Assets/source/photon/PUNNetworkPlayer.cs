@@ -72,7 +72,7 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	}
 
 	public void EnterLobby() {
-		photonView.RPC("SignalEnterLobby", PhotonTargets.All);
+		photonView.RPC("SignalEnterLobby", PhotonTargets.AllBuffered);
 	}
 
 	// Set this player as in-game
@@ -87,7 +87,7 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 
 	public void SignalReady() {
 		this.isReady = true;
-		photonView.RPC("SignalPlayerReady", PhotonTargets.Others, new bool[]{isHost});
+		photonView.RPC("SignalPlayerReady", PhotonTargets.All);
 	}
 
 	#endregion
@@ -124,8 +124,7 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 
 	[PunRPC]
 	void SignalEnterLobby() {
-		Debug.Log("RPC - Host:" + this.isHost);
-		PUNMenuManager.Get().OnNetworkPlayerEnteredLobby(this.isHost);
+		PUNLobbyManager.Get().OnPlayerEnteredLobby(this);
 	}
 
 	[PunRPC]	// RPC to trigger reaction from this player on all clients
@@ -134,8 +133,8 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	}
 
 	[PunRPC]
-	void SignalPlayerReady(bool hostSamurai) {
-
+	void SignalPlayerReady() {
+		PUNLobbyManager.Get().UpdateLobbyUI();
 	}
 
 	#endregion

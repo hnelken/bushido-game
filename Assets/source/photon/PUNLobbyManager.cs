@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 
 public class PUNLobbyManager : MonoBehaviour {
 
@@ -21,7 +22,8 @@ public class PUNLobbyManager : MonoBehaviour {
 
 	#region Private Variables
 
-	private PUNNetworkPlayer[] players;					// The list of players in the lobby
+	private List<PUNNetworkPlayer> players = new List<PUNNetworkPlayer>();
+	//private PUNNetworkPlayer[] players;					// The list of players in the lobby
 
 	// Lobby type and info
 	private bool localLobby;							// True if the lobby is for a local game, false if for a network game
@@ -114,34 +116,15 @@ public class PUNLobbyManager : MonoBehaviour {
 				clientInLobby = true;
 				clientReady = player.IsReady;
 			}
-
-			UpdateLobbySamurai();
-			UpdateLobbyReadyStatus();
 		}
+		UpdateLobbySamurai();
+		UpdateLobbyReadyStatus();
 	}
 
 	// Handles a player joining a room
-	public bool OnPlayerEnteredLobby(bool playerIsHost) {
-
-		this.players = PUNNetworkPlayer.GetAllPlayers();
-
+	public void OnPlayerEnteredLobby(PUNNetworkPlayer player) {
+		this.players.Add(player);
 		UpdateLobbyUI();
-		return !clientInLobby;
-		/*
-		if (playerIsHost) {
-			hostInLobby = true;
-		}
-		else {
-			clientInLobby = true;
-		}
-
-
-		// Update lobby UI to show present players
-		UpdateLobbySamurai();
-
-		// Return true if the host just joined, false if the client did
-		return !clientInLobby;
-		*/
 	}
 
 	// Prepare the lobby menu for a local lobby
@@ -151,19 +134,37 @@ public class PUNLobbyManager : MonoBehaviour {
 		clientInLobby = true;
 
 		// Initialize lobby UI
-		PrepareLobbyUI(true);
+		PrepareLobbyUI(true, true);
 		UpdateLobbySamurai();
 	}
 
 	// Prepare the lobby menu for a network lobby
-	public void PrepareNetworkLobby() {
-		PrepareLobbyUI(false);
+	public void PrepareNetworkLobby(bool asHost) {
+		PrepareLobbyUI(false, asHost);
 	}
 
 	#endregion
 
 
 	#region Private API
+
+	// Initialize the lobby UI for a local or network game
+	private void PrepareLobbyUI(bool isLocalLobby, bool asHost) {
+		// Set lobby type
+		localLobby = isLocalLobby;
+
+		// Initialize lobby settings if the host, client syncs automatically
+		if (asHost) {
+			bestOfIndex = 1;
+			UpdateBestOfText();
+			ClearReadyStatus();
+		}
+
+		// Hide or show ready buttons depending on lobby type
+		NetReady.gameObject.SetActive(!localLobby);
+		LeftReady.gameObject.SetActive(localLobby);
+		RightReady.gameObject.SetActive(localLobby);
+	}
 
 	// Reset ready status of both players and refresh UI
 	private void ClearReadyStatus() {
@@ -196,22 +197,6 @@ public class PUNLobbyManager : MonoBehaviour {
 		UpdateBestOfText();
 	}
 
-	// Initialize the lobby UI for a local or network game
-	private void PrepareLobbyUI(bool isLocalLobby) {
-		// Set lobby type
-		localLobby = isLocalLobby;
-
-		// Initialize lobby UI
-		bestOfIndex = 1;
-		UpdateBestOfText();
-		ClearReadyStatus();
-
-		// Hide or show ready buttons depending on lobby type
-		NetReady.gameObject.SetActive(!localLobby);
-		LeftReady.gameObject.SetActive(localLobby);
-		RightReady.gameObject.SetActive(localLobby);
-	}
-
 	// Updates the samurai image elements based on presence of players
 	private void UpdateLobbySamurai() {
 		// Enable or disable the samurai images
@@ -225,6 +210,7 @@ public class PUNLobbyManager : MonoBehaviour {
 
 	// Updates the lobby ready checkbox images based on player ready status
 	private void UpdateLobbyReadyStatus() {
+		Debug.Log(hostInLobby + " " + clientInLobby + "-" + hostReady + " " + clientReady);
 		// Update the checkbox images
 		LeftCheckbox.sprite = (hostReady) ? CheckedBox : UncheckedBox;
 		RightCheckbox.sprite = (clientReady) ? CheckedBox : UncheckedBox;
@@ -339,8 +325,12 @@ public class PUNLobbyManager : MonoBehaviour {
 		LeftArrow.gameObject.SetActive(false);
 		RightArrow.gameObject.SetActive(false);
 
+		PUNNetworkPlayer localPlayer = PUNNetworkPlayer.GetLocalPlayer();
+		localPlayer.SignalReady();
+
+		/*
 		// Set host or client as ready depending on the local player
-		if (PUNQuickPlay.Get().LocalPlayerIsHost()) {
+		if (localPlayer.IsHost) {
 			hostReady = true;
 		}
 		else {
@@ -349,6 +339,7 @@ public class PUNLobbyManager : MonoBehaviour {
 
 		// Update the lobby UI to show ready status
 		UpdateLobbyReadyStatus();
+		*/
 	}
 
 	// Handle the local left-side player signalling ready
