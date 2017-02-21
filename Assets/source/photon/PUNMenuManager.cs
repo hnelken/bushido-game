@@ -105,8 +105,14 @@ public class PUNMenuManager : MonoBehaviour {
 
 	// Triggered when a network player enters the lobby
 	// Returns true if the player is the host, false if the client
-	public bool OnNetworkPlayerEnteredLobby(bool playerIsHost) {
-		return Lobby.OnPlayerEnteredLobby();
+	public void OnNetworkPlayerEnteredLobby(bool playerIsHost) {
+		if (!playerIsHost) {
+		//	Lobby.OnClientEnterLobby();
+		}
+		else {
+			
+		}
+		Lobby.OnPlayerEnteredLobby(playerIsHost);
 	}
 
 	// Manage UI to show a network lobby

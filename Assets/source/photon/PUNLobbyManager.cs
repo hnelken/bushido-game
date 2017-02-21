@@ -1,9 +1,8 @@
-﻿using Photon;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 
-public class PUNLobbyManager : Photon.MonoBehaviour {
+public class PUNLobbyManager : MonoBehaviour {
 
 	#region Editor References
 
@@ -21,6 +20,8 @@ public class PUNLobbyManager : Photon.MonoBehaviour {
 
 
 	#region Private Variables
+
+	private PUNNetworkPlayer[] players;					// The list of players in the lobby
 
 	// Lobby type and info
 	private bool localLobby;							// True if the lobby is for a local game, false if for a network game
@@ -94,30 +95,6 @@ public class PUNLobbyManager : Photon.MonoBehaviour {
 		RightCheckbox.sprite = UncheckedBox;
 	}
 
-	// Sync the lobby on all clients
-	public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info) {
-		if (stream.isWriting) {
-			stream.SendNext(hostInLobby);
-			stream.SendNext(clientInLobby);
-			stream.SendNext(hostReady);
-			stream.SendNext(clientReady);
-			stream.SendNext(bestOfIndex);
-		}
-		else {
-			// Sync player presence, ready status, and win limit selection
-			this.hostInLobby = (bool) stream.ReceiveNext();
-			this.clientInLobby = (bool) stream.ReceiveNext();
-			this.hostReady = (bool) stream.ReceiveNext();
-			this.clientReady = (bool) stream.ReceiveNext();
-			this.bestOfIndex = (int) stream.ReceiveNext();
-
-			// Update UI with sync'd parameters
-			UpdateLobbySamurai();
-			UpdateLobbyReadyStatus();
-			UpdateBestOfText();
-		}
-	}
-
 	#endregion
 
 
@@ -127,21 +104,44 @@ public class PUNLobbyManager : Photon.MonoBehaviour {
 		return FindObjectOfType<PUNLobbyManager>();
 	}
 
+	public void UpdateLobbyUI() {
+		foreach (PUNNetworkPlayer player in players) {
+			if (player.IsHost) {
+				hostInLobby = true;
+				hostReady = player.IsReady;
+			}
+			else {
+				clientInLobby = true;
+				clientReady = player.IsReady;
+			}
+
+			UpdateLobbySamurai();
+			UpdateLobbyReadyStatus();
+		}
+	}
+
 	// Handles a player joining a room
-	public bool OnPlayerEnteredLobby() {
-		// Update lobby status
-		if (!hostInLobby) {
+	public bool OnPlayerEnteredLobby(bool playerIsHost) {
+
+		this.players = PUNNetworkPlayer.GetAllPlayers();
+
+		UpdateLobbyUI();
+		return !clientInLobby;
+		/*
+		if (playerIsHost) {
 			hostInLobby = true;
 		}
 		else {
 			clientInLobby = true;
 		}
 
+
 		// Update lobby UI to show present players
 		UpdateLobbySamurai();
 
 		// Return true if the host just joined, false if the client did
 		return !clientInLobby;
+		*/
 	}
 
 	// Prepare the lobby menu for a local lobby
@@ -278,7 +278,7 @@ public class PUNLobbyManager : Photon.MonoBehaviour {
 		}
 
 		// Set the win limit in the network manager
-		BushidoNetManager.Get().SetMatchLimit(BestOfNumText.text);
+		//BushidoNetManager.Get().SetMatchLimit(BestOfNumText.text);
 
 		// Begin countdown to game start
 		countDown = 5;					// Set countdown to 5

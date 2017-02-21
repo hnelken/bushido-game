@@ -7,6 +7,7 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	#region Public Accessors
 
 	public bool IsHost { get { return isHost; } }
+	public bool IsReady { get { return isReady; } }
 
 	#endregion
 
@@ -15,6 +16,7 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 
 	private bool inGame;					// True if this player is in a game
 	private bool isHost;					// True if this player created the current room
+	private bool isReady;					// True if this player is ready to leave the lobby
 	private bool inputReceived;				// True if input has been received this round during gameplay
 
 	#endregion
@@ -42,9 +44,11 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info) {
 		if (stream.isWriting) {
 			stream.SendNext(isHost);
+			stream.SendNext(isReady);
 		}
 		else {
 			this.isHost = (bool) stream.ReceiveNext();
+			this.isReady = (bool) stream.ReceiveNext();
 		}
 	}
 
@@ -53,6 +57,24 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 
 	#region Public API
 		
+	public static PUNNetworkPlayer GetLocalPlayer() {
+		foreach (PUNNetworkPlayer player in GetAllPlayers()) {
+			if (player.photonView.isMine) {
+				return player;
+			}
+		}
+		Debug.Log("Couldn't find local player");
+		return null;
+	}
+
+	public static PUNNetworkPlayer[] GetAllPlayers() {
+		return GameObject.FindObjectsOfType<PUNNetworkPlayer>();
+	}
+
+	public void EnterLobby() {
+		photonView.RPC("SignalEnterLobby", PhotonTargets.All);
+	}
+
 	// Set this player as in-game
 	public void LeaveLobby() {
 		this.inGame = true;
@@ -61,6 +83,11 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	// Set this player as host
 	public void SetAsHost() {
 		this.isHost = true;
+	}
+
+	public void SignalReady() {
+		this.isReady = true;
+		photonView.RPC("SignalPlayerReady", PhotonTargets.Others, new bool[]{isHost});
 	}
 
 	#endregion
@@ -95,9 +122,20 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 
 	#region PUN RPC's
 
+	[PunRPC]
+	void SignalEnterLobby() {
+		Debug.Log("RPC - Host:" + this.isHost);
+		PUNMenuManager.Get().OnNetworkPlayerEnteredLobby(this.isHost);
+	}
+
 	[PunRPC]	// RPC to trigger reaction from this player on all clients
 	void TriggerReaction(bool hostSamurai, int reactionTime) {
 		DuelManager.Get().TriggerReaction(hostSamurai, reactionTime);
+	}
+
+	[PunRPC]
+	void SignalPlayerReady(bool hostSamurai) {
+
 	}
 
 	#endregion

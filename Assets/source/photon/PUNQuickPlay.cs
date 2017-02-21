@@ -74,11 +74,24 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 		// Set the player as host or client
 		if (this.playerIsHost) {
 			player.SetAsHost();
-			PUNMenuManager.Get().ShowNetworkLobby();
+		}
+		else {
+			Debug.Log("client entered room: " + this.playerIsHost);
+
 		}
 
 		// Signal to the lobby that a player has entered
-		PUNMenuManager.Get().OnNetworkPlayerEnteredLobby(this.playerIsHost);
+		//OnPlayerEnteredLobby();
+		StartCoroutine(WaitAndEnterLobby(player));
+	}
+
+	public IEnumerator WaitAndEnterLobby(PUNNetworkPlayer player) {
+
+		yield return new WaitForSeconds(2);
+		Debug.Log("Entering Lobby");
+		player.EnterLobby();
+		// Show the lobby for the local player
+		PUNMenuManager.Get().ShowNetworkLobby();
 	}
 
 	#endregion
