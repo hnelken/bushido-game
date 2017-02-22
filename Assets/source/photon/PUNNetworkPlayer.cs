@@ -83,9 +83,8 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	}
 
 	// Set this player as ready and 
-	public void SignalReady() {
-		this.isReady = true;
-		PUNLobbyManager.Get().OnPlayerSignalReady();
+	public void ToggleReady() {
+		this.isReady = !isReady;
 	}
 
 	// Set this player as host
@@ -135,12 +134,6 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 		PUNLobbyManager.Get().OnPlayerEnteredLobby(this);
 	}
 
-	/*
-	[PunRPC]
-	void SignalPlayerReady() {
-		PUNLobbyManager.Get().OnPlayerSignalReady();
-	}
-*/
 	[PunRPC]	// RPC to trigger reaction from this player on all clients
 	void TriggerReaction(bool hostSamurai, int reactionTime) {
 		DuelManager.Get().TriggerReaction(hostSamurai, reactionTime);

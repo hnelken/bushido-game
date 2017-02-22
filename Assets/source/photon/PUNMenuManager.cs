@@ -10,7 +10,7 @@ using System.Collections.Generic;
  */
 public class PUNMenuManager : MonoBehaviour {
 
-	#region Editor References
+	#region Public References
 
 	public Text TitleText;							// The title text element
 	public GlowingText PlayText;					// The glowing "tap-to-play" text element
@@ -140,6 +140,24 @@ public class PUNMenuManager : MonoBehaviour {
 
 	#region Private API
 
+	public void UpdateConnectionStatus(PUNQuickPlay.NetGameStatus connStatus) {
+		switch (connStatus) {
+		case PUNQuickPlay.NetGameStatus.CONNECTING:
+			PlayText.text = "Connecting";
+			PlayText.enabled = true;
+			break;
+		case PUNQuickPlay.NetGameStatus.FINDING:
+			PlayText.text = "Finding a game";
+			break;
+		case PUNQuickPlay.NetGameStatus.ENTERING:
+			PlayText.text = "Entering game";
+			break;
+		default:
+			PlayText.enabled = false;
+			break;
+		}
+	}
+
 	// Handle animating UI elements when leaving menu scene
 	private void CheckForMenuExit() {
 		// After shade is black, leave menu
@@ -233,11 +251,13 @@ public class PUNMenuManager : MonoBehaviour {
 
 		// Setup UI to show matchmaking process
 		TogglePlayMenu();
-		PlayText.text = "Finding a game";
-		PlayText.enabled = true;
+		MatchMaker.Connect();
+
+		//PlayText.text = "Finding a game";
+		//PlayText.enabled = true;
 
 		// Find opponent via quick play matchaking
-		MatchMaker.QuickPlay();
+		//MatchMaker.QuickPlay();
 	}
 
 	#endregion

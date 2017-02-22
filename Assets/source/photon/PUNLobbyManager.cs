@@ -109,6 +109,11 @@ public class PUNLobbyManager : MonoBehaviour {
 		RightCheckbox.sprite = UncheckedBox;
 	}
 
+	#endregion
+
+
+	#region Photon RPC's
+
 	[PunRPC]
 	void SyncLobby(bool _hostReady, bool _clientReady, int _bestOfIndex) {
 		this.hostReady = _hostReady;
@@ -116,6 +121,11 @@ public class PUNLobbyManager : MonoBehaviour {
 		this.bestOfIndex = _bestOfIndex;
 
 		UpdateLobbyUI();
+	}
+
+	[PunRPC]
+	void SyncChangeBestOfIndex(bool minus) {
+		ChangeBestOfIndex(minus);
 	}
 
 	#endregion
@@ -158,13 +168,9 @@ public class PUNLobbyManager : MonoBehaviour {
 		PrepareLobbyUI(false, asHost);
 	}
 
-	#endregion
-
-
-	#region Private API
-
 	// Use the network players in the scene to update the lobby UI
 	public void UpdateLobbyUI() {
+		// Get lobby info from player objects
 		foreach (PUNNetworkPlayer player in players) {
 			if (player.IsHost) {
 				hostInLobby = true;
@@ -175,44 +181,27 @@ public class PUNLobbyManager : MonoBehaviour {
 				clientReady = player.IsReady;
 			}
 		}
+
+		// Refresh UI elements
 		UpdateLobbySamurai();
 		UpdateLobbyReadyStatus();
+		UpdateBestOfText();
 	}
 
-	// Initialize the lobby UI for a local or network game
-	private void PrepareLobbyUI(bool isLocalLobby, bool asHost) {
-		// Set lobby type
-		localLobby = isLocalLobby;
+	#endregion
 
-		// Initialize lobby settings if the host, client syncs automatically
-		if (asHost) {
-			bestOfIndex = 1;
-			UpdateBestOfText();
-			ClearReadyStatus();
-		}
 
-		// Hide or show ready buttons depending on lobby type
-		NetReady.gameObject.SetActive(!localLobby);
-		LeftReady.gameObject.SetActive(localLobby);
-		RightReady.gameObject.SetActive(localLobby);
-	}
-
-	// Reset ready status of both players and refresh UI
-	private void ClearReadyStatus() {
-		// Both players are no longer ready
-		hostReady = false;
-		clientReady = false;
-
-		// Best-of selector arrows become available again
-		LeftArrow.gameObject.SetActive(true);
-		RightArrow.gameObject.SetActive(true);
-
-		// Update UI
-		UpdateLobbyReadyStatus();
-	}
+	#region Private API
 
 	// Increment or decrement the "best-of" index and update the UI
+	private void ChangeBestOfIndexOnAllClients(bool minus) {
+		photonView.RPC("SyncChangeBestOfIndex", PhotonTargets.All, minus);
+	}
+
+	// Change the current win limit selection
 	private void ChangeBestOfIndex(bool minus) {
+		Audio.PlayMenuSound();
+
 		// Changing match parameters resets ready status
 		ClearReadyStatus();
 
@@ -228,6 +217,47 @@ public class PUNLobbyManager : MonoBehaviour {
 		UpdateBestOfText();
 	}
 
+	// Initialize the lobby UI for a local or network game
+	private void PrepareLobbyUI(bool isLocalLobby, bool asHost) {
+		// Set lobby type
+		localLobby = isLocalLobby;
+
+		// Initialize lobby settings if the host, client syncs automatically
+		if (asHost) {
+			bestOfIndex = 1;
+			UpdateBestOfText();
+			ClearReadyStatus();
+
+			if (!isLocalLobby) {
+				clientInLobby = false;
+				UpdateLobbySamurai();
+			}
+		}
+
+		// Hide or show ready buttons depending on lobby type
+		NetReady.gameObject.SetActive(!localLobby);
+		LeftReady.gameObject.SetActive(localLobby);
+		RightReady.gameObject.SetActive(localLobby);
+	}
+
+	// Reset ready status of both players and refresh UI
+	private void ClearReadyStatus() {
+		// Both players are no longer ready
+		hostReady = false;
+		clientReady = false;
+
+		foreach (PUNNetworkPlayer player in this.players) {
+			player.ToggleReady();
+		}
+
+		// Best-of selector arrows become available again
+		LeftArrow.gameObject.SetActive(true);
+		RightArrow.gameObject.SetActive(true);
+
+		// Update UI
+		UpdateLobbyReadyStatus();
+	}
+
 	// Updates the samurai image elements based on presence of players
 	private void UpdateLobbySamurai() {
 		// Enable or disable the samurai images
@@ -241,7 +271,6 @@ public class PUNLobbyManager : MonoBehaviour {
 
 	// Updates the lobby ready checkbox images based on player ready status
 	private void UpdateLobbyReadyStatus() {
-		Debug.Log(hostInLobby + " " + clientInLobby + "-" + hostReady + " " + clientReady);
 		// Update the checkbox images
 		LeftCheckbox.sprite = (hostReady) ? CheckedBox : UncheckedBox;
 		RightCheckbox.sprite = (clientReady) ? CheckedBox : UncheckedBox;
@@ -356,21 +385,8 @@ public class PUNLobbyManager : MonoBehaviour {
 		LeftArrow.gameObject.SetActive(false);
 		RightArrow.gameObject.SetActive(false);
 
-		PUNNetworkPlayer localPlayer = PUNNetworkPlayer.GetLocalPlayer();
-		localPlayer.SignalReady();
-
-		/*
-		// Set host or client as ready depending on the local player
-		if (localPlayer.IsHost) {
-			hostReady = true;
-		}
-		else {
-			clientReady = true;
-		}
-
-		// Update the lobby UI to show ready status
-		UpdateLobbyReadyStatus();
-		*/
+		PUNNetworkPlayer.GetLocalPlayer().ToggleReady();
+		OnPlayerSignalReady();
 	}
 
 	// Handle the local left-side player signalling ready
@@ -402,15 +418,20 @@ public class PUNLobbyManager : MonoBehaviour {
 		Audio.PlayMenuSound();
 
 		// Decrement from the "best-of" index
-		ChangeBestOfIndex(true);
+		if (PhotonNetwork.connected) {
+			ChangeBestOfIndexOnAllClients(true);
+		}
+		else {
+			ChangeBestOfIndex(true);
+		}
 	}
 
 	// Handle the right arrow button being pressed
 	public void OnRightPressed() {
-		Audio.PlayMenuSound();
 
 		// Increase the "best-of" index
-		ChangeBestOfIndex(false);
+		ChangeBestOfIndexOnAllClients(false);
+		//ChangeBestOfIndex(false);
 	}
 
 	// Handle the lobby exit button being pressed
