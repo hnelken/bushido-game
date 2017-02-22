@@ -111,21 +111,18 @@ public class PUNMenuManager : MonoBehaviour {
 
 	// Manage UI to leave a local lobby
 	public void ExitLocalLobby() {
-		ToggleLocalLobby();
+		ToggleLobbyMenu();
 		TogglePlayMenu();
 	}
 
 	// Manage leaving a network lobby
 	public void ExitNetworkLobby() {
-		/*
-		// Quit match
-		if (matchMaker.PlayingAsHost) {
-			NetworkManager.singleton.StopHost();
-		}
-		else {
-			NetworkManager.singleton.StopClient();
-		}
-		*/
+		UpdateConnectionStatus(PUNQuickPlay.NetGameStatus.NOTCONNECTED);
+
+		// Disconnect from the network, leaving any game in progress
+		PhotonNetwork.Disconnect();
+		ToggleLobbyMenu();
+		TogglePlayMenu();
 	}
 
 	// Begins the animations that lead to desired scene change
@@ -249,15 +246,9 @@ public class PUNMenuManager : MonoBehaviour {
 		AudioManager.Get().PlayMenuSound();
 		localMenuOpen = false;
 
-		// Setup UI to show matchmaking process
+		// Hide play menu and begin connecting for network game
 		TogglePlayMenu();
 		MatchMaker.Connect();
-
-		//PlayText.text = "Finding a game";
-		//PlayText.enabled = true;
-
-		// Find opponent via quick play matchaking
-		//MatchMaker.QuickPlay();
 	}
 
 	#endregion
