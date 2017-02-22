@@ -45,10 +45,17 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 		if (stream.isWriting) {
 			stream.SendNext(isHost);
 			stream.SendNext(isReady);
+			stream.SendNext(inGame);
 		}
 		else {
 			this.isHost = (bool) stream.ReceiveNext();
 			this.isReady = (bool) stream.ReceiveNext();
+			this.inGame = (bool) stream.ReceiveNext();
+
+			// Update lobby if not in game
+			if (!inGame) {
+				PUNLobbyManager.Get().UpdateLobbyUI();
+			}
 		}
 	}
 
@@ -75,9 +82,10 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 		photonView.RPC("SignalEnterLobby", PhotonTargets.AllBuffered);
 	}
 
-	// Set this player as in-game
-	public void LeaveLobby() {
-		this.inGame = true;
+	// Set this player as ready and 
+	public void SignalReady() {
+		this.isReady = true;
+		PUNLobbyManager.Get().OnPlayerSignalReady();
 	}
 
 	// Set this player as host
@@ -85,9 +93,9 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 		this.isHost = true;
 	}
 
-	public void SignalReady() {
-		this.isReady = true;
-		photonView.RPC("SignalPlayerReady", PhotonTargets.All);
+	// Set this player as in-game
+	public void LeaveLobby() {
+		this.inGame = true;
 	}
 
 	#endregion
@@ -127,14 +135,15 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 		PUNLobbyManager.Get().OnPlayerEnteredLobby(this);
 	}
 
+	/*
+	[PunRPC]
+	void SignalPlayerReady() {
+		PUNLobbyManager.Get().OnPlayerSignalReady();
+	}
+*/
 	[PunRPC]	// RPC to trigger reaction from this player on all clients
 	void TriggerReaction(bool hostSamurai, int reactionTime) {
 		DuelManager.Get().TriggerReaction(hostSamurai, reactionTime);
-	}
-
-	[PunRPC]
-	void SignalPlayerReady() {
-		PUNLobbyManager.Get().UpdateLobbyUI();
 	}
 
 	#endregion

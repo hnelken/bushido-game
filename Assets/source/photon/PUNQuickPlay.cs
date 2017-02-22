@@ -61,8 +61,8 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 	}
 
 	public override void OnPhotonPlayerConnected(PhotonPlayer player) {
-		if (PhotonNetwork.isMasterClient && thisPlayer.IsReady) {
-			thisPlayer.SignalReady();
+		if (PhotonNetwork.isMasterClient) {
+			PUNLobbyManager.Get().SyncLobbySettings();
 		}
 	}
 
@@ -90,6 +90,11 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 
 		// Show the lobby for the local player
 		PUNMenuManager.Get().ShowNetworkLobby(thisPlayer.IsHost);
+	}
+
+	[PunRPC]
+	void SyncSettings() {
+
 	}
 
 	#endregion

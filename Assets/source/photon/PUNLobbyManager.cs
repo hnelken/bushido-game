@@ -22,8 +22,8 @@ public class PUNLobbyManager : MonoBehaviour {
 
 	#region Private Variables
 
-	private List<PUNNetworkPlayer> players = new List<PUNNetworkPlayer>();
-	//private PUNNetworkPlayer[] players;					// The list of players in the lobby
+	private PhotonView photonView;
+	private List<PUNNetworkPlayer> players = new List<PUNNetworkPlayer>();	// The list of players in the lobby
 
 	// Lobby type and info
 	private bool localLobby;							// True if the lobby is for a local game, false if for a network game
@@ -64,6 +64,16 @@ public class PUNLobbyManager : MonoBehaviour {
 		}
 	}
 
+	private PUNLobbyManager lobby;
+	public PUNLobbyManager Lobby {
+		get {
+			if (!lobby) {
+				lobby = GetComponent<PUNLobbyManager>();
+			}
+			return lobby;
+		}
+	}
+
 	// The sprite for the checked box
 	private Sprite checkedBox;
 	private Sprite CheckedBox {
@@ -93,8 +103,19 @@ public class PUNLobbyManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start() {
+		this.photonView = GetComponent<PhotonView>();
+
 		LeftCheckbox.sprite = UncheckedBox;
 		RightCheckbox.sprite = UncheckedBox;
+	}
+
+	[PunRPC]
+	void SyncLobby(bool _hostReady, bool _clientReady, int _bestOfIndex) {
+		this.hostReady = _hostReady;
+		this.clientReady = _clientReady;
+		this.bestOfIndex = _bestOfIndex;
+
+		UpdateLobbyUI();
 	}
 
 	#endregion
@@ -106,24 +127,18 @@ public class PUNLobbyManager : MonoBehaviour {
 		return FindObjectOfType<PUNLobbyManager>();
 	}
 
-	public void UpdateLobbyUI() {
-		foreach (PUNNetworkPlayer player in players) {
-			if (player.IsHost) {
-				hostInLobby = true;
-				hostReady = player.IsReady;
-			}
-			else {
-				clientInLobby = true;
-				clientReady = player.IsReady;
-			}
-		}
-		UpdateLobbySamurai();
-		UpdateLobbyReadyStatus();
+	// Synchronize lobby settings for players just entering a network game
+	public void SyncLobbySettings() {
+		photonView.RPC("SyncLobby", PhotonTargets.All, hostReady, clientReady, bestOfIndex);
 	}
 
 	// Handles a player joining a room
 	public void OnPlayerEnteredLobby(PUNNetworkPlayer player) {
 		this.players.Add(player);
+		UpdateLobbyUI();
+	}
+
+	public void OnPlayerSignalReady() {
 		UpdateLobbyUI();
 	}
 
@@ -147,6 +162,22 @@ public class PUNLobbyManager : MonoBehaviour {
 
 
 	#region Private API
+
+	// Use the network players in the scene to update the lobby UI
+	public void UpdateLobbyUI() {
+		foreach (PUNNetworkPlayer player in players) {
+			if (player.IsHost) {
+				hostInLobby = true;
+				hostReady = player.IsReady;
+			}
+			else {
+				clientInLobby = true;
+				clientReady = player.IsReady;
+			}
+		}
+		UpdateLobbySamurai();
+		UpdateLobbyReadyStatus();
+	}
 
 	// Initialize the lobby UI for a local or network game
 	private void PrepareLobbyUI(bool isLocalLobby, bool asHost) {
