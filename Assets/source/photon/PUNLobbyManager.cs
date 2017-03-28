@@ -149,6 +149,9 @@ public class PUNLobbyManager : MonoBehaviour {
 	// Handles a player joining a room
 	public void OnPlayerEnteredLobby(PUNNetworkPlayer player) {
 		this.players.Add(player);
+		if (hostInLobby && !clientInLobby) {
+			OnLobbyFull();
+		}
 		UpdateLobbyUI();
 	}
 
@@ -197,6 +200,13 @@ public class PUNLobbyManager : MonoBehaviour {
 
 	#region Private API
 
+	private void OnLobbyFull() {
+		Menu.PlayText.enabled = false;
+		NetReady.gameObject.SetActive(true);
+		LeftArrow.gameObject.SetActive(true);
+		RightArrow.gameObject.SetActive(true);
+	}
+
 	// Increment or decrement the "best-of" index and update the UI
 	private void ChangeBestOfIndexOnAllClients(bool minus) {
 		photonView.RPC("SyncChangeBestOfIndex", PhotonTargets.All, minus);
@@ -235,11 +245,13 @@ public class PUNLobbyManager : MonoBehaviour {
 			if (!isLocalLobby) {
 				clientInLobby = false;
 				UpdateLobbySamurai();
+				LeftArrow.gameObject.SetActive(false);
+				RightArrow.gameObject.SetActive(false);
 			}
 		}
 
 		// Hide or show ready buttons depending on lobby type
-		NetReady.gameObject.SetActive(!localLobby);
+		NetReady.gameObject.SetActive(false);
 		LeftReady.gameObject.SetActive(localLobby);
 		RightReady.gameObject.SetActive(localLobby);
 	}
@@ -269,8 +281,16 @@ public class PUNLobbyManager : MonoBehaviour {
 		RightSamurai.enabled = clientInLobby;
 
 		// Set the lobby text to show presence of each player
-		LeftText.text = (hostInLobby) ? "Player 1" : "Waiting for\nplayer";
-		RightText.text = (clientInLobby) ? "Player 2" : "Waiting for\nplayer";
+		LeftText.enabled = hostInLobby;
+		RightText.enabled = clientInLobby;
+
+		if (clientInLobby) {
+			Menu.PlayText.enabled = false;
+		}
+		else {
+			Menu.PlayText.text = "Waiting for another player";
+			Menu.PlayText.enabled = true;
+		}
 	}
 
 	// Updates the lobby ready checkbox images based on player ready status
