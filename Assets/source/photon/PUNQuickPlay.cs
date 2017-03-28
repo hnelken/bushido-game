@@ -42,6 +42,11 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 	void Start() {
 	}
 
+	void OnGUI()
+	{
+		GUILayout.Label(PhotonNetwork.connectionStateDetailed.ToString());
+	}
+
 	#endregion
 
 
@@ -57,13 +62,6 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 		// Connect to photon network
 		PhotonNetwork.ConnectUsingSettings("0.1");
 	}
-
-	/*
-	public void QuickPlay() {
-		// Try quickly joining a random room as client
-		this.playerIsHost = false;
-		PhotonNetwork.JoinRandomRoom();
-	}*/
 		
 	public bool LocalPlayerIsHost() {
 		return playerIsHost;
@@ -83,7 +81,6 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 	}
 
 	public override void OnPhotonRandomJoinFailed(object[] codeAndMsg) {
-
 		// Must create a room, player will be the host
 		this.playerIsHost = true;
 		PhotonNetwork.CreateRoom(null);
@@ -91,7 +88,15 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 
 	public override void OnPhotonPlayerConnected(PhotonPlayer player) {
 		if (PhotonNetwork.isMasterClient) {
-			PUNLobbyManager.Get().SyncLobbySettings();
+			Lobby.PrintLobbyStatus();
+			//Lobby.SyncLobbySettings();
+		}
+	}
+
+	public override void OnPhotonPlayerDisconnected(PhotonPlayer player) {
+		if (PhotonNetwork.isMasterClient) {
+			Lobby.UpdateLobbyUI();
+			Lobby.SyncLobbySettings();
 		}
 	}
 
@@ -120,12 +125,7 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 		thisPlayer.EnterLobby();
 
 		// Show the lobby for the local player
-		PUNMenuManager.Get().ShowNetworkLobby(thisPlayer.IsHost);
-	}
-
-	[PunRPC]
-	void SyncSettings() {
-
+		Menu.ShowNetworkLobby(thisPlayer.IsHost);
 	}
 
 	#endregion

@@ -133,6 +133,10 @@ public class PUNLobbyManager : MonoBehaviour {
 
 	#region Public API
 
+	public void PrintLobbyStatus() {
+		Debug.Log(hostInLobby + ":" + clientInLobby + " - " + hostReady + ":" + clientReady);
+	}
+
 	public static PUNLobbyManager Get() {
 		return FindObjectOfType<PUNLobbyManager>();
 	}
@@ -415,9 +419,8 @@ public class PUNLobbyManager : MonoBehaviour {
 
 	// Handle the left arrow button being pressed
 	public void OnLeftPressed() {
-		Audio.PlayMenuSound();
 
-		// Decrement from the "best-of" index
+		// Decrement the "best-of" index
 		if (PhotonNetwork.connected) {
 			ChangeBestOfIndexOnAllClients(true);
 		}
@@ -429,9 +432,13 @@ public class PUNLobbyManager : MonoBehaviour {
 	// Handle the right arrow button being pressed
 	public void OnRightPressed() {
 
-		// Increase the "best-of" index
-		ChangeBestOfIndexOnAllClients(false);
-		//ChangeBestOfIndex(false);
+		// Increment the "best-of" index
+		if (PhotonNetwork.connected) {
+			ChangeBestOfIndexOnAllClients(false);
+		}
+		else {
+			ChangeBestOfIndex(false);
+		}
 	}
 
 	// Handle the lobby exit button being pressed
