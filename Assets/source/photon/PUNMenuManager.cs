@@ -220,9 +220,10 @@ public class PUNMenuManager : MonoBehaviour {
 	// Prepare local lobby and toggle menu
 	private void ToggleLocalLobby() {
 		// Prepare local lobby if menu is not visible
-		if (!LobbyMenu.activeSelf) {
+		/*if (!LobbyMenu.activeSelf) {
 			Lobby.PrepareLocalLobby();
-		}
+		}*/
+		LocalLobbyManager.Get().InitializeLobby();
 		ToggleLobbyMenu();
 	}
 
