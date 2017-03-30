@@ -3,15 +3,15 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
-public class PUNLobbyManager : MonoBehaviour {
+public class NetLobbyManager : MonoBehaviour {
 
 	#region Editor References
 
-	public Image LeftCheckbox, RightCheckbox;			// The left and right checkbox image elements
-	public Image LeftSamurai, RightSamurai;				// The left and right samurai image elements
-
-	public Button LeftReady, RightReady, NetReady;		// The left, right, and center ready button elements
+	public Button NetReady;								// The center ready button element
 	public Button LeftArrow, RightArrow;				// The left and right arrow button elements
+
+	public Image LeftSamurai, RightSamurai;				// The left and right samurai image elements
+	public Image LeftCheckbox, RightCheckbox;			// The left and right checkbox image elements
 
 	public Text LeftText, RightText;					// The text element displaying the status of each player's presence in lobby
 	public Text BestOfNumText;							// The text element displaying the number of matches to be played
@@ -24,9 +24,6 @@ public class PUNLobbyManager : MonoBehaviour {
 
 	private PhotonView photonView;
 	private List<PUNNetworkPlayer> players = new List<PUNNetworkPlayer>();	// The list of players in the lobby
-
-	// Lobby type and info
-	private bool localLobby;							// True if the lobby is for a local game, false if for a network game
 
 	// Lobby status variables
 	private bool hostReady, clientReady;				// True if the host/client is ready to leave the lobby, false if not
@@ -41,38 +38,6 @@ public class PUNLobbyManager : MonoBehaviour {
 	private string[] bestOfOptions =  {					// The array of options for the "best of" text
 		"3", "5", "7"
 	};
-
-	// Safe reference to the source of all game audio
-	private AudioManager audioManager;
-	private AudioManager Audio {
-		get {
-			if (!audioManager) {
-				audioManager = AudioManager.Get();
-			}
-			return audioManager;
-		}
-	}
-
-	// The menu manager governing this lobby
-	private PUNMenuManager menu;
-	public PUNMenuManager Menu {
-		get {
-			if (!menu) {
-				menu = PUNMenuManager.Get();
-			}
-			return menu;
-		}
-	}
-
-	private PUNLobbyManager lobby;
-	public PUNLobbyManager Lobby {
-		get {
-			if (!lobby) {
-				lobby = GetComponent<PUNLobbyManager>();
-			}
-			return lobby;
-		}
-	}
 
 	// The sprite for the checked box
 	private Sprite checkedBox;
@@ -128,53 +93,51 @@ public class PUNLobbyManager : MonoBehaviour {
 		ChangeBestOfIndex(minus);
 	}
 
-	#endregion
-
-
-	#region Public API
-
-	public void PrintLobbyStatus() {
-		Debug.Log(hostInLobby + ":" + clientInLobby + " - " + hostReady + ":" + clientReady);
-	}
-
-	public static PUNLobbyManager Get() {
-		return FindObjectOfType<PUNLobbyManager>();
-	}
-
 	// Synchronize lobby settings for players just entering a network game
 	public void SyncLobbySettings() {
 		photonView.RPC("SyncLobby", PhotonTargets.All, hostReady, clientReady, bestOfIndex);
 	}
 
-	// Handles a player joining a room
-	public void OnPlayerEnteredLobby(PUNNetworkPlayer player) {
-		this.players.Add(player);
-		if (hostInLobby && !clientInLobby) {
-			OnLobbyFull();
-		}
-		UpdateLobbyUI();
+	// Increment or decrement the "best-of" index and update the UI
+	private void ChangeBestOfIndexOnAllClients(bool minus) {
+		photonView.RPC("SyncChangeBestOfIndex", PhotonTargets.All, minus);
 	}
 
-	public void OnPlayerSignalReady() {
-		UpdateLobbyUI();
+	#endregion
+
+
+	#region Public API
+
+	public static PUNLobbyManager Get() {
+		return FindObjectOfType<PUNLobbyManager>();
 	}
-
-	// Prepare the lobby menu for a local lobby
-	public void PrepareLocalLobby() {
-		// Both players are immediately present in a local game
-		hostInLobby = true;
-		clientInLobby = true;
-
-		// Initialize lobby UI
-		PrepareLobbyUI(true, true);
-		UpdateLobbySamurai();
-	}
-
+		
 	// Prepare the lobby menu for a network lobby
 	public void PrepareNetworkLobby(bool asHost) {
-		PrepareLobbyUI(false, asHost);
-	}
+		// Initialize lobby settings if the host, client syncs automatically
+		if (asHost) {
+			// Initialize "best of" selector
+			bestOfIndex = 1;
+			UpdateBestOfText();
 
+			// Set both players as not ready
+			ClearReadyStatus();
+
+			// Set client as not present
+			clientInLobby = false;
+			UpdateLobbySamurai();
+
+			// Add UI to show client is not present yet
+			Globals.Menu.PlayText.text = "Waiting for another player";
+			Globals.Menu.PlayText.enabled = true;
+
+			// Hide host UI until client joins
+			LeftArrow.gameObject.SetActive(false);
+			RightArrow.gameObject.SetActive(false);
+			NetReady.gameObject.SetActive(false);
+		}
+	}
+	
 	// Use the network players in the scene to update the lobby UI
 	public void UpdateLobbyUI() {
 		// Get lobby info from player objects
@@ -195,27 +158,31 @@ public class PUNLobbyManager : MonoBehaviour {
 		UpdateBestOfText();
 	}
 
+	// Handles a player joining a room
+	public void OnPlayerEnteredLobby(PUNNetworkPlayer player) {
+		this.players.Add(player);
+
+		// Hide "waiting for player text" for host if client just joined
+		if (!player.photonView.isMine && players.Count == 2) {
+			Globals.Menu.PlayText.enabled = false;
+		}
+
+		// Refresh all UI elements
+		UpdateLobbyUI();
+	}
+
+	// Updates lobby UI when a player is newly ready
+	public void OnPlayerSignalReady() {
+		UpdateLobbyUI();
+	}
+
 	#endregion
 
 
 	#region Private API
 
-	private void OnLobbyFull() {
-		Menu.PlayText.enabled = false;
-		NetReady.gameObject.SetActive(true);
-		LeftArrow.gameObject.SetActive(true);
-		RightArrow.gameObject.SetActive(true);
-	}
-
-	// Increment or decrement the "best-of" index and update the UI
-	private void ChangeBestOfIndexOnAllClients(bool minus) {
-		photonView.RPC("SyncChangeBestOfIndex", PhotonTargets.All, minus);
-	}
-
 	// Change the current win limit selection
 	private void ChangeBestOfIndex(bool minus) {
-		Audio.PlayMenuSound();
-
 		// Changing match parameters resets ready status
 		ClearReadyStatus();
 
@@ -231,47 +198,9 @@ public class PUNLobbyManager : MonoBehaviour {
 		UpdateBestOfText();
 	}
 
-	// Initialize the lobby UI for a local or network game
-	private void PrepareLobbyUI(bool isLocalLobby, bool asHost) {
-		// Set lobby type
-		localLobby = isLocalLobby;
-
-		// Initialize lobby settings if the host, client syncs automatically
-		if (asHost) {
-			bestOfIndex = 1;
-			UpdateBestOfText();
-			ClearReadyStatus();
-
-			if (!isLocalLobby) {
-				clientInLobby = false;
-				UpdateLobbySamurai();
-				LeftArrow.gameObject.SetActive(false);
-				RightArrow.gameObject.SetActive(false);
-			}
-		}
-
-		// Hide or show ready buttons depending on lobby type
-		NetReady.gameObject.SetActive(false);
-		LeftReady.gameObject.SetActive(localLobby);
-		RightReady.gameObject.SetActive(localLobby);
-	}
-
-	// Reset ready status of both players and refresh UI
-	private void ClearReadyStatus() {
-		// Both players are no longer ready
-		hostReady = false;
-		clientReady = false;
-
-		foreach (PUNNetworkPlayer player in this.players) {
-			player.ClearReadyStatus();
-		}
-
-		// Best-of selector arrows become available again
-		LeftArrow.gameObject.SetActive(true);
-		RightArrow.gameObject.SetActive(true);
-
-		// Update UI
-		UpdateLobbyReadyStatus();
+	// Updates "best of" text from index in options array
+	private void UpdateBestOfText() {
+		BestOfNumText.text = bestOfOptions[bestOfIndex];
 	}
 
 	// Updates the samurai image elements based on presence of players
@@ -283,14 +212,6 @@ public class PUNLobbyManager : MonoBehaviour {
 		// Set the lobby text to show presence of each player
 		LeftText.enabled = hostInLobby;
 		RightText.enabled = clientInLobby;
-
-		if (clientInLobby) {
-			Menu.PlayText.enabled = false;
-		}
-		else {
-			Menu.PlayText.text = "Waiting for another player";
-			Menu.PlayText.enabled = true;
-		}
 	}
 
 	// Updates the lobby ready checkbox images based on player ready status
@@ -299,22 +220,15 @@ public class PUNLobbyManager : MonoBehaviour {
 		LeftCheckbox.sprite = (hostReady) ? CheckedBox : UncheckedBox;
 		RightCheckbox.sprite = (clientReady) ? CheckedBox : UncheckedBox;
 
-		if (localLobby) {
-			// Hide/show local lobby ready buttons
-			LeftReady.gameObject.SetActive(!hostReady);
-			RightReady.gameObject.SetActive(!clientReady);
-		}
-		else {
-			// Hide/show network lobby UI
-			UpdateNetworkReadyStatus();
-		}
+		// Hide/show network lobby UI
+		UpdateReadyUI();
 
 		// Check if both players are ready
 		CheckReadyStatus();
 	}
 
 	// Update UI to reflect ready status of both network players
-	private void UpdateNetworkReadyStatus() {
+	private void UpdateReadyUI() {
 		// Check if local player is host or client
 		if (PUNQuickPlay.Get().LocalPlayerIsHost()) {
 			// Hide or show all lobby buttons depending on ready status of host
@@ -330,51 +244,53 @@ public class PUNLobbyManager : MonoBehaviour {
 		}
 	}
 
+	// Reset ready status of both players and refresh UI
+	private void ClearReadyStatus() {
+		// Both players are no longer ready
+		hostReady = false;
+		clientReady = false;
+
+		// Clear ready status on player objects
+		foreach (PUNNetworkPlayer player in this.players) {
+			player.ClearReadyStatus();
+		}
+
+		// Update UI
+		UpdateLobbyReadyStatus();
+	}
+
 	// Check for and handle both players being ready to leave the lobby
 	private void CheckReadyStatus() {
 		// Check if both players are ready
 		if (hostReady && clientReady) {
-			// Begin countdown to round begin
-			OnBothPlayersReady();
+			// Set the win limit in the network manager
+			//BushidoNetManager.Get().SetMatchLimit(BestOfNumText.text);
+
+			// Begin countdown to game start
+			countDown = 5;						// Set countdown to 5
+			countingDown = true;				// Set countdown as active
+			SetCountDownText(countDown);		// Update countdown UI
+			StartCoroutine(CountDown());		// Begin counting interval
 		}
-	}
-
-	// Triggered when both lobby players are ready to begin a match
-	private void OnBothPlayersReady() {
-		// Turn off arrow buttons in local lobby
-		if (localLobby) {
-			LeftArrow.gameObject.SetActive(false);
-			RightArrow.gameObject.SetActive(false);
-		}
-
-		// Set the win limit in the network manager
-		//BushidoNetManager.Get().SetMatchLimit(BestOfNumText.text);
-
-		// Begin countdown to game start
-		countDown = 5;					// Set countdown to 5
-		countingDown = true;			// Set countdown as active
-		UpdateLobbyText(countDown);		// Update countdown UI
-		StartCoroutine(CountDown());	// Begin counting
 	}
 
 	// Take a step in the countdown towards leaving the lobby
 	private IEnumerator CountDown() {
-
 		yield return new WaitForSeconds(1);
 
 		// Check if the countdown was cancelled
 		if (countingDown) {
-			countDown -= 1;				// Decrement the countdown
-			UpdateLobbyText(countDown);	// Update the countdown UI
-			CheckCountDownStatus();		// Check if the countdown finished
+			countDown -= 1;						// Decrement the countdown
+			SetCountDownText(countDown);		// Update the countdown UI
+			CheckCountDownStatus();				// Check if the countdown finished
 		}
 	}
 
-	// Determines the status of the countdown after the counter changes
+	// Determines the status of the countdown each interval
 	private void CheckCountDownStatus() {
 		// Check if countdown has expired
 		if (countDown == 0) {
-			Menu.LeaveMenu();
+			Globals.Menu.LeaveMenu();
 		}
 		else {
 			// Not finished, continue count down
@@ -382,18 +298,13 @@ public class PUNLobbyManager : MonoBehaviour {
 		}
 	}
 
-	// Update the big text element that displays the countdown when leaving the lobby
-	private void UpdateLobbyText(int countdown) {
+	// Sets the text element to display the countdown
+	private void SetCountDownText(int countdown) {
 		if (!LobbyText.enabled) {
 			LobbyText.enabled = true;
 		}
 		// Show countdown
 		LobbyText.text = "Game starting in  " + countdown;
-	}
-
-	// Updates "best of" match number text from options array
-	private void UpdateBestOfText() {
-		BestOfNumText.text = bestOfOptions[bestOfIndex];
 	}
 
 	#endregion
@@ -403,80 +314,45 @@ public class PUNLobbyManager : MonoBehaviour {
 
 	// Handle a network player signalling ready
 	public void OnNetworkReady() {
-		Audio.PlayMenuSound();
+		Globals.Audio.PlayMenuSound();
 
 		// Hide "best of" selector arrows for local player
 		LeftArrow.gameObject.SetActive(false);
 		RightArrow.gameObject.SetActive(false);
 
+		// Signal local player ready
 		PUNNetworkPlayer.GetLocalPlayer().SetAsReady();
 		OnPlayerSignalReady();
 	}
 
-	// Handle the local left-side player signalling ready
-	public void OnLocalLobbyReadyLeft() {
-		Audio.PlayMenuSound();
-
-		// Set host as ready
-		hostReady = true;
-
-		// Update UI
-		LeftReady.gameObject.SetActive(false);
-		UpdateLobbyReadyStatus();
-	}
-
-	// Handle the local right-side player signalling ready
-	public void OnLocalLobbyReadyRight() {
-		Audio.PlayMenuSound();
-
-		// Set client as ready
-		clientReady = true;
-
-		// Update UI
-		RightReady.gameObject.SetActive(false);
-		UpdateLobbyReadyStatus();
-	}
-
 	// Handle the left arrow button being pressed
 	public void OnLeftPressed() {
+		Globals.Audio.PlayMenuSound();
 
 		// Decrement the "best-of" index
-		if (PhotonNetwork.connected) {
-			ChangeBestOfIndexOnAllClients(true);
-		}
-		else {
-			ChangeBestOfIndex(true);
-		}
+		ChangeBestOfIndexOnAllClients(true);
 	}
 
 	// Handle the right arrow button being pressed
 	public void OnRightPressed() {
+		Globals.Audio.PlayMenuSound();
 
 		// Increment the "best-of" index
-		if (PhotonNetwork.connected) {
-			ChangeBestOfIndexOnAllClients(false);
-		}
-		else {
-			ChangeBestOfIndex(false);
-		}
+		ChangeBestOfIndexOnAllClients(false);
 	}
 
 	// Handle the lobby exit button being pressed
 	public void OnLobbyExit() {
-		Audio.PlayMenuSound();
+		Globals.Audio.PlayMenuSound();
 
 		// Stop count down if it was in progress
 		LobbyText.enabled = false;
 		countingDown = false;
 
 		// Exit the local or network lobby accordingly
-		if (localLobby) {
-			Menu.ExitLocalLobby();
-		}
-		else {
-			Menu.ExitNetworkLobby();
-		}
+		Globals.Menu.ExitNetworkLobby();
 	}
 
 	#endregion
 }
+

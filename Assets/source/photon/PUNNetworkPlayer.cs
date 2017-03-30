@@ -54,7 +54,7 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 
 			// Update lobby if not in game
 			if (!inGame) {
-				PUNLobbyManager.Get().UpdateLobbyUI();
+				Globals.NetLobby.UpdateLobbyUI();
 			}
 		}
 	}
@@ -83,8 +83,12 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	}
 
 	// Set this player as ready and 
-	public void ToggleReady() {
-		this.isReady = !isReady;
+	public void SetAsReady() {
+		this.isReady = true;
+	}
+
+	public void ClearReadyStatus() {
+		this.isReady = false;
 	}
 
 	// Set this player as host
@@ -131,7 +135,7 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 
 	[PunRPC]
 	void SignalEnterLobby() {
-		PUNLobbyManager.Get().OnPlayerEnteredLobby(this);
+		Globals.NetLobby.OnPlayerEnteredLobby(this);
 	}
 
 	[PunRPC]	// RPC to trigger reaction from this player on all clients

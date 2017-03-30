@@ -43,7 +43,7 @@ public class LocalLobbyManager : MonoBehaviour {
 		return FindObjectOfType<LocalLobbyManager>();
 	}
 
-	public void InitializeLobby() {
+	public void PrepareLocalLobby() {
 		bestOfIndex = 1;
 		UpdateBestOfText();
 		ClearReadyStatus();
