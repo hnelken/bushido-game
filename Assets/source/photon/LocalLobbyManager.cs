@@ -14,8 +14,6 @@ public class LocalLobbyManager : MonoBehaviour {
 	public Text BestOfNumText;							// The text element displaying the number of matches to be played
 	public Text LobbyText;								// The text element displaying the status of the lobby
 
-	public Sprite CheckedBox, UncheckedBox;
-
 	#endregion
 
 
@@ -33,6 +31,38 @@ public class LocalLobbyManager : MonoBehaviour {
 	private string[] bestOfOptions =  {					// The array of options for the "best of" text
 		"3", "5", "7"
 	};
+
+	// The sprite for the checked box
+	private Sprite checkedBox;
+	private Sprite CheckedBox {
+		get {
+			if (!checkedBox) {
+				checkedBox = Resources.Load<Sprite>("sprites/checkbox-checked");
+			}
+			return checkedBox;
+		}
+	}
+
+	// The sprite for the unchecked box
+	private Sprite uncheckedBox;
+	private Sprite UncheckedBox {
+		get {
+			if (!uncheckedBox) {
+				uncheckedBox = Resources.Load<Sprite>("sprites/checkbox-unchecked");
+			}
+			return uncheckedBox;
+		}
+	}
+
+	#endregion
+
+
+	#region MonoBehaviour API
+
+	void Start() {
+		LeftCheckbox.sprite = UncheckedBox;
+		RightCheckbox.sprite = UncheckedBox;
+	}
 
 	#endregion
 

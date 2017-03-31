@@ -26,6 +26,7 @@ public class NetLobbyManager : MonoBehaviour {
 	private List<PUNNetworkPlayer> players = new List<PUNNetworkPlayer>();	// The list of players in the lobby
 
 	// Lobby status variables
+	private bool clientFound;							// True if a client has entered a host's game, false if the host is waiting
 	private bool hostReady, clientReady;				// True if the host/client is ready to leave the lobby, false if not
 	private bool hostInLobby, clientInLobby;			// True if the host/client is present in the lobby, false if not
 
@@ -162,11 +163,6 @@ public class NetLobbyManager : MonoBehaviour {
 	public void OnPlayerEnteredLobby(PUNNetworkPlayer player) {
 		this.players.Add(player);
 
-		// Hide "waiting for player text" for host if client just joined
-		if (!player.photonView.isMine && players.Count == 2) {
-			Globals.Menu.PlayText.enabled = false;
-		}
-
 		// Refresh all UI elements
 		UpdateLobbyUI();
 	}
@@ -231,10 +227,17 @@ public class NetLobbyManager : MonoBehaviour {
 	private void UpdateReadyUI() {
 		// Check if local player is host or client
 		if (PUNQuickPlay.Get().LocalPlayerIsHost()) {
-			// Hide or show all lobby buttons depending on ready status of host
-			NetReady.gameObject.SetActive(!hostReady);
-			LeftArrow.gameObject.SetActive(!hostReady);
-			RightArrow.gameObject.SetActive(!hostReady);
+			// Change UI in succession to avoid overlapping elements
+			if (Globals.Menu.PlayText.enabled && Globals.Menu.PlayText.text == "Waiting for another player") {
+				// Hide "waiting for player" text
+				Globals.Menu.PlayText.enabled = false;
+			}
+			else {
+				// Hide or show all lobby buttons depending on ready status of host
+				NetReady.gameObject.SetActive(!hostReady);
+				LeftArrow.gameObject.SetActive(!hostReady);
+				RightArrow.gameObject.SetActive(!hostReady);
+			}
 		}
 		else {
 			// Hide or show all lobby buttons depending on ready status of client
