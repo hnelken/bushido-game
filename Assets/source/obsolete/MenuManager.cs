@@ -256,7 +256,7 @@ public class MenuManager : MonoBehaviour {
 		}
 		else {
 			// Stop any running broadcasts
-			BushidoNetManager.Get().Discovery.ExitBroadcast();
+			//BushidoNetManager.Get().Discovery.ExitBroadcast();
 
 			// Close the nearby game menu and show net-game menu
 			ToggleNearbyMenu();
@@ -318,13 +318,13 @@ public class MenuManager : MonoBehaviour {
 
 	public void OnStartNearbyGamePressed() {
 		// Begin broadcasting on local network
-		BushidoNetManager.Get().Discovery.StartNearbyGame();
+		//BushidoNetManager.Get().Discovery.StartNearbyGame();
 		ToggleNearbyMenu();
 		ToggleExitButton();
 	}
 
 	public void OnFindNearbyGamePressed() {
-		BushidoNetManager.Get().Discovery.FindNearbyGame();
+		//BushidoNetManager.Get().Discovery.FindNearbyGame();
 		ToggleNearbyMenu();
 		ToggleExitButton();
 
