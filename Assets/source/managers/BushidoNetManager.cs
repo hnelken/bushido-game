@@ -100,12 +100,21 @@ public class BushidoNetManager : NetworkLobbyManager {
 	/*
 	#region Public Accessors
 
-	public int matchLimit;
+	public BushidoDiscovery Discovery;				// The network discovery component for nearby games
 
+	// The last match limit set in a lobby
+	public int MatchLimit {
+		get {
+			return matchLimit;
+		}
+	}
+
+	// The results struct from the last complete game
 	public MatchResults Results {
 		get { return results; }
 	}
 
+	// The struct representing the results of a complete match
 	public struct MatchResults {
 		int leftWins, rightWins;
 		int leftBest, rightBest;
@@ -146,14 +155,15 @@ public class BushidoNetManager : NetworkLobbyManager {
 	#region Private Variables
 
 	private MatchResults results;
+	private int matchLimit;
 
 	#endregion
 
 
 	#region Public API
 
-	public void SetMatchResults(int leftWins, int rightWins, int leftBest, int rightBest, bool networked) {
-		results = new MatchResults(leftWins, rightWins, leftBest, rightBest, networked);
+	public static BushidoNetManager Get() {
+		return GameObject.FindObjectOfType<BushidoNetManager>();
 	}
 
 	public override void OnLobbyClientExit ()
@@ -162,12 +172,16 @@ public class BushidoNetManager : NetworkLobbyManager {
 		Debug.Log("Client left lobby");
 	}
 
-	public static BushidoNetManager Get() {
-		return GameObject.FindObjectOfType<BushidoNetManager>();
-	}
-
 	public override void OnLobbyServerPlayersReady() {
 		Debug.Log("Both players ready");
+	}
+
+	public void SetMatchLimit(string limitText) {
+		int.TryParse(limitText, out matchLimit);
+	}
+
+	public void SetMatchResults(int leftWins, int rightWins, int leftBest, int rightBest, bool networked) {
+		results = new MatchResults(leftWins, rightWins, leftBest, rightBest, networked);
 	}
 
 	public void LaunchNetworkDuel() {

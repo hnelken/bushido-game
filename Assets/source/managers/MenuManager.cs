@@ -15,11 +15,15 @@ public class MenuManager : MonoBehaviour {
 	public Text TitleText;										// The title text element
 	public GlowingText PlayText;								// The glowing "tap-to-play" text element
 	public FadingShade Shade;									// The black image used for fading in and out of scenes
-	public GameObject MultiPlayMenu, NetworkMenu, LobbyMenu;	// The parent objects for the menu segments
+	public GameObject MultiPlayMenu, NetworkMenu;				// The parent objects for some menu segments
+	public GameObject LobbyMenu, NearbyMenu;					// The parent objects for other menu segments
+	public GameObject ExitButton;								// The parent object of the exit button UI element
 
 	public LobbyManager Lobby;									// Reference to the lobby manager object
 
 	#endregion
+
+
 
 	// Safe reference to the source of all game audio
 	public AudioManager Audio {
@@ -47,6 +51,7 @@ public class MenuManager : MonoBehaviour {
 	private AudioManager audioManager;				// Unsafe reference to audio source
 	private BushidoMatchMaker matchMaker;			// Unsafe reference to the match maker
 
+	private bool nearbyMenuOpen;					// True if the nearby menu is open, false if not
 	private bool localMenuOpen;						// True if a local-play menu is open, false if a net-play menu is open
 	private bool leavingMenu;						// True if a game is about to begin and the menu scene must be left
 	private bool pastOpenMenu;						// True if the opening menu is no longer showing
@@ -193,6 +198,14 @@ public class MenuManager : MonoBehaviour {
 		NetworkMenu.SetActive(!NetworkMenu.activeSelf);
 	}
 
+	private void ToggleNearbyMenu() {
+		NearbyMenu.SetActive(!NearbyMenu.activeSelf);
+	}
+
+	private void ToggleExitButton() {
+		ExitButton.SetActive(!ExitButton.activeSelf);
+	}
+
 	// Toggle visibility of lobby menu
 	private void ToggleLobbyMenu() {
 		TitleText.gameObject.SetActive(LobbyMenu.activeSelf);
@@ -217,18 +230,38 @@ public class MenuManager : MonoBehaviour {
 		ToggleLobbyMenu();
 	}
 
+	private void QuickPlay() {
+		// Find opponent via quick play matchaking
+		MatchMaker.QuickPlay();
+
+		// Setup UI to show matchmaking process
+		PlayText.text = "Finding a game";
+		PlayText.enabled = true;
+	}
+
 	#endregion
 
 
 	#region ButtonEvents
 
 	// Close the network match menu
-	public void OnNetworkMenuExit() {
+	public void OnMenuExit() {
 		AudioManager.Get().PlayMenuSound();
 
-		// Close the network menu and show multi-play menu
-		ToggleNetworkMenu();
-		TogglePlayMenu();
+		if (!nearbyMenuOpen) {
+			// Close the network menu and show multi-play menu
+			ToggleNetworkMenu();
+			ToggleExitButton();
+			TogglePlayMenu();
+		}
+		else {
+			// Stop any running broadcasts
+			BushidoNetManager.Get().Discovery.ExitBroadcast();
+
+			// Close the nearby game menu and show net-game menu
+			ToggleNearbyMenu();
+			ToggleNetworkMenu();
+		}
 	}
 
 	// Open the local game lobby
@@ -246,27 +279,58 @@ public class MenuManager : MonoBehaviour {
 		AudioManager.Get().PlayMenuSound();
 		localMenuOpen = false;
 
+		// Hide multiplay menu and show network lobby
+		TogglePlayMenu();
+		QuickPlay();
+
+		/* 
+		 * --UNCOMMENT WHEN NEARBY GAME FEATURE IS AVAILABLE--
+		 * 
 		// Hide multiplay menu and show network game menu
 		TogglePlayMenu();
 		ToggleNetworkMenu();
+		ToggleExitButton();
+		*/
 	}
 
 	// Trigger quick play matchmaking and open lobby
 	public void OnQuickPlayPressed() {
 		AudioManager.Get().PlayMenuSound();
 
-		// Find opponent via quick play matchaking
-		MatchMaker.QuickPlay();
-		ToggleNetworkMenu();
-
 		// Setup UI to show matchmaking process
-		PlayText.text = "Finding a game";
-		PlayText.enabled = true;
+		ToggleNetworkMenu();
+		ToggleExitButton();
+
+		// Find opponent via quick play matchaking
+		QuickPlay();
 	}
 
 	// Trigger nearby matchmaking process and open lobby
 	public void OnNearbyGamePressed() {
 		// TODO: use local discovery to find nearby opponent
+		AudioManager.Get().PlayMenuSound();
+
+		// Toggle discovery game menu
+		ToggleNetworkMenu();
+		ToggleNearbyMenu();
+		nearbyMenuOpen = true;
+	}
+
+	public void OnStartNearbyGamePressed() {
+		// Begin broadcasting on local network
+		BushidoNetManager.Get().Discovery.StartNearbyGame();
+		ToggleNearbyMenu();
+		ToggleExitButton();
+	}
+
+	public void OnFindNearbyGamePressed() {
+		BushidoNetManager.Get().Discovery.FindNearbyGame();
+		ToggleNearbyMenu();
+		ToggleExitButton();
+
+		// Setup UI to show search process
+		PlayText.text = "Finding a game nearby";
+		PlayText.enabled = true;
 	}
 
 	#endregion
