@@ -18,8 +18,9 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 
 
 	#region Behaviour API
-	// Use this for initialization
+
 	void Start() {
+		PhotonNetwork.automaticallySyncScene = true;
 	}
 
 	void OnGUI()

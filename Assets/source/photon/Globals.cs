@@ -3,6 +3,9 @@ using System.Collections;
 
 public class Globals : MonoBehaviour {
 
+	public static string LocalDuelScene = "LocalDuel";
+	public static string NetDuelScene = "NetworkDuel";
+
 	// Safe reference to the PUN match maker
 	private static PUNQuickPlay matchMaker;
 	public static PUNQuickPlay MatchMaker {

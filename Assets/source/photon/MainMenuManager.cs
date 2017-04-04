@@ -108,7 +108,7 @@ public class MainMenuManager : MonoBehaviour {
 
 	// Begins the animations that lead to desired scene change
 	public void LeaveMenu() {
-		nextSceneName = localLobbyOpen ? "LocalDuel" : "NetworkDuel";
+		nextSceneName = localLobbyOpen ? Globals.LocalDuelScene : Globals.NetDuelScene;
 		leavingMenu = true;
 		Shade.Toggle();
 	}
@@ -131,8 +131,8 @@ public class MainMenuManager : MonoBehaviour {
 			if (localLobbyOpen) {
 				SceneManager.LoadScene(nextSceneName);
 			}
-			else {
-				BushidoNetManager.Get().LaunchNetworkDuel();
+			else if (PhotonNetwork.isMasterClient) {
+				PhotonNetwork.LoadLevel(nextSceneName);
 			}
 		}
 	}
