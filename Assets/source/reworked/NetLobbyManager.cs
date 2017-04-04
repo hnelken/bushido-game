@@ -90,6 +90,12 @@ public class NetLobbyManager : MonoBehaviour {
 	}
 
 	[PunRPC]
+	void SyncSetBestOfIndex(int index) {
+		bestOfIndex = index;
+		UpdateBestOfText();
+	}
+
+	[PunRPC]
 	void SyncChangeBestOfIndex(bool minus) {
 		ChangeBestOfIndex(minus);
 	}
@@ -97,6 +103,11 @@ public class NetLobbyManager : MonoBehaviour {
 	// Synchronize lobby settings for players just entering a network game
 	public void SyncLobbySettings() {
 		photonView.RPC("SyncLobby", PhotonTargets.All, hostReady, clientReady, bestOfIndex);
+	}
+
+	// Directly set the best of index on all clients and update the UI
+	private void SetBestOfIndexOnAllClients(int index) {
+		photonView.RPC("SyncSetBestOfIndex", PhotonTargets.AllBuffered, index);
 	}
 
 	// Increment or decrement the "best-of" index and update the UI
@@ -118,8 +129,9 @@ public class NetLobbyManager : MonoBehaviour {
 		// Initialize lobby settings if the host, client syncs automatically
 		if (asHost) {
 			// Initialize "best of" selector
-			bestOfIndex = 1;
-			UpdateBestOfText();
+			SetBestOfIndexOnAllClients(1);
+			//bestOfIndex = 1;
+			//UpdateBestOfText();
 
 			// Set both players as not ready
 			ClearReadyStatus();
