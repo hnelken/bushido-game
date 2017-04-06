@@ -128,10 +128,8 @@ public class NetLobbyManager : MonoBehaviour {
 	public void PrepareNetworkLobby(bool asHost) {
 		// Initialize lobby settings if the host, client syncs automatically
 		if (asHost) {
-			// Initialize "best of" selector
+			// Initialize "best of" selector for all clients
 			SetBestOfIndexOnAllClients(1);
-			//bestOfIndex = 1;
-			//UpdateBestOfText();
 
 			// Set both players as not ready
 			ClearReadyStatus();

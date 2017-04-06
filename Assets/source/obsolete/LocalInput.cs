@@ -11,7 +11,7 @@ public class LocalInput : MonoBehaviour {
 
 	#region Private Variables
 
-	private DuelManager manager;			// The current duel manager
+	private LocalDuelManager manager;			// The current duel manager
 	private bool leftPlayerInput;			// True if left player input this frame
 	private bool rightPlayerInput;			// True if right player input this frame
 
@@ -22,7 +22,7 @@ public class LocalInput : MonoBehaviour {
 
 	// Initialization
 	void Start () {
-		manager = GetComponent<DuelManager>();
+		manager = GetComponent<LocalDuelManager>();
 	}
 
 	// Update is called once per frame
@@ -33,7 +33,7 @@ public class LocalInput : MonoBehaviour {
 
 		// Submit reaction inputs from either player
 		if (manager.WaitingForInput()) {
-			int reactionTime = DuelManager.Get().GetCurrentTime();
+			int reactionTime = manager.GetCurrentTime();
 			if (leftPlayerInput) {
 				manager.TriggerReaction(true, reactionTime);
 			}
