@@ -161,7 +161,7 @@ public class LocalLobbyManager : MonoBehaviour {
 		RightArrow.gameObject.SetActive(false);
 
 		// Set the win limit in the game scene
-		//BushidoNetManager.Get().SetMatchLimit(BestOfNumText.text);
+		BushidoMatchInfo.Get().SetMatchLimit(BestOfNumText.text);
 
 		// Begin countdown to game start
 		countDown = 5;					// Set countdown to 5

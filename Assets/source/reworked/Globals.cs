@@ -3,7 +3,9 @@ using System.Collections;
 
 public class Globals : MonoBehaviour {
 
+	public static string MainMenuScene = "Menu-Fix";
 	public static string LocalDuelScene = "LocalDuel-Fix";
+	public static string LocalPostScene = "LocalPostGame";
 	public static string NetDuelScene = "NetworkDuel";
 
 	// Safe reference to the PUN match maker
@@ -58,6 +60,28 @@ public class Globals : MonoBehaviour {
 				audioManager = AudioManager.Get();
 			}
 			return audioManager;
+		}
+	}
+
+	// The sprite for the checked box
+	private static Sprite checkedBox;
+	public static Sprite CheckedBox {
+		get {
+			if (!checkedBox) {
+				checkedBox = Resources.Load<Sprite>("sprites/checkbox-checked");
+			}
+			return checkedBox;
+		}
+	}
+
+	// The sprite for the unchecked box
+	private static Sprite uncheckedBox;
+	public static Sprite UncheckedBox {
+		get {
+			if (!uncheckedBox) {
+				uncheckedBox = Resources.Load<Sprite>("sprites/checkbox-unchecked");
+			}
+			return uncheckedBox;
 		}
 	}
 

@@ -203,7 +203,7 @@ public class LocalUIManager : MonoBehaviour {
 
 			EventManager.Nullify();
 			//AudioManager.Get().BackToMenu();
-			SceneManager.LoadScene("PostGame");
+			SceneManager.LoadScene(Globals.LocalPostScene);
 		}
 	}
 

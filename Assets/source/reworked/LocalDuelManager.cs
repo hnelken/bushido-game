@@ -46,7 +46,7 @@ public class LocalDuelManager : MonoBehaviour {
 	#endregion
 
 
-	#region State Functions
+	#region MonoBehaviour API
 
 	// Initialization
 	void Awake() {
@@ -77,37 +77,6 @@ public class LocalDuelManager : MonoBehaviour {
 
 
 	#region Public API
-
-	public void SetWaitTime(float waitTime) {
-		randomWait = waitTime;
-		StartCoroutine(WaitAndPopFlag());
-	}
-
-	public void SetStartTime(float time) {
-		startTime = time;
-	}
-
-	public void SetCurrentTime(int time) {
-		currTime = time;
-	}
-
-	public void TriggerGameStart() {
-		GUI.ToggleShadeForRoundStart();
-		AudioManager.Get().StartMusic();
-	}
-
-	public void PopFlag() {
-		// No strike, record time of flag pop and start timer
-		startTime = Time.realtimeSinceStartup;
-
-		GUI.ToggleTimer();
-
-		// "Pop" the flag 
-		GUI.ToggleFlag();
-		flagPopped = true;
-
-		AudioManager.Get().PlayPopSound();
-	}
 
 	// Signal a player reaction during a round
 	// - leftSamurai: A boolean representing which player triggered this event
@@ -182,6 +151,24 @@ public class LocalDuelManager : MonoBehaviour {
 
 
 	#region Private API
+
+	private void PopFlag() {
+		// No strike, record time of flag pop and start timer
+		startTime = Time.realtimeSinceStartup;
+
+		GUI.ToggleTimer();
+
+		// "Pop" the flag 
+		GUI.ToggleFlag();
+		flagPopped = true;
+
+		AudioManager.Get().PlayPopSound();
+	}
+
+	private void TriggerGameStart() {
+		GUI.ToggleShadeForRoundStart();
+		AudioManager.Get().StartMusic();
+	}
 
 	private void RecordReactionTime(bool leftSamurai, int time) {
 		if (leftSamurai) {
@@ -386,13 +373,11 @@ public class LocalDuelManager : MonoBehaviour {
 	public IEnumerator WaitAndEndGame() {
 		yield return new WaitForSeconds(4);
 
-		/*
 		// Set match results
-		BushidoNetManager.Get().SetMatchResults(
+		BushidoMatchInfo.Get().SetMatchResults(
 			LeftSamurai.WinCount, RightSamurai.WinCount,
 			LeftSamurai.BestTime, RightSamurai.BestTime,
-			networking);
-		*/
+			false);
 
 		GUI.ToggleShadeForMatchEnd();
 	}
