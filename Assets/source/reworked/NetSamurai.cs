@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class LocalSamurai : MonoBehaviour {
+public class NetSamurai : MonoBehaviour {
 
 	#region Inspector References + Public Properties
 
@@ -12,7 +12,7 @@ public class LocalSamurai : MonoBehaviour {
 
 	#region Private Variables
 
-	private LocalDuelManager manager;			// The duel manager monitoring this player
+	private NetDuelManager manager;				// The duel manager monitoring this player
 
 	private int bestTime;						// This samurai's best reaction time of the game
 	private int winCount;						// The number of round wins this player has this match
@@ -57,7 +57,7 @@ public class LocalSamurai : MonoBehaviour {
 	}
 
 	// Sets the manager for the duel this player is in
-	public void SetManager(LocalDuelManager _manager) {
+	public void SetManager(NetDuelManager _manager) {
 		manager = _manager;
 	}
 
@@ -72,7 +72,7 @@ public class LocalSamurai : MonoBehaviour {
 	}
 
 	// Returns whether a player has struck out following the last round
-	public bool StrikeOut(int strikeLimit, LocalSamurai opponent) {
+	public bool StrikeOut(int strikeLimit, NetSamurai opponent) {
 		// Player's strike count must exceed limit to strike out
 		bool strikeOut = strikeCount >= strikeLimit;
 

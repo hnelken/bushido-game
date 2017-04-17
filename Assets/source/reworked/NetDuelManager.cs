@@ -1,18 +1,27 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class LocalDuelManager : MonoBehaviour {
+public class NetDuelManager : MonoBehaviour {
 
-	#region Public References
+	#region Inspector References + Public Properties
 
-	public LocalSamurai LeftSamurai, RightSamurai;
+	public NetSamurai LeftSamurai, RightSamurai;
+
+	public NetworkUtility Utility {
+		get {
+			if (!utility) {
+				utility = NetworkUtility.Get();
+			}
+			return utility;
+		}
+	}
 
 	// Safe reference to the manager of all UI elements
-	private LocalUIManager gui;
-	public LocalUIManager GUI {
+	private NetUIManager gui;
+	public NetUIManager GUI {
 		get {
 			if (!gui) {
-				gui = GetComponent<LocalUIManager>();
+				gui = GetComponent<NetUIManager>();
 			}
 			return gui;
 		}
@@ -23,6 +32,8 @@ public class LocalDuelManager : MonoBehaviour {
 
 	#region Private Variables
 
+	private NetworkUtility utility;
+	private PhotonView photonView;
 	private const int strikeLimit = 2;						// Number of strikes required to lose a round
 	private int winLimit = 3;								// Number of wins required to win the match
 
@@ -46,10 +57,12 @@ public class LocalDuelManager : MonoBehaviour {
 	#endregion
 
 
-	#region MonoBehaviour API
+	#region State Functions
 
 	// Initialization
 	void Awake() {
+
+		this.photonView = GetComponent<PhotonView>();
 
 		// Get match limit from match info
 		winLimit = BushidoMatchInfo.Get().MatchLimit;
@@ -61,7 +74,7 @@ public class LocalDuelManager : MonoBehaviour {
 		EventManager.GameStart += BeginRound;
 		EventManager.GameReset += ResetGame;
 
-		StartCoroutine(WaitAndStartRound());
+		Get().StartCoroutine(WaitAndStartRound());
 	}
 
 	void Update() {
@@ -76,7 +89,85 @@ public class LocalDuelManager : MonoBehaviour {
 	#endregion
 
 
+	#region Photon RPC's
+
+	[PunRPC]
+	public void SyncTriggerGameStart() {
+		TriggerGameStart();
+	}
+
+	[PunRPC]
+	public void SyncPopFlag() {
+		PopFlag();
+	}
+
+	[PunRPC]
+	private void SyncSetRandomWaitTime(float waitTime) {
+		SetWaitTime(waitTime);
+	}
+
+	[PunRPC]
+	private void SyncSetStartTime(float startTime) {
+		SetStartTime(startTime);
+	}
+
+	private void TriggerGameStartOnAllClients() {
+		photonView.RPC("SyncTriggerGameStart", PhotonTargets.All);
+	}
+
+	private void PopFlagOnAllClients() {
+		photonView.RPC("SyncPopFlag", PhotonTargets.All);
+	}
+
+	private void SetRandomWaitTimeOnAllClients(float waitTime) {
+		photonView.RPC("SyncSetRandomWaitTime", PhotonTargets.All, waitTime);
+	}
+
+	private void SetStartTimeOnAllClients(float startTime) {
+		photonView.RPC("SyncSetStartTime", PhotonTargets.All, startTime);
+	}
+
+	#endregion
+
+
 	#region Public API
+
+	public static NetDuelManager Get() {
+		return FindObjectOfType<NetDuelManager>();
+	}
+
+	public void SetWaitTime(float waitTime) {
+		randomWait = waitTime;
+		Get().StartCoroutine(WaitAndPopFlag());
+	}
+
+	public void SetStartTime(float time) {
+		startTime = time;
+	}
+
+	public void SetCurrentTime(int time) {
+		currTime = time;
+	}
+
+	public void TriggerGameStart() {
+		GUI.ToggleShadeForRoundStart();
+		AudioManager.Get().StartMusic();
+	}
+
+	public void PopFlag() {
+		// No strike, record time of flag pop and start timer
+		if (PUNNetworkPlayer.LocalPlayerIsHost()) {
+			SetStartTimeOnAllClients(Time.realtimeSinceStartup);
+		}
+
+		GUI.ToggleTimer();
+
+		// "Pop" the flag 
+		GUI.ToggleFlag();
+		flagPopped = true;
+
+		AudioManager.Get().PlayPopSound();
+	}
 
 	// Signal a player reaction during a round
 	// - leftSamurai: A boolean representing which player triggered this event
@@ -106,7 +197,7 @@ public class LocalDuelManager : MonoBehaviour {
 				// Compare time against samurai's current best
 				RecordReactionTime(leftSamurai, reactionTime);
 
-				StartCoroutine(WaitAndShowReaction(leftSamurai));
+				Get().StartCoroutine(WaitAndShowReaction(leftSamurai));
 			}
 			else {
 				// The flag was not out, input is a strike.
@@ -152,24 +243,6 @@ public class LocalDuelManager : MonoBehaviour {
 
 	#region Private API
 
-	private void PopFlag() {
-		// No strike, record time of flag pop and start timer
-		startTime = Time.realtimeSinceStartup;
-
-		GUI.ToggleTimer();
-
-		// "Pop" the flag 
-		GUI.ToggleFlag();
-		flagPopped = true;
-
-		AudioManager.Get().PlayPopSound();
-	}
-
-	private void TriggerGameStart() {
-		GUI.ToggleShadeForRoundStart();
-		AudioManager.Get().StartMusic();
-	}
-
 	private void RecordReactionTime(bool leftSamurai, int time) {
 		if (leftSamurai) {
 			LeftSamurai.RecordReactionTime(time);
@@ -192,7 +265,7 @@ public class LocalDuelManager : MonoBehaviour {
 
 			// Show round result and prepare to restart game
 			EventManager.TriggerGameResult();
-			StartCoroutine(WaitAndRestartGame());
+			Get().StartCoroutine(WaitAndRestartGame());
 		}
 	}
 
@@ -204,7 +277,9 @@ public class LocalDuelManager : MonoBehaviour {
 		// Allow input and begin delayed flag display
 		waitingForInput = true;
 
-		StartCoroutine(WaitAndPopFlag());
+		if (PUNNetworkPlayer.LocalPlayerIsHost()) {
+			SetRandomWaitTimeOnAllClients(Random.Range(4, 7));
+		}
 	}
 
 	// Reset the parameters of the manager before setting up for a new round
@@ -221,9 +296,8 @@ public class LocalDuelManager : MonoBehaviour {
 		tieTime = 0;
 		currTime = 0;
 
-
 		// Start delayed wait before round start
-		StartCoroutine(WaitAndStartRound());
+		Get().StartCoroutine(WaitAndStartRound());
 	}
 
 	// Signal that a player's input was too early
@@ -248,7 +322,8 @@ public class LocalDuelManager : MonoBehaviour {
 			leftPlayerCausedResult = false;
 
 			// Show resulting winner after a delay
-			StartCoroutine(WaitAndShowResult(false, true));
+			Get().StartCoroutine(WaitAndShowResult(false, true));
+			//Get().StartCoroutine(WaitAndShowWinner());
 		}
 		else if (RightSamurai.StrikeOut(strikeLimit, LeftSamurai)) {
 			// Change the result to be a win
@@ -256,11 +331,12 @@ public class LocalDuelManager : MonoBehaviour {
 			leftPlayerCausedResult = true;
 
 			// Show resulting winner after a delay
-			StartCoroutine(WaitAndShowResult(false, true));
+			Get().StartCoroutine(WaitAndShowResult(false, true));
+			//Get().StartCoroutine(WaitAndShowWinner());
 		}
 		else {
 			// Neither player struck out, just reset round
-			StartCoroutine(WaitAndRestartGame());
+			Get().StartCoroutine(WaitAndRestartGame());
 		}
 	}
 
@@ -297,19 +373,38 @@ public class LocalDuelManager : MonoBehaviour {
 
 		yield return new WaitForSeconds(2);
 
-		TriggerGameStart();
+		if (PUNNetworkPlayer.LocalPlayerIsHost()) {
+			TriggerGameStartOnAllClients();
+		}
+		//if (networking) {
+		//}
+		//else {
+		//	TriggerGameStart();
+		//}
 	}
 
 	// Displays the flag after a randomized wait time
 	public IEnumerator WaitAndPopFlag() {
 
-		randomWait = Random.Range(4, 7);
+		//if (!networking) {
+		//	randomWait = Random.Range(4, 7);
+		//}
 
 		yield return new WaitForSeconds(randomWait);
 
 		// Only pop flag if the player has not struck early
 		if (!playerStrike) {
-			PopFlag();
+			if (PUNNetworkPlayer.LocalPlayerIsHost()) {
+				PopFlagOnAllClients();
+			}
+		//	if (networking) {
+		//		if (Utility.isServer) {
+		//			Utility.RpcPopFlag();
+		//		}
+		//	}
+		//	else {
+		//		PopFlag();
+		//	}
 		}
 	}
 
@@ -322,7 +417,7 @@ public class LocalDuelManager : MonoBehaviour {
 		EventManager.TriggerGameReaction();
 
 		// Show the winner after a delay
-		StartCoroutine(WaitAndShowResult(leftSamurai, false));
+		Get().StartCoroutine(WaitAndShowResult(leftSamurai, false));
 	}
 
 	public IEnumerator WaitAndShowResult(bool leftSamurai, bool resultWasStrike) {
@@ -347,7 +442,7 @@ public class LocalDuelManager : MonoBehaviour {
 
 		// Show round result and prepare to restart game
 		EventManager.TriggerGameResult();
-		StartCoroutine(WaitAndRestartGame());
+		Get().StartCoroutine(WaitAndRestartGame());
 	}
 
 	// Resets for a new round after 4 seconds
@@ -360,7 +455,7 @@ public class LocalDuelManager : MonoBehaviour {
 			EventManager.TriggerGameOver();
 
 			// Leave the duel scene after a delay
-			StartCoroutine(WaitAndEndGame());
+			Get().StartCoroutine(WaitAndEndGame());
 		}
 		else {
 			// No player has won the match
@@ -374,14 +469,13 @@ public class LocalDuelManager : MonoBehaviour {
 		yield return new WaitForSeconds(4);
 
 		// Set match results
-		BushidoMatchInfo.Get().SetMatchResults(
+		BushidoNetManager.Get().SetMatchResults(
 			LeftSamurai.WinCount, RightSamurai.WinCount,
 			LeftSamurai.BestTime, RightSamurai.BestTime,
-			false);
+			true);
 
 		GUI.ToggleShadeForMatchEnd();
 	}
 
 	#endregion
-
 }

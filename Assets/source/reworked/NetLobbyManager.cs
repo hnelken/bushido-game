@@ -81,10 +81,10 @@ public class NetLobbyManager : MonoBehaviour {
 	#region Photon RPC's
 
 	[PunRPC]
-	void SyncLobby(bool _hostReady, bool _clientReady, int _bestOfIndex) {
-		this.hostReady = _hostReady;
-		this.clientReady = _clientReady;
-		this.bestOfIndex = _bestOfIndex;
+	void SyncLobby(bool hostReady, bool clientReady, int bestOfIndex) {
+		this.hostReady = hostReady;
+		this.clientReady = clientReady;
+		this.bestOfIndex = bestOfIndex;
 
 		UpdateLobbyUI();
 	}
@@ -276,8 +276,8 @@ public class NetLobbyManager : MonoBehaviour {
 	private void CheckReadyStatus() {
 		// Check if both players are ready
 		if (hostReady && clientReady) {
-			// Set the win limit in the network manager
-			//BushidoNetManager.Get().SetMatchLimit(BestOfNumText.text);
+			// Set the win limit in the game scene
+			BushidoMatchInfo.Get().SetMatchLimit(BestOfNumText.text);
 
 			// Begin countdown to game start
 			countDown = 5;						// Set countdown to 5

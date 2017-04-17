@@ -64,6 +64,10 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 
 	#region Public API
 		
+	public static bool LocalPlayerIsHost() {
+		return PhotonNetwork.isMasterClient;
+	}
+
 	public static PUNNetworkPlayer GetLocalPlayer() {
 		foreach (PUNNetworkPlayer player in GetAllPlayers()) {
 			if (player.photonView.isMine) {

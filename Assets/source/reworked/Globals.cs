@@ -6,7 +6,8 @@ public class Globals : MonoBehaviour {
 	public static string MainMenuScene = "Menu-Fix";
 	public static string LocalDuelScene = "LocalDuel-Fix";
 	public static string LocalPostScene = "LocalPostGame";
-	public static string NetDuelScene = "NetworkDuel";
+	public static string NetDuelScene = "NetworkDuel-Fix";
+	public static bool LocalPlayerIsHost;
 
 	// Safe reference to the PUN match maker
 	private static PUNQuickPlay matchMaker;
@@ -14,6 +15,7 @@ public class Globals : MonoBehaviour {
 		get {
 			if (!matchMaker) {
 				matchMaker = Get().GetComponent<PUNQuickPlay>();
+				LocalPlayerIsHost = matchMaker.LocalPlayerIsHost();
 			}
 			return matchMaker;
 		}
