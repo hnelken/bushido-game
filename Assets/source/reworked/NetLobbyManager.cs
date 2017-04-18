@@ -288,13 +288,12 @@ public class NetLobbyManager : MonoBehaviour {
 		if (hostReady && clientReady) {
 			// Set the win limit in the game scene
 			BushidoMatchInfo.Get().SetMatchLimit(BestOfNumText.text);
-			Debug.Log("CountDownStart");
+
 			if (PhotonNetwork.isMasterClient) {
 				// Begin countdown to game start
 				countDown = 5;								// Set countdown to 5
 				countingDown = true;						// Set countdown as active
 				SetCountDownTextOnAllClients(countDown);	// Update countdown UI
-				//SetCountDownText(countDown);				
 				StartCoroutine(CountDown());				// Begin counting interval
 			}
 		}

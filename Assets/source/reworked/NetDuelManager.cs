@@ -106,11 +106,6 @@ public class NetDuelManager : MonoBehaviour {
 		SetWaitTime(waitTime);
 	}
 
-	[PunRPC]
-	private void SyncSetStartTime(float startTime) {
-		SetStartTime(startTime);
-	}
-
 	private void TriggerGameStartOnAllClients() {
 		photonView.RPC("SyncTriggerGameStart", PhotonTargets.All);
 	}
@@ -121,10 +116,6 @@ public class NetDuelManager : MonoBehaviour {
 
 	private void SetRandomWaitTimeOnAllClients(float waitTime) {
 		photonView.RPC("SyncSetRandomWaitTime", PhotonTargets.All, waitTime);
-	}
-
-	private void SetStartTimeOnAllClients(float startTime) {
-		photonView.RPC("SyncSetStartTime", PhotonTargets.All, startTime);
 	}
 
 	#endregion
@@ -156,9 +147,7 @@ public class NetDuelManager : MonoBehaviour {
 
 	public void PopFlag() {
 		// No strike, record time of flag pop and start timer
-		if (PUNNetworkPlayer.LocalPlayerIsHost()) {
-			SetStartTimeOnAllClients(Time.realtimeSinceStartup);
-		}
+		startTime = Time.realtimeSinceStartup;
 
 		GUI.ToggleTimer();
 
