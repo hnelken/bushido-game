@@ -100,6 +100,11 @@ public class NetLobbyManager : MonoBehaviour {
 		ChangeBestOfIndex(minus);
 	}
 
+	[PunRPC]
+	void SyncCountDownText(int countDown) {
+		SetCountDownText(countDown);
+	}
+
 	// Synchronize lobby settings for players just entering a network game
 	public void SyncLobbySettings() {
 		photonView.RPC("SyncLobby", PhotonTargets.All, hostReady, clientReady, bestOfIndex);
@@ -113,6 +118,10 @@ public class NetLobbyManager : MonoBehaviour {
 	// Increment or decrement the "best-of" index and update the UI
 	private void ChangeBestOfIndexOnAllClients(bool minus) {
 		photonView.RPC("SyncChangeBestOfIndex", PhotonTargets.All, minus);
+	}
+
+	private void SetCountDownTextOnAllClients(int countDown) {
+		photonView.RPC("SyncCountDownText", PhotonTargets.All, countDown);
 	}
 
 	#endregion
@@ -179,7 +188,8 @@ public class NetLobbyManager : MonoBehaviour {
 
 	// Updates lobby UI when a player is newly ready
 	public void OnPlayerSignalReady() {
-		UpdateLobbyUI();
+		SyncLobbySettings();
+		//UpdateLobbyUI();
 	}
 
 	#endregion
@@ -278,12 +288,15 @@ public class NetLobbyManager : MonoBehaviour {
 		if (hostReady && clientReady) {
 			// Set the win limit in the game scene
 			BushidoMatchInfo.Get().SetMatchLimit(BestOfNumText.text);
-
-			// Begin countdown to game start
-			countDown = 5;						// Set countdown to 5
-			countingDown = true;				// Set countdown as active
-			SetCountDownText(countDown);		// Update countdown UI
-			StartCoroutine(CountDown());		// Begin counting interval
+			Debug.Log("CountDownStart");
+			if (PhotonNetwork.isMasterClient) {
+				// Begin countdown to game start
+				countDown = 5;								// Set countdown to 5
+				countingDown = true;						// Set countdown as active
+				SetCountDownTextOnAllClients(countDown);	// Update countdown UI
+				//SetCountDownText(countDown);				
+				StartCoroutine(CountDown());				// Begin counting interval
+			}
 		}
 	}
 
@@ -293,9 +306,9 @@ public class NetLobbyManager : MonoBehaviour {
 
 		// Check if the countdown was cancelled
 		if (countingDown) {
-			countDown -= 1;						// Decrement the countdown
-			SetCountDownText(countDown);		// Update the countdown UI
-			CheckCountDownStatus();				// Check if the countdown finished
+			countDown -= 1;								// Decrement the countdown
+			SetCountDownTextOnAllClients(countDown);	// Update the countdown UI
+			CheckCountDownStatus();						// Check if the countdown finished
 		}
 	}
 
