@@ -266,7 +266,7 @@ public class NetDuelManager : MonoBehaviour {
 		// Allow input and begin delayed flag display
 		waitingForInput = true;
 
-		if (PUNNetworkPlayer.LocalPlayerIsHost()) {
+		if (PhotonNetwork.isMasterClient) {
 			SetRandomWaitTimeOnAllClients(Random.Range(4, 7));
 		}
 	}
@@ -362,7 +362,7 @@ public class NetDuelManager : MonoBehaviour {
 
 		yield return new WaitForSeconds(2);
 
-		if (PUNNetworkPlayer.LocalPlayerIsHost()) {
+		if (PhotonNetwork.isMasterClient) {
 			TriggerGameStartOnAllClients();
 		}
 		//if (networking) {
@@ -383,7 +383,7 @@ public class NetDuelManager : MonoBehaviour {
 
 		// Only pop flag if the player has not struck early
 		if (!playerStrike) {
-			if (PUNNetworkPlayer.LocalPlayerIsHost()) {
+			if (PhotonNetwork.isMasterClient) {
 				PopFlagOnAllClients();
 			}
 		//	if (networking) {

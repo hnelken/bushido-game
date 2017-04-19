@@ -127,11 +127,16 @@ public class MainMenuManager : MonoBehaviour {
 			// Clear event listeners
 			EventManager.Nullify();
 
-			// Change scene
+			// Change scene depending on local/net duel
 			if (localLobbyOpen) {
+				// Local lobby, load duel scene
 				SceneManager.LoadScene(nextSceneName);
 			}
 			else if (PhotonNetwork.isMasterClient) {
+				// Set players as in game
+				SignalBothPlayersLeaveLobby();
+
+				// Load network duel scene
 				PhotonNetwork.LoadLevel(nextSceneName);
 			}
 		}
@@ -188,6 +193,14 @@ public class MainMenuManager : MonoBehaviour {
 			Globals.LocalLobby.PrepareLocalLobby();
 		}
 		ToggleLobbyMenu();
+	}
+
+	// Signal boths players as leaving the lobby
+	private void SignalBothPlayersLeaveLobby() {
+		// Set each player to be in game
+		foreach (PUNNetworkPlayer player in PUNNetworkPlayer.GetAllPlayers()) {
+			player.LeaveLobby();
+		}
 	}
 
 	#endregion

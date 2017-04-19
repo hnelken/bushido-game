@@ -24,6 +24,10 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 
 	#region Photon Behaviour API
 
+	void Awake() {
+		DontDestroyOnLoad(gameObject);
+	}
+
 	void Update() {
 		// Stop if not the local player or input has been received
 		if (!ShouldCheckForInput()) {
@@ -34,9 +38,11 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 		if (TouchInput() || Input.GetKeyDown(KeyCode.Space)) {
 			inputReceived = true;
 
-			// Trigger player reaction at the current time
-			int reactionTime = DuelManager.Get().GetCurrentTime();
-			TriggerReaction(isHost, reactionTime);
+			// Get reaction time from duel manager
+			int reactionTime = NetDuelManager.Get().GetCurrentTime();
+
+			// Call reaction RPC to trigger input on all clients
+			photonView.RPC("TriggerReaction", PhotonTargets.All, isHost, reactionTime);
 		}
 	}
 
@@ -144,7 +150,7 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 
 	[PunRPC]	// RPC to trigger reaction from this player on all clients
 	void TriggerReaction(bool hostSamurai, int reactionTime) {
-		DuelManager.Get().TriggerReaction(hostSamurai, reactionTime);
+		NetDuelManager.Get().TriggerReaction(hostSamurai, reactionTime);
 	}
 
 	#endregion

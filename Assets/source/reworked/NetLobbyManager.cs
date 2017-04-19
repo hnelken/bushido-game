@@ -105,6 +105,11 @@ public class NetLobbyManager : MonoBehaviour {
 		SetCountDownText(countDown);
 	}
 
+	[PunRPC]
+	void SyncLeaveLobby() {
+		Globals.Menu.LeaveMenu();
+	}
+
 	// Synchronize lobby settings for players just entering a network game
 	public void SyncLobbySettings() {
 		photonView.RPC("SyncLobby", PhotonTargets.All, hostReady, clientReady, bestOfIndex);
@@ -122,6 +127,10 @@ public class NetLobbyManager : MonoBehaviour {
 
 	private void SetCountDownTextOnAllClients(int countDown) {
 		photonView.RPC("SyncCountDownText", PhotonTargets.All, countDown);
+	}
+
+	private void LeaveMenuOnAllClients() {
+		photonView.RPC("SyncLeaveLobby", PhotonTargets.All);
 	}
 
 	#endregion
@@ -315,7 +324,8 @@ public class NetLobbyManager : MonoBehaviour {
 	private void CheckCountDownStatus() {
 		// Check if countdown has expired
 		if (countDown == 0) {
-			Globals.Menu.LeaveMenu();
+			LeaveMenuOnAllClients();
+			//Globals.Menu.LeaveMenu();
 		}
 		else {
 			// Not finished, continue count down
