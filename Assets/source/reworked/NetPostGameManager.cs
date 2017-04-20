@@ -48,6 +48,7 @@ public class NetPostGameManager : MonoBehaviour {
 		// Initialize some UI
 		Shade.Initialize();
 		MainText.enabled = false;
+
 		LeftCheckbox.sprite = UncheckedBox;
 		RightCheckbox.sprite = UncheckedBox;
 
@@ -100,6 +101,7 @@ public class NetPostGameManager : MonoBehaviour {
 
 	// Prepare to leave the match
 	public void LeaveMatchPressed() {
+		PhotonNetwork.Disconnect();
 		Debug.Log("Leave match");
 		leavingScene = true;
 		exiting = true;

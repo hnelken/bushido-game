@@ -203,7 +203,7 @@ public class NetUIManager : MonoBehaviour {
 
 			EventManager.Nullify();
 			//AudioManager.Get().BackToMenu();
-			SceneManager.LoadScene(Globals.LocalPostScene);
+			SceneManager.LoadScene(Globals.NetPostScene);
 		}
 	}
 

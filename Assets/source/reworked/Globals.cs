@@ -7,6 +7,7 @@ public class Globals : MonoBehaviour {
 	public static string LocalDuelScene = "LocalDuel-Fix";
 	public static string LocalPostScene = "LocalPostGame";
 	public static string NetDuelScene = "NetworkDuel-Fix";
+	public static string NetPostScene = "NetPostGame";
 
 	// Safe reference to the PUN match maker
 	private static PUNQuickPlay matchMaker;

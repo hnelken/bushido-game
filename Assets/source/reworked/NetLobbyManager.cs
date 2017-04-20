@@ -325,7 +325,6 @@ public class NetLobbyManager : MonoBehaviour {
 		// Check if countdown has expired
 		if (countDown == 0) {
 			LeaveMenuOnAllClients();
-			//Globals.Menu.LeaveMenu();
 		}
 		else {
 			// Not finished, continue count down
