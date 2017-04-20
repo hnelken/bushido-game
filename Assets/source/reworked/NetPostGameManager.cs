@@ -12,6 +12,8 @@ public class NetPostGameManager : MonoBehaviour {
 	public Image LeftCheckbox, RightCheckbox;
 	public FadingShade Shade;
 
+	private PhotonView photonView;
+
 	private int countDown;
 
 	private bool countingDown;
@@ -48,6 +50,8 @@ public class NetPostGameManager : MonoBehaviour {
 		// Initialize some UI
 		Shade.Initialize();
 		MainText.enabled = false;
+
+		photonView = GetComponent<PhotonView>();
 
 		LeftCheckbox.sprite = UncheckedBox;
 		RightCheckbox.sprite = UncheckedBox;
@@ -86,6 +90,21 @@ public class NetPostGameManager : MonoBehaviour {
 		}
 	}
 
+
+	#region Photon RPC's
+
+	[PunRPC]
+	void SyncRefreshReadyStatus() {
+		UpdateRematchReadyStatus();
+	}
+
+	private void RefreshReadyStatusOnAllClients() {
+		photonView.RPC("SyncRefreshReadyStatus", PhotonTargets.All);
+	}
+
+	#endregion
+
+
 	// Send rematch signal
 	public void RematchPressed() {
 		RematchButton.SetActive(false);
@@ -94,9 +113,7 @@ public class NetPostGameManager : MonoBehaviour {
 
 		// Signal local player ready
 		PUNNetworkPlayer.GetLocalPlayer().SetAsReady();
-		UpdateRematchReadyStatus();
-			// check ready status
-			// then start countdown
+		RefreshReadyStatusOnAllClients();
 	}
 
 	// Prepare to leave the match
@@ -122,7 +139,13 @@ public class NetPostGameManager : MonoBehaviour {
 		}
 
 		if (hostRematchReady && clientRematchReady) {
-			StartCountDown();
+			// Hide checkboxes and rematch button
+			LeftCheckbox.enabled = false;
+			RightCheckbox.enabled = false;
+
+			if (PhotonNetwork.isMasterClient) {
+				StartCountDown();
+			}
 		}
 	}
 
@@ -142,10 +165,6 @@ public class NetPostGameManager : MonoBehaviour {
 
 	// Triggered when both lobby players are ready to begin a match
 	private void StartCountDown() {
-
-		// Hide checkboxes and rematch button
-		LeftCheckbox.enabled = false;
-		RightCheckbox.enabled = false;
 
 		// Start counting down from 5
 		countDown = 5;
