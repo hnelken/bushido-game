@@ -109,6 +109,7 @@ public class MainMenuManager : MonoBehaviour {
 	// Begins the animations that lead to desired scene change
 	public void LeaveMenu() {
 		nextSceneName = localLobbyOpen ? Globals.LocalDuelScene : Globals.NetDuelScene;
+		PUNNetworkPlayer.SignalBothPlayersLeaveLobby();
 		leavingMenu = true;
 		Shade.Toggle();
 	}
@@ -133,9 +134,6 @@ public class MainMenuManager : MonoBehaviour {
 				SceneManager.LoadScene(nextSceneName);
 			}
 			else if (PhotonNetwork.isMasterClient) {
-				// Set players as in game
-				PUNNetworkPlayer.SignalBothPlayersLeaveLobby();
-
 				// Load network duel scene
 				PhotonNetwork.LoadLevel(nextSceneName);
 			}

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class NetDuelManager : MonoBehaviour {
 
@@ -63,9 +64,13 @@ public class NetDuelManager : MonoBehaviour {
 	void Awake() {
 
 		this.photonView = GetComponent<PhotonView>();
+		/*foreach (PUNNetworkPlayer player in PUNNetworkPlayer.GetAllPlayers()) {
+			player.LeaveLobby();
+		}*/
 
 		// Get match limit from match info
 		winLimit = BushidoMatchInfo.Get().MatchLimit;
+
 
 		LeftSamurai.SetManager(this);
 		RightSamurai.SetManager(this);
@@ -141,6 +146,9 @@ public class NetDuelManager : MonoBehaviour {
 	}
 
 	public void TriggerGameStart() {
+		// Begin to allow input from both players
+		PUNNetworkPlayer.ResetInputForBothPlayers();
+
 		GUI.ToggleShadeForRoundStart();
 		AudioManager.Get().StartMusic();
 	}
@@ -362,11 +370,8 @@ public class NetDuelManager : MonoBehaviour {
 
 		yield return new WaitForSeconds(2);
 
+		// Synchronize round start
 		if (PhotonNetwork.isMasterClient) {
-
-			// Begin to allow input from both players
-			PUNNetworkPlayer.ResetInputForBothPlayers();
-
 			TriggerGameStartOnAllClients();
 		}
 	}

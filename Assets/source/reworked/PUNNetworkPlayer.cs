@@ -31,9 +31,11 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	void Update() {
 		// Stop if not the local player or input has been received
 		if (!ShouldCheckForInput()) {
+			Debug.Log("Input blocked - IsHost:" + isHost + " InGame: " + inGame + " Input: " + inputReceived);
 			return;
 		}
 
+		Debug.Log("Touch allowed - IsHost:" + isHost);
 		// Check for touch or keyboard input
 		if (TouchInput() || Input.GetKeyDown(KeyCode.Space)) {
 			inputReceived = true;
@@ -95,6 +97,7 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 		// Set each player to be in game
 		foreach (PUNNetworkPlayer player in GetAllPlayers()) {
 			player.LeaveLobby();
+			Debug.Log("Ingame: " + player.inGame);
 		}
 	}
 
