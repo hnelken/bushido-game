@@ -56,6 +56,12 @@ public class NetSamurai : MonoBehaviour {
 		}
 	}
 
+	public string DisplayName {
+		get {
+			return displayName;
+		}
+	}
+
 	// Sets the manager for the duel this player is in
 	public void SetManager(NetDuelManager _manager) {
 		manager = _manager;
@@ -73,27 +79,10 @@ public class NetSamurai : MonoBehaviour {
 
 	// Returns whether a player has struck out following the last round
 	public bool StrikeOut(int strikeLimit, NetSamurai opponent) {
-		// Player's strike count must exceed limit to strike out
-		bool strikeOut = strikeCount >= strikeLimit;
-
-		// Player's oppenent receives a win if a strike out occured
-		if (strikeOut) {
-			opponent.winCount++;
-		}
-
-		// Return whether strikeout occured
-		return strikeOut;
+		// Player's strike count must reach limit to strike out
+		return strikeCount >= strikeLimit;
 	}
 
-	// Returns the display name for this player
-	public string GetPlayerName() {
-		return displayName;
-	}
-
-	// Returns player win count
-	public int GetWinCount() {
-		return winCount;
-	}
 
 	#endregion
 

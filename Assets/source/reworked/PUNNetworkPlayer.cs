@@ -52,11 +52,13 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 			stream.SendNext(isHost);
 			stream.SendNext(isReady);
 			stream.SendNext(inGame);
+			stream.SendNext(inputReceived);
 		}
 		else {
 			this.isHost = (bool) stream.ReceiveNext();
 			this.isReady = (bool) stream.ReceiveNext();
 			this.inGame = (bool) stream.ReceiveNext();
+			this.inputReceived = (bool) stream.ReceiveNext();
 
 			// Update lobby if not in game
 			if (!inGame) {
@@ -88,8 +90,27 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 		return GameObject.FindObjectsOfType<PUNNetworkPlayer>();
 	}
 
+	// Signal boths players as leaving the lobby
+	public static void SignalBothPlayersLeaveLobby() {
+		// Set each player to be in game
+		foreach (PUNNetworkPlayer player in GetAllPlayers()) {
+			player.LeaveLobby();
+		}
+	}
+
+	public static void ResetInputForBothPlayers() {
+		// Set each player to be in game
+		foreach (PUNNetworkPlayer player in GetAllPlayers()) {
+			player.ResetInput();
+		}
+	}
+
 	public void EnterLobby() {
 		photonView.RPC("SignalEnterLobby", PhotonTargets.AllBuffered);
+	}
+
+	public void ResetInput() {
+		inputReceived = false;
 	}
 
 	// Set this player as ready and 

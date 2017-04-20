@@ -343,8 +343,8 @@ public class NetDuelManager : MonoBehaviour {
 
 	// Checks if either player has enough wins to claim the match
 	private bool MatchWon() {
-		return LeftSamurai.GetWinCount() > winLimit / 2
-			|| RightSamurai.GetWinCount() > winLimit / 2;
+		return LeftSamurai.WinCount > winLimit / 2
+			|| RightSamurai.WinCount > winLimit / 2;
 	}
 
 	// Checks if both players have entered the room
@@ -363,21 +363,16 @@ public class NetDuelManager : MonoBehaviour {
 		yield return new WaitForSeconds(2);
 
 		if (PhotonNetwork.isMasterClient) {
+
+			// Begin to allow input from both players
+			PUNNetworkPlayer.ResetInputForBothPlayers();
+
 			TriggerGameStartOnAllClients();
 		}
-		//if (networking) {
-		//}
-		//else {
-		//	TriggerGameStart();
-		//}
 	}
 
 	// Displays the flag after a randomized wait time
 	public IEnumerator WaitAndPopFlag() {
-
-		//if (!networking) {
-		//	randomWait = Random.Range(4, 7);
-		//}
 
 		yield return new WaitForSeconds(randomWait);
 
@@ -386,14 +381,6 @@ public class NetDuelManager : MonoBehaviour {
 			if (PhotonNetwork.isMasterClient) {
 				PopFlagOnAllClients();
 			}
-		//	if (networking) {
-		//		if (Utility.isServer) {
-		//			Utility.RpcPopFlag();
-		//		}
-		//	}
-		//	else {
-		//		PopFlag();
-		//	}
 		}
 	}
 
@@ -455,10 +442,11 @@ public class NetDuelManager : MonoBehaviour {
 
 	// Leaves the duel scene after 4 seconds
 	public IEnumerator WaitAndEndGame() {
+
 		yield return new WaitForSeconds(4);
 
 		// Set match results
-		BushidoNetManager.Get().SetMatchResults(
+		BushidoMatchInfo.Get().SetMatchResults(
 			LeftSamurai.WinCount, RightSamurai.WinCount,
 			LeftSamurai.BestTime, RightSamurai.BestTime,
 			true);

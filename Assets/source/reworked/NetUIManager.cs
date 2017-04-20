@@ -266,19 +266,13 @@ public class NetUIManager : MonoBehaviour {
 
 	#region Private API
 
-	// Update the win count text elements
-	private void RefreshWinCounts() {
-		// Set text elements to show latest win counts
-		//LeftCount.text = "P1\n" + manager.LeftSamurai.GetWinCount();
-		//RightCount.text = "P2\n" + manager.RightSamurai.GetWinCount();
-	}
 
 	// Returns the display name of the player that caused the given result
 	private string GetPlayerString(bool roundWon) {
 		// Get the players name depending if the left or right player caused the result
 		return (manager.LeftPlayerCausedResult()) 
-			? manager.LeftSamurai.GetPlayerName() 
-				: manager.RightSamurai.GetPlayerName();
+			? manager.LeftSamurai.DisplayName 
+				: manager.RightSamurai.DisplayName;
 	}
 
 	// Sets both samurai image elements to given positions
@@ -350,11 +344,8 @@ public class NetUIManager : MonoBehaviour {
 	}
 
 	private void ShowResult() {
-		// Refresh and display win count text elements
-		RefreshWinCounts();
-		//LeftCount.enabled = true;
-		//RightCount.enabled = true;
 
+		// Check result of round
 		if (manager.ResultWasTie()) {
 			// Change the sprite color of both players
 			ShowPlayersTied();

@@ -134,7 +134,7 @@ public class MainMenuManager : MonoBehaviour {
 			}
 			else if (PhotonNetwork.isMasterClient) {
 				// Set players as in game
-				SignalBothPlayersLeaveLobby();
+				PUNNetworkPlayer.SignalBothPlayersLeaveLobby();
 
 				// Load network duel scene
 				PhotonNetwork.LoadLevel(nextSceneName);
@@ -195,13 +195,14 @@ public class MainMenuManager : MonoBehaviour {
 		ToggleLobbyMenu();
 	}
 
+	/*
 	// Signal boths players as leaving the lobby
 	private void SignalBothPlayersLeaveLobby() {
 		// Set each player to be in game
 		foreach (PUNNetworkPlayer player in PUNNetworkPlayer.GetAllPlayers()) {
 			player.LeaveLobby();
 		}
-	}
+	}*/
 
 	#endregion
 
