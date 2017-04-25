@@ -10,6 +10,7 @@ public class CountdownManager : MonoBehaviour {
 	public static event CountdownEvent AllReady;						// Event for both players being ready
 	public static event CountdownEvent ResetReady;						// Event for the ready status being reset
 	public static event CountdownEvent LeftReady, RightReady;			// Events for each player signalling ready
+	public static event CountdownEvent CountdownComplete;				// Event for the end of the countdown
 
 	// Triggers "game start" event
 	public static void TriggerAllReady() {
@@ -36,6 +37,12 @@ public class CountdownManager : MonoBehaviour {
 	public static void TriggerRightReady() {
 		if (RightReady != null) {
 			RightReady();
+		}
+	}
+
+	public static void TriggerCountdownComplete() {
+		if (CountdownComplete != null) {
+			CountdownComplete();
 		}
 	}
 
@@ -84,6 +91,15 @@ public class CountdownManager : MonoBehaviour {
 	#endregion
 
 
+	#region MonoBehaviour API
+
+	void Start() {
+		photonView = GetComponent<PhotonView>();
+	}
+
+	#endregion
+
+
 	#region Public API
 
 	public void SignalPlayerReady(bool left) {
@@ -96,12 +112,7 @@ public class CountdownManager : MonoBehaviour {
 			TriggerRightReady();
 		}
 
-		SyncLobbySettings();
-	}
-
-	// Synchronize lobby settings for players just entering a network game
-	public void SyncLobbySettings() {
-		photonView.RPC("SyncLobby", PhotonTargets.All, leftReady, rightReady);
+		SyncReadyStatusOnAllClients();
 	}
 
 	#endregion
@@ -110,11 +121,12 @@ public class CountdownManager : MonoBehaviour {
 	#region Photon RPC's
 
 	[PunRPC]
-	void SyncLobby(bool leftReady, bool rightReady, int bestOfIndex) {
+	void SyncReadyStatus(bool leftReady, bool rightReady) {
 		this.leftReady = leftReady;
 		this.rightReady = rightReady;
 
 		// Update UI
+		UpdateReadyStatus();
 	}
 
 	[PunRPC]
@@ -124,7 +136,7 @@ public class CountdownManager : MonoBehaviour {
 
 	[PunRPC]
 	void SyncLeaveLobby() {
-		Globals.Menu.LeaveMenu();
+		TriggerCountdownComplete();
 	}
 
 	#endregion
@@ -132,53 +144,17 @@ public class CountdownManager : MonoBehaviour {
 
 	#region Private API
 
+	// Synchronize lobby settings for players just entering a network game
+	private void SyncReadyStatusOnAllClients() {
+		photonView.RPC("SyncReadyStatus", PhotonTargets.All, leftReady, rightReady);
+	}
+
 	private void SetCountDownTextOnAllClients(int countDown) {
 		photonView.RPC("SyncCountDownText", PhotonTargets.All, countDown);
 	}
 
 	private void LeaveMenuOnAllClients() {
 		photonView.RPC("SyncLeaveLobby", PhotonTargets.All);
-	}
-
-	// Updates the lobby ready checkbox images based on player ready status
-	private void UpdateLobbyReadyStatus() {
-		// Update the checkbox images
-		LeftCheckbox.sprite = (leftReady) ? CheckedBox : UncheckedBox;
-		RightCheckbox.sprite = (rightReady) ? CheckedBox : UncheckedBox;
-
-		// Hide/show network lobby UI
-		UpdateReadyUI();
-
-		// Check if both players are ready
-		CheckReadyStatus();
-	}
-
-	// Update UI to reflect ready status of both network players
-	private void UpdateReadyUI() {
-		// Check if local player is host or client
-		if (PUNQuickPlay.Get().LocalPlayerIsHost()) {
-			// Change UI in succession to avoid overlapping elements
-			if (Globals.Menu.PlayText.enabled && Globals.Menu.PlayText.text == "Waiting for another player") {
-				// Hide "waiting for player" text
-				Globals.Menu.PlayText.enabled = false;
-			}
-			else {
-				/*
-				// Hide or show all lobby buttons depending on ready status of host
-				NetReady.gameObject.SetActive(!hostReady);
-				LeftArrow.gameObject.SetActive(!hostReady);
-				RightArrow.gameObject.SetActive(!hostReady);
-				*/
-			}
-		}
-		else {
-			// Hide or show all lobby buttons depending on ready status of client
-			/*
-			NetReady.gameObject.SetActive(!clientReady);
-			LeftArrow.gameObject.SetActive(!clientReady);
-			RightArrow.gameObject.SetActive(!clientReady);
-			*/
-		}
 	}
 
 	// Reset ready status of both players and refresh UI
@@ -193,7 +169,18 @@ public class CountdownManager : MonoBehaviour {
 		}
 
 		// Update UI
-		UpdateLobbyReadyStatus();
+		UpdateReadyStatus();
+		TriggerResetReady();
+	}
+
+	// Updates the lobby ready checkbox images based on player ready status
+	private void UpdateReadyStatus() {
+		// Update the checkbox images
+		LeftCheckbox.sprite = (leftReady) ? CheckedBox : UncheckedBox;
+		RightCheckbox.sprite = (rightReady) ? CheckedBox : UncheckedBox;
+
+		// Check if both players are ready
+		CheckReadyStatus();
 	}
 
 	// Check for and handle both players being ready to leave the lobby
@@ -202,6 +189,7 @@ public class CountdownManager : MonoBehaviour {
 		if (leftReady && rightReady) {
 			// Set the win limit in the game scene
 			//BushidoMatchInfo.Get().SetMatchLimit(BestOfNumText.text);
+			TriggerAllReady();
 
 			if (PhotonNetwork.isMasterClient) {
 				// Begin countdown to game start

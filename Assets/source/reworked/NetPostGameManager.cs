@@ -9,41 +9,13 @@ public class NetPostGameManager : MonoBehaviour {
 	public Text MainText, LeftWinner, RightWinner;
 	public Text LeftWins, RightWins;
 	public Text LeftBest, RightBest;
-	public Image LeftCheckbox, RightCheckbox;
 	public FadingShade Shade;
 
-	private PhotonView photonView;
+	private CountdownManager countdown;
 
-	private int countDown;
-
-	private bool countingDown;
 	private bool leavingScene;
 	private bool rematching;
 	private bool exiting;
-
-	private bool hostRematchReady, clientRematchReady;
-
-	// The sprite for the checked box
-	private Sprite checkedBox;
-	private Sprite CheckedBox {
-		get {
-			if (!checkedBox) {
-				checkedBox = Resources.Load<Sprite>("sprites/checkbox-checked");
-			}
-			return checkedBox;
-		}
-	}
-
-	// The sprite for the unchecked box
-	private Sprite uncheckedBox;
-	private Sprite UncheckedBox {
-		get {
-			if (!uncheckedBox) {
-				uncheckedBox = Resources.Load<Sprite>("sprites/checkbox-unchecked");
-			}
-			return uncheckedBox;
-		}
-	}
 
 	// Use this for initialization
 	void Start() {
@@ -51,17 +23,44 @@ public class NetPostGameManager : MonoBehaviour {
 		Shade.Initialize();
 		MainText.enabled = false;
 
-		photonView = GetComponent<PhotonView>();
-
-		LeftCheckbox.sprite = UncheckedBox;
-		RightCheckbox.sprite = UncheckedBox;
+		countdown = GetComponent<CountdownManager>();
+		CountdownManager.CountdownComplete += StartLeavingScene;
 
 		// Clear ready status of both players
 		PUNNetworkPlayer.GetLocalPlayer().ClearReadyStatus();
 
-		// Get match results from net manager
-		var matchInfo = BushidoMatchInfo.Get();
+		// Fill UI with stats from finished match
+		UpdateUIWithGameStats(BushidoMatchInfo.Get());
+	}
 
+	void Update() {
+		if (IsLeavingScene()) {
+			CheckForRematch();
+			CheckForExit();
+		}
+	}
+
+	// Send rematch signal
+	public void RematchPressed() {
+		RematchButton.SetActive(false);
+
+		Globals.Audio.PlayMenuSound();
+
+		// Signal local player ready
+		PUNNetworkPlayer.GetLocalPlayer().SetAsReady();
+		countdown.SignalPlayerReady(PhotonNetwork.isMasterClient);
+	}
+
+	// Prepare to leave the match
+	public void LeaveMatchPressed() {
+		PhotonNetwork.Disconnect();
+		Debug.Log("Leave match");
+		leavingScene = true;
+		exiting = true;
+		Shade.Toggle();
+	}
+
+	private void UpdateUIWithGameStats(BushidoMatchInfo matchInfo) {
 		// Change UI to show number of wins for each player
 		int leftWins = matchInfo.Results.LeftWins;
 		int rightWins = matchInfo.Results.RightWins;
@@ -83,127 +82,32 @@ public class NetPostGameManager : MonoBehaviour {
 		RightBest.text = (rightBest == -1) ? "xx" : "" + rightBest;
 	}
 
-	void Update() {
-		if (IsLeavingScene()) {
-			CheckForRematch();
-			CheckForExit();
-		}
-	}
-
-
-	#region Photon RPC's
-
-	[PunRPC]
-	void SyncRefreshReadyStatus() {
-		UpdateRematchReadyStatus();
-	}
-
-	private void RefreshReadyStatusOnAllClients() {
-		photonView.RPC("SyncRefreshReadyStatus", PhotonTargets.All);
-	}
-
-	#endregion
-
-
-	// Send rematch signal
-	public void RematchPressed() {
-		RematchButton.SetActive(false);
-
-		Globals.Audio.PlayMenuSound();
-
-		// Signal local player ready
-		PUNNetworkPlayer.GetLocalPlayer().SetAsReady();
-		RefreshReadyStatusOnAllClients();
-	}
-
-	// Prepare to leave the match
-	public void LeaveMatchPressed() {
-		PhotonNetwork.Disconnect();
-		Debug.Log("Leave match");
-		leavingScene = true;
-		exiting = true;
-		Shade.Toggle();
-	}
-
-	private void UpdateRematchReadyStatus() {
-		// Get lobby info from player objects
-		foreach (PUNNetworkPlayer player in PUNNetworkPlayer.GetAllPlayers()) {
-			if (player.IsHost) {
-				hostRematchReady = player.IsReady;
-				LeftCheckbox.sprite = (hostRematchReady) ? CheckedBox : UncheckedBox;
-			}
-			else {
-				clientRematchReady = player.IsReady;
-				RightCheckbox.sprite = (clientRematchReady) ? CheckedBox : UncheckedBox;
-			}
-		}
-
-		if (hostRematchReady && clientRematchReady) {
-			// Hide checkboxes and rematch button
-			LeftCheckbox.enabled = false;
-			RightCheckbox.enabled = false;
-
-			if (PhotonNetwork.isMasterClient) {
-				StartCountDown();
-			}
-		}
-	}
-
 	private void CheckForExit() {
 		if (exiting) {
 			exiting = false;
-			PhotonNetwork.LoadLevel(Globals.MainMenuScene);
+			LeaveScene(Globals.MainMenuScene);
+			//PhotonNetwork.LoadLevel(Globals.MainMenuScene);
 		}
 	}
 
 	private void CheckForRematch() {
 		if (rematching) {
 			rematching = false;
-			PhotonNetwork.LoadLevel(Globals.NetDuelScene);
+			LeaveScene(Globals.NetDuelScene);
+			//PhotonNetwork.LoadLevel(Globals.NetDuelScene);
 		}
 	}
-
-	// Triggered when both lobby players are ready to begin a match
-	private void StartCountDown() {
-
-		// Start counting down from 5
-		countDown = 5;
-		countingDown = true;
-		UpdateMainText(countDown);
-		StartCoroutine(CountDown());
+		
+	private void StartLeavingScene() {
+		leavingScene = true;
+		rematching = true;
+		Shade.Toggle();
 	}
 
-	private IEnumerator CountDown() {
-
-		yield return new WaitForSeconds(1);
-
-		if (countingDown) {
-			countDown -= 1;
-			UpdateMainText(countDown);
-			CheckCountDownStatus();
-		}
-	}
-
-	// Determines the status of the countdown after the counter changes
-	private void CheckCountDownStatus() {
-
-		// Not canceled, check if countdown is over
-		if (countDown == 0) {
-			leavingScene = true;
-			rematching = true;
-			Shade.Toggle();
-		}
-		else {
-			// Not canceled or complete, continue count down
-			StartCoroutine(CountDown());
-		}
-	}
-
-	private void UpdateMainText(int countdown) {
-		if (!MainText.enabled) {
-			MainText.enabled = true;
-		}
-		MainText.text = "Game starting in  " + countdown;
+	private void LeaveScene(string sceneName) {
+		AudioManager.Get().BackToMenu();
+		BushidoMatchInfo.Get().EndMatch();
+		PhotonNetwork.LoadLevel(sceneName);
 	}
 
 	private bool IsLeavingScene() {
