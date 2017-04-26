@@ -115,6 +115,26 @@ public class CountdownManager : MonoBehaviour {
 		SyncReadyStatusOnAllClients();
 	}
 
+	// Reset ready status of both players and refresh UI
+	public void ClearReadyStatus() {
+		// Both players are no longer ready
+		leftReady = false;
+		rightReady = false;
+
+		// Clear ready status on player objects
+		foreach (PUNNetworkPlayer player in PUNNetworkPlayer.GetAllPlayers()) {
+			player.ClearReadyStatus();
+		}
+
+		// Update UI
+		UpdateReadyStatus();
+		TriggerResetReady();
+	}
+
+	public void HaltCountdown() {
+		countingDown = false;
+	}
+
 	#endregion
 
 
@@ -155,22 +175,6 @@ public class CountdownManager : MonoBehaviour {
 
 	private void LeaveMenuOnAllClients() {
 		photonView.RPC("SyncLeaveLobby", PhotonTargets.All);
-	}
-
-	// Reset ready status of both players and refresh UI
-	private void ClearReadyStatus() {
-		// Both players are no longer ready
-		leftReady = false;
-		rightReady = false;
-
-		// Clear ready status on player objects
-		foreach (PUNNetworkPlayer player in PUNNetworkPlayer.GetAllPlayers()) {
-			player.ClearReadyStatus();
-		}
-
-		// Update UI
-		UpdateReadyStatus();
-		TriggerResetReady();
 	}
 
 	// Updates the lobby ready checkbox images based on player ready status

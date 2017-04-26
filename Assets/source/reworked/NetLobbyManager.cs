@@ -11,7 +11,7 @@ public class NetLobbyManager : MonoBehaviour {
 	public Button LeftArrow, RightArrow;				// The left and right arrow button elements
 
 	public Image LeftSamurai, RightSamurai;				// The left and right samurai image elements
-	public Image LeftCheckbox, RightCheckbox;			// The left and right checkbox image elements
+	//public Image LeftCheckbox, RightCheckbox;			// The left and right checkbox image elements
 
 	public Text LeftText, RightText;					// The text element displaying the status of each player's presence in lobby
 	public Text BestOfNumText;							// The text element displaying the number of matches to be played
@@ -22,17 +22,17 @@ public class NetLobbyManager : MonoBehaviour {
 
 	#region Private Variables
 
+	private CountdownManager countdown;
 	private PhotonView photonView;
 	private List<PUNNetworkPlayer> players = new List<PUNNetworkPlayer>();	// The list of players in the lobby
 
-	// Lobby status variables
-	private bool clientFound;							// True if a client has entered a host's game, false if the host is waiting
-	private bool hostReady, clientReady;				// True if the host/client is ready to leave the lobby, false if not
+	// Lobby status variables						// True if a client has entered a host's game, false if the host is waiting
+	//private bool hostReady, clientReady;				// True if the host/client is ready to leave the lobby, false if not
 	private bool hostInLobby, clientInLobby;			// True if the host/client is present in the lobby, false if not
 
 	// Countdown variables
-	private bool countingDown;							// True if the countdown to match start is active, false if not
-	private int countDown;								// The remaining number of seconds in the countdown
+	//private bool countingDown;							// True if the countdown to match start is active, false if not
+	//private int countDown;								// The remaining number of seconds in the countdown
 
 	// "Best of" variables
 	private int bestOfIndex = 1;						// The index in the array of options for the win limit
@@ -41,7 +41,7 @@ public class NetLobbyManager : MonoBehaviour {
 	};
 
 	// The sprite for the checked box
-	private Sprite checkedBox;
+	/*private Sprite checkedBox;
 	private Sprite CheckedBox {
 		get {
 			if (!checkedBox) {
@@ -60,7 +60,7 @@ public class NetLobbyManager : MonoBehaviour {
 			}
 			return uncheckedBox;
 		}
-	}
+	}*/
 
 	#endregion
 
@@ -70,9 +70,13 @@ public class NetLobbyManager : MonoBehaviour {
 	// Use this for initialization
 	void Start() {
 		this.photonView = GetComponent<PhotonView>();
+		this.countdown = GetComponent<CountdownManager>();
 
-		LeftCheckbox.sprite = UncheckedBox;
-		RightCheckbox.sprite = UncheckedBox;
+		CountdownManager.AllReady += SetMatchWinLimit;
+		CountdownManager.ResetReady += ShowInteractiveUI;
+		CountdownManager.CountdownComplete += LeaveLobby;
+		//LeftCheckbox.sprite = UncheckedBox;
+		//RightCheckbox.sprite = UncheckedBox;
 	}
 
 	#endregion
@@ -80,14 +84,15 @@ public class NetLobbyManager : MonoBehaviour {
 
 	#region Photon RPC's
 
+	/*
 	[PunRPC]
 	void SyncLobby(bool hostReady, bool clientReady, int bestOfIndex) {
-		this.hostReady = hostReady;
-		this.clientReady = clientReady;
+		//this.hostReady = hostReady;
+		//this.clientReady = clientReady;
 		this.bestOfIndex = bestOfIndex;
 
 		UpdateLobbyUI();
-	}
+	}*/
 
 	[PunRPC]
 	void SyncSetBestOfIndex(int index) {
@@ -100,20 +105,16 @@ public class NetLobbyManager : MonoBehaviour {
 		ChangeBestOfIndex(minus);
 	}
 
+	/*
 	[PunRPC]
 	void SyncCountDownText(int countDown) {
 		SetCountDownText(countDown);
 	}
 
-	[PunRPC]
-	void SyncLeaveLobby() {
-		Globals.Menu.LeaveMenu();
-	}
-
 	// Synchronize lobby settings for players just entering a network game
 	public void SyncLobbySettings() {
 		photonView.RPC("SyncLobby", PhotonTargets.All, hostReady, clientReady, bestOfIndex);
-	}
+	}*/
 
 	// Directly set the best of index on all clients and update the UI
 	private void SetBestOfIndexOnAllClients(int index) {
@@ -150,7 +151,7 @@ public class NetLobbyManager : MonoBehaviour {
 			SetBestOfIndexOnAllClients(1);
 
 			// Set both players as not ready
-			ClearReadyStatus();
+			countdown.ClearReadyStatus();
 
 			// Set client as not present
 			clientInLobby = false;
@@ -161,9 +162,12 @@ public class NetLobbyManager : MonoBehaviour {
 			Globals.Menu.PlayText.enabled = true;
 
 			// Hide host UI until client joins
+			HideInteractiveUI();
+			/*
 			LeftArrow.gameObject.SetActive(false);
 			RightArrow.gameObject.SetActive(false);
 			NetReady.gameObject.SetActive(false);
+			*/
 		}
 	}
 	
@@ -173,17 +177,16 @@ public class NetLobbyManager : MonoBehaviour {
 		foreach (PUNNetworkPlayer player in players) {
 			if (player.IsHost) {
 				hostInLobby = true;
-				hostReady = player.IsReady;
+				//hostReady = player.IsReady;
 			}
 			else {
 				clientInLobby = true;
-				clientReady = player.IsReady;
+				//clientReady = player.IsReady;
 			}
 		}
 
 		// Refresh UI elements
 		UpdateLobbySamurai();
-		UpdateLobbyReadyStatus();
 		UpdateBestOfText();
 	}
 
@@ -191,25 +194,50 @@ public class NetLobbyManager : MonoBehaviour {
 	public void OnPlayerEnteredLobby(PUNNetworkPlayer player) {
 		this.players.Add(player);
 
+		CheckForFullLobby();
+
 		// Refresh all UI elements
 		UpdateLobbyUI();
 	}
 
-	// Updates lobby UI when a player is newly ready
+	public void LeaveLobby() {
+		Globals.Menu.LeaveMenu();
+	}
+
+	public void ShowInteractiveUI() {
+		SetInteractiveUIVisible(true);
+	}
+
+	public void SetMatchWinLimit() {
+		// Set the win limit in the game scene
+		BushidoMatchInfo.Get().SetMatchLimit(BestOfNumText.text);
+	}
+
+	/*// Updates lobby UI when a player is newly ready
 	public void OnPlayerSignalReady() {
 		SyncLobbySettings();
 		//UpdateLobbyUI();
-	}
+	}*/
 
 	#endregion
 
 
 	#region Private API
 
+	private void HideInteractiveUI() {
+		SetInteractiveUIVisible(false);
+	}
+
+	private void SetInteractiveUIVisible(bool visible) {
+		LeftArrow.gameObject.SetActive(visible);
+		RightArrow.gameObject.SetActive(visible);
+		NetReady.gameObject.SetActive(visible);
+	}
+
 	// Change the current win limit selection
 	private void ChangeBestOfIndex(bool minus) {
 		// Changing match parameters resets ready status
-		ClearReadyStatus();
+		countdown.ClearReadyStatus();
 
 		// Increment or decrement the index with wraparound
 		if (minus) {
@@ -239,6 +267,24 @@ public class NetLobbyManager : MonoBehaviour {
 		RightText.enabled = clientInLobby;
 	}
 
+	// Check for UI changes due to players entering the lobby
+	private void CheckForFullLobby() {
+		// Change UI depending on player being host or client
+		if (PhotonNetwork.isMasterClient) {
+			// Change UI for host now that a client has entered
+			if (Globals.Menu.PlayText.enabled && Globals.Menu.PlayText.text == "Waiting for another player") {
+				
+				// Hide "waiting for player" text
+				Globals.Menu.PlayText.enabled = false;
+				ShowInteractiveUI();
+			}
+		}
+		else {	// Show UI for client
+			countdown.ClearReadyStatus();
+		}
+	}
+
+	/*
 	// Updates the lobby ready checkbox images based on player ready status
 	private void UpdateLobbyReadyStatus() {
 		// Update the checkbox images
@@ -339,7 +385,7 @@ public class NetLobbyManager : MonoBehaviour {
 		}
 		// Show countdown
 		LobbyText.text = "Game starting in  " + countdown;
-	}
+	} */
 
 	#endregion
 
@@ -351,12 +397,14 @@ public class NetLobbyManager : MonoBehaviour {
 		Globals.Audio.PlayMenuSound();
 
 		// Hide "best of" selector arrows for local player
-		LeftArrow.gameObject.SetActive(false);
-		RightArrow.gameObject.SetActive(false);
+		HideInteractiveUI();
+		//LeftArrow.gameObject.SetActive(false);
+		//RightArrow.gameObject.SetActive(false);
+
 
 		// Signal local player ready
 		PUNNetworkPlayer.GetLocalPlayer().SetAsReady();
-		OnPlayerSignalReady();
+		countdown.SignalPlayerReady(PhotonNetwork.isMasterClient);
 	}
 
 	// Handle the left arrow button being pressed
@@ -381,7 +429,7 @@ public class NetLobbyManager : MonoBehaviour {
 
 		// Stop count down if it was in progress
 		LobbyText.enabled = false;
-		countingDown = false;
+		countdown.HaltCountdown();
 
 		// Exit the local or network lobby accordingly
 		Globals.Menu.ExitNetworkLobby();
