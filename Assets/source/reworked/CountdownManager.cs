@@ -9,7 +9,6 @@ public class CountdownManager : MonoBehaviour {
 	public delegate void CountdownEvent();
 	public static event CountdownEvent AllReady;						// Event for both players being ready
 	public static event CountdownEvent ResetReady;						// Event for the ready status being reset
-	public static event CountdownEvent LeftReady, RightReady;			// Events for each player signalling ready
 	public static event CountdownEvent CountdownComplete;				// Event for the end of the countdown
 
 	// Triggers "game start" event
@@ -26,20 +25,6 @@ public class CountdownManager : MonoBehaviour {
 		}
 	}
 
-	// Triggers "game start" event
-	public static void TriggerLeftReady() {
-		if (LeftReady != null) {
-			LeftReady();
-		}
-	}
-
-	// Triggers "game start" event
-	public static void TriggerRightReady() {
-		if (RightReady != null) {
-			RightReady();
-		}
-	}
-
 	public static void TriggerCountdownComplete() {
 		if (CountdownComplete != null) {
 			CountdownComplete();
@@ -52,13 +37,13 @@ public class CountdownManager : MonoBehaviour {
 	#region Editor References
 
 	public Image LeftCheckbox, RightCheckbox;
-	public Text CountdownText;
 
 	#endregion
 
 
 	#region Private Variables
 
+	private Text countDownText;
 	private PhotonView photonView;
 	private bool leftReady, rightReady;
 
@@ -95,6 +80,7 @@ public class CountdownManager : MonoBehaviour {
 
 	void Start() {
 		photonView = GetComponent<PhotonView>();
+		countDownText.enabled = false;
 	}
 
 	#endregion
@@ -102,14 +88,19 @@ public class CountdownManager : MonoBehaviour {
 
 	#region Public API
 
+	public void Initialize(Text countDownText) {
+		AllReady = null;
+		ResetReady = null;
+		CountdownComplete = null;
+		this.countDownText = countDownText;
+	}
+
 	public void SignalPlayerReady(bool left) {
 		if (left) {
 			leftReady = true;
-			TriggerLeftReady();
 		}
 		else {
 			rightReady = true;
-			TriggerRightReady();
 		}
 
 		SyncReadyStatusOnAllClients();
@@ -192,7 +183,6 @@ public class CountdownManager : MonoBehaviour {
 		// Check if both players are ready
 		if (leftReady && rightReady) {
 			// Set the win limit in the game scene
-			//BushidoMatchInfo.Get().SetMatchLimit(BestOfNumText.text);
 			TriggerAllReady();
 
 			if (PhotonNetwork.isMasterClient) {
@@ -231,11 +221,11 @@ public class CountdownManager : MonoBehaviour {
 
 	// Sets the text element to display the countdown
 	private void SetCountDownText(int countdown) {
-		if (!CountdownText.enabled) {
-			CountdownText.enabled = true;
+		if (!countDownText.enabled) {
+			countDownText.enabled = true;
 		}
 		// Show countdown
-		CountdownText.text = "Game starting in  " + countdown;
+		countDownText.text = "Game starting in  " + countdown;
 	}
 
 	#endregion

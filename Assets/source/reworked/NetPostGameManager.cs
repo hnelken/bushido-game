@@ -5,25 +5,40 @@ using System.Collections;
 
 public class NetPostGameManager : MonoBehaviour {
 
-	public GameObject RematchButton;
-	public Text MainText, LeftWinner, RightWinner;
-	public Text LeftWins, RightWins;
-	public Text LeftBest, RightBest;
-	public FadingShade Shade;
+	#region Public References
 
-	private CountdownManager countdown;
+	public GameObject RematchButton;			// The button element used to vote for a rematch
+	public Text LeftWinner, RightWinner;		// The text elements used to indicate the winner of the match
+	public Text LeftWins, RightWins;			// The text elements displaying each player's number of wins
+	public Text LeftBest, RightBest;			// The text elements displaying each player's best reaction time
+	public Text MainText;						// The text element used to show the countdown to a rematch
+	public FadingShade Shade;					// The UI element used to fade in and out of scenes
 
-	private bool leavingScene;
-	private bool rematching;
-	private bool exiting;
+	#endregion
+
+
+	#region Private Variables
+
+	private CountdownManager countdown;			// A private reference to the countdown manager for a potential rematch
+
+	private bool rematching;					// True when a rematch has been confirmed by both players
+	private bool exiting;						// True when a player is exiting the post game with no rematch
+
+	#endregion 
+
+
+	#region MonoBehaviour API
 
 	// Use this for initialization
 	void Start() {
 		// Initialize some UI
 		Shade.Initialize();
-		MainText.enabled = false;
 
+		// Setup countdown reference
 		countdown = GetComponent<CountdownManager>();
+		countdown.Initialize(MainText);
+
+		// Setup countdown event block
 		CountdownManager.CountdownComplete += StartLeavingScene;
 
 		// Clear ready status of both players
@@ -40,6 +55,11 @@ public class NetPostGameManager : MonoBehaviour {
 		}
 	}
 
+	#endregion
+
+
+	#region Public API
+
 	// Send rematch signal
 	public void RematchPressed() {
 		RematchButton.SetActive(false);
@@ -54,11 +74,14 @@ public class NetPostGameManager : MonoBehaviour {
 	// Prepare to leave the match
 	public void LeaveMatchPressed() {
 		PhotonNetwork.Disconnect();
-		Debug.Log("Leave match");
-		leavingScene = true;
 		exiting = true;
 		Shade.Toggle();
 	}
+
+	#endregion
+
+
+	#region Private API
 
 	private void UpdateUIWithGameStats(BushidoMatchInfo matchInfo) {
 		// Change UI to show number of wins for each player
@@ -85,32 +108,27 @@ public class NetPostGameManager : MonoBehaviour {
 	private void CheckForExit() {
 		if (exiting) {
 			exiting = false;
-			LeaveScene(Globals.MainMenuScene);
-			//PhotonNetwork.LoadLevel(Globals.MainMenuScene);
+			AudioManager.Get().BackToMenu();
+			BushidoMatchInfo.Get().EndMatch();
+			PhotonNetwork.LoadLevel(Globals.MainMenuScene);
 		}
 	}
 
 	private void CheckForRematch() {
 		if (rematching) {
 			rematching = false;
-			LeaveScene(Globals.NetDuelScene);
-			//PhotonNetwork.LoadLevel(Globals.NetDuelScene);
+			PhotonNetwork.LoadLevel(Globals.NetDuelScene);
 		}
 	}
 		
 	private void StartLeavingScene() {
-		leavingScene = true;
 		rematching = true;
 		Shade.Toggle();
 	}
 
-	private void LeaveScene(string sceneName) {
-		AudioManager.Get().BackToMenu();
-		BushidoMatchInfo.Get().EndMatch();
-		PhotonNetwork.LoadLevel(sceneName);
+	private bool IsLeavingScene() {
+		return (exiting || rematching) && !Shade.IsHidden && !Shade.IsBusy;
 	}
 
-	private bool IsLeavingScene() {
-		return leavingScene && !Shade.IsHidden && !Shade.IsBusy;
-	}
+	#endregion
 }

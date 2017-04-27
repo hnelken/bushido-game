@@ -59,11 +59,6 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 			this.isReady = (bool) stream.ReceiveNext();
 			this.inGame = (bool) stream.ReceiveNext();
 			this.inputReceived = (bool) stream.ReceiveNext();
-
-			// Update lobby if not in game
-			if (!inGame) {
-				Globals.NetLobby.UpdateLobbyUI();
-			}
 		}
 	}
 
