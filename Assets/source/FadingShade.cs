@@ -50,6 +50,17 @@ public class FadingShade : Image {
 		IsBusy = true;
 	}
 
+	public void ToggleHalfAlpha() {
+		if (!enabled) {
+			enabled = true;
+			SetAlphaValue(0.5f);
+		}
+		else {
+			SetAlphaValue(0f);
+			enabled = false;
+		}
+	}
+
 	// Handle fading in
 	private void RaiseAlpha() {
 		var limit = 1;

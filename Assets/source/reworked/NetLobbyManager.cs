@@ -107,7 +107,7 @@ public class NetLobbyManager : MonoBehaviour {
 
 			// Set client as not present
 			clientInLobby = false;
-			UpdateLobbySamurai();
+			UpdateLobbySamurai(true);
 
 			// Add UI to show client is not present yet
 			Globals.Menu.PlayText.text = "Waiting for another player";
@@ -127,7 +127,14 @@ public class NetLobbyManager : MonoBehaviour {
 		CheckForFullLobby();
 
 		// Refresh all UI elements
-		UpdateLobbySamurai();
+		UpdateLobbySamurai(false);
+	}
+
+	// Handles a player leaving a room
+	public void OnPlayerLeftLobby() {
+		players = new List<PUNNetworkPlayer>(PUNNetworkPlayer.GetAllPlayers());
+		UpdateLobbySamurai(false);
+		ShowOkMenu();
 	}
 
 	#endregion 
@@ -157,6 +164,16 @@ public class NetLobbyManager : MonoBehaviour {
 
 
 	#region Private API
+
+	private void ShowOkMenu() {
+		/* 
+		 * TODO: 
+		 * Pop up ok menu
+		 * Toggle shade to half alpha
+		 * Disable lobby interactive UI
+		 * Attach "OnPlayerRequeue" function to OK button
+		 */
+	}
 
 	// Disable use of the interactive UI
 	private void HideInteractiveUI() {
@@ -197,14 +214,16 @@ public class NetLobbyManager : MonoBehaviour {
 	}
 
 	// Updates the samurai image elements based on presence of players
-	private void UpdateLobbySamurai() {
-		// Get lobby info from player objects
-		foreach (PUNNetworkPlayer player in players) {
-			if (player.IsHost) {
-				hostInLobby = true;
-			}
-			else {
-				clientInLobby = true;
+	private void UpdateLobbySamurai(bool force) {
+		if (!force) {
+			// Get lobby info from player objects
+			foreach (PUNNetworkPlayer player in players) {
+				if (player.IsHost) {
+					hostInLobby = true;
+				}
+				else {
+					clientInLobby = true;
+				}
 			}
 		}
 
@@ -231,6 +250,20 @@ public class NetLobbyManager : MonoBehaviour {
 		}
 		else {	// Show UI for client
 			countdown.ClearReadyStatus();
+		}
+	}
+
+	private void LeaveLobby(bool playerLeft) {
+		// Stop count down if it was in progress
+		LobbyText.enabled = false;
+		countdown.HaltCountdown();
+
+		if (playerLeft) {
+			Globals.Menu.RequeueForGame();
+		}
+		else {
+			// Exit the local or network lobby accordingly
+			Globals.Menu.ExitNetworkLobby();
 		}
 	}
 
@@ -271,12 +304,15 @@ public class NetLobbyManager : MonoBehaviour {
 	public void OnLobbyExit() {
 		Globals.Audio.PlayMenuSound();
 
-		// Stop count down if it was in progress
-		LobbyText.enabled = false;
-		countdown.HaltCountdown();
+		// Exit back to main menu
+		LeaveLobby(false);
+	}
 
-		// Exit the local or network lobby accordingly
-		Globals.Menu.ExitNetworkLobby();
+	public void OnPlayerRequeueForGame() {
+		Globals.Audio.PlayMenuSound();
+
+		// Exit lobby and requeue for another game
+		LeaveLobby(true);
 	}
 
 	#endregion

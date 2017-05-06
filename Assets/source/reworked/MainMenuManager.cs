@@ -71,6 +71,7 @@ public class MainMenuManager : MonoBehaviour {
 			break;
 		case PUNQuickPlay.NetGameStatus.FINDING:
 			PlayText.text = "Finding a game";
+			PlayText.enabled = true;
 			break;
 		case PUNQuickPlay.NetGameStatus.ENTERING:
 			PlayText.text = "Entering game";
@@ -104,6 +105,16 @@ public class MainMenuManager : MonoBehaviour {
 		// Switch menu visibility
 		ToggleLobbyMenu();
 		TogglePlayMenu();
+	}
+
+	// Handle searching for a new game after a player has left
+	public void RequeueForGame() {
+		// Exit current room to allow search for new opponent
+		PhotonNetwork.LeaveRoom();
+		ToggleLobbyMenu();
+
+		// Search for another opponent
+		Globals.MatchMaker.OnJoinedLobby();
 	}
 
 	// Begins the animations that lead to desired scene change
@@ -192,15 +203,6 @@ public class MainMenuManager : MonoBehaviour {
 		}
 		ToggleLobbyMenu();
 	}
-
-	/*
-	// Signal boths players as leaving the lobby
-	private void SignalBothPlayersLeaveLobby() {
-		// Set each player to be in game
-		foreach (PUNNetworkPlayer player in PUNNetworkPlayer.GetAllPlayers()) {
-			player.LeaveLobby();
-		}
-	}*/
 
 	#endregion
 

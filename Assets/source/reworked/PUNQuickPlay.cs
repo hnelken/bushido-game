@@ -60,15 +60,14 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 			Lobby.PrintLobbyStatus();
 			//Lobby.SyncLobbySettings();
 		}
-	}
+	}*/
 
 	// Called when a player disconnects from the room
 	public override void OnPhotonPlayerDisconnected(PhotonPlayer player) {
-		if (PhotonNetwork.isMasterClient) {
-			Lobby.UpdateLobbyUI();
-			Lobby.SyncLobbySettings();
-		}
-	} */
+		Debug.Log("Disconnect");
+
+		Globals.NetLobby.OnPlayerLeftLobby();
+	}
 
 	// Called when a player connects to Photon successfully
 	public override void OnJoinedLobby() {
