@@ -7,7 +7,7 @@ public class NetLobbyManager : MonoBehaviour {
 
 	#region Editor References
 
-	public Button NetReady;								// The center ready button element
+	public Button Exit, NetReady;						// The exit button and the ready button elements
 	public Button LeftArrow, RightArrow;				// The left and right arrow button elements
 
 	public Image LeftSamurai, RightSamurai;				// The left and right samurai image elements
@@ -22,6 +22,7 @@ public class NetLobbyManager : MonoBehaviour {
 	#region Private Variables
 
 	// Component references
+	private PopupManager okMenu;						// The popup menu for leaving a lobby and requeuing for a game
 	private PhotonView photonView;						// A reference to the photon view component used to make RPC calls
 	private CountdownManager countdown;					// A reference to the countdown manager component for beginning a match
 
@@ -44,6 +45,7 @@ public class NetLobbyManager : MonoBehaviour {
 	void Start() {
 		// Set references
 		this.photonView = GetComponent<PhotonView>();
+		this.okMenu = GetComponent<PopupManager>();
 
 		// Setup countdown reference
 		this.countdown = GetComponent<CountdownManager>();
@@ -52,7 +54,7 @@ public class NetLobbyManager : MonoBehaviour {
 		// Setup countdown event blocks
 		CountdownManager.AllReady += SetMatchWinLimit;
 		CountdownManager.ResetReady += ShowInteractiveUI;
-		CountdownManager.CountdownComplete += LeaveLobby;
+		CountdownManager.CountdownComplete += LeaveForDuelScene;
 
 		// Initialize the mutable list of players in the lobby
 		this.players = new List<PUNNetworkPlayer>();
@@ -131,21 +133,24 @@ public class NetLobbyManager : MonoBehaviour {
 	}
 
 	// Handles a player leaving a room
-	public void OnPlayerLeftLobby() {
+	public void OnOpponentLeftLobby() {
+		// Update list of players and refresh UI
 		players = new List<PUNNetworkPlayer>(PUNNetworkPlayer.GetAllPlayers());
 		UpdateLobbySamurai(false);
-		ShowOkMenu();
+
+		// Trigger popup menu
+		ShowOkMenu(false);
 	}
 
 	#endregion 
 
 
-	#region Event Blocks
+	#region Delegate Event Blocks
 
 	// Called when countdown completes 
-	public void LeaveLobby() {
+	public void LeaveForDuelScene() {
 		// Leave the lobby for the duel scene
-		Globals.Menu.LeaveMenu();
+		Globals.Menu.LeaveForDuelScene();
 	}
 
 	// Called when ready status is reset
@@ -159,20 +164,62 @@ public class NetLobbyManager : MonoBehaviour {
 		// Set the win limit in the game scene
 		BushidoMatchInfo.Get().SetMatchLimit(BestOfNumText.text);
 	}
+		
+	public void OnPlayerRequeueForGame() {
+		Globals.Audio.PlayMenuSound();
+		Globals.Menu.Shade.ToggleHalfAlpha();
+		ToggleUIInteractivity();
+
+		// Exit lobby and requeue for another game
+		LeaveForDuelScene(true);
+	}
+
+	public void OnPlayerExitLobby() {
+		// Close popup
+		HidePopup();
+
+		// Exit back to main menu
+		LeaveForDuelScene(false);
+	}
+
+	public void CancelExitLobby() {
+		// Close popup
+		HidePopup();
+	}
 
 	#endregion
 
 
 	#region Private API
 
-	private void ShowOkMenu() {
-		/* 
-		 * TODO: 
-		 * Pop up ok menu
-		 * Toggle shade to half alpha
-		 * Disable lobby interactive UI
-		 * Attach "OnPlayerRequeue" function to OK button
-		 */
+	private void HidePopup() {
+		Globals.Audio.PlayMenuSound();
+		Globals.Menu.Shade.ToggleHalfAlpha();
+		ToggleUIInteractivity();
+	}
+
+	private void ShowOkMenu(bool manualExit) {
+		// Disable lobby interactive UI
+		ToggleUIInteractivity();
+
+		// Fade background a little
+		Globals.Menu.Shade.ToggleHalfAlpha();
+
+		if (manualExit) {
+			// Popup the notification asking if you want to leave the game
+			okMenu.Initialize(OnPlayerExitLobby, CancelExitLobby, "You  are  leaving\nthe  game", true);
+		}
+		else {
+			// Popup the notification that a player has left
+			okMenu.Initialize(OnPlayerRequeueForGame, null, "Your  opponent\nhas  left", false);
+		}
+	}
+
+	private void ToggleUIInteractivity() {
+		LeftArrow.interactable = !LeftArrow.interactable;
+		RightArrow.interactable = !RightArrow.interactable;
+		NetReady.interactable = !NetReady.interactable;
+		Exit.interactable = !Exit.interactable;
 	}
 
 	// Disable use of the interactive UI
@@ -253,16 +300,18 @@ public class NetLobbyManager : MonoBehaviour {
 		}
 	}
 
-	private void LeaveLobby(bool playerLeft) {
+	// Leave the lobby for the main menu or to find a different game
+	private void LeaveForDuelScene(bool playerLeft) {
 		// Stop count down if it was in progress
 		LobbyText.enabled = false;
 		countdown.HaltCountdown();
 
 		if (playerLeft) {
+			// Close the lobby and look for another game
 			Globals.Menu.RequeueForGame();
 		}
 		else {
-			// Exit the local or network lobby accordingly
+			// Exit the lobby and go back to the main menu
 			Globals.Menu.ExitNetworkLobby();
 		}
 	}
@@ -304,15 +353,8 @@ public class NetLobbyManager : MonoBehaviour {
 	public void OnLobbyExit() {
 		Globals.Audio.PlayMenuSound();
 
-		// Exit back to main menu
-		LeaveLobby(false);
-	}
-
-	public void OnPlayerRequeueForGame() {
-		Globals.Audio.PlayMenuSound();
-
-		// Exit lobby and requeue for another game
-		LeaveLobby(true);
+		// Ask player if they want to leave via popup
+		ShowOkMenu(true);
 	}
 
 	#endregion

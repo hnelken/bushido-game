@@ -66,16 +66,12 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 	public override void OnPhotonPlayerDisconnected(PhotonPlayer player) {
 		Debug.Log("Disconnect");
 
-		Globals.NetLobby.OnPlayerLeftLobby();
+		Globals.NetLobby.OnOpponentLeftLobby();
 	}
 
 	// Called when a player connects to Photon successfully
 	public override void OnJoinedLobby() {
-		Globals.Menu.UpdateConnectionStatus(NetGameStatus.FINDING);
-
-		// Try quickly joining a random room as client
-		this.playerIsHost = false;
-		PhotonNetwork.JoinRandomRoom();
+		QuickPlay();
 	}
 
 	// Called when there are no rooms to join immediately
@@ -112,6 +108,14 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 
 		// Show the lobby for the local player
 		Globals.Menu.ShowNetworkLobby(thisPlayer.IsHost);
+	}
+
+	public void QuickPlay() {
+		Globals.Menu.UpdateConnectionStatus(NetGameStatus.FINDING);
+
+		// Try quickly joining a random room as client
+		this.playerIsHost = false;
+		PhotonNetwork.JoinRandomRoom();
 	}
 
 	#endregion

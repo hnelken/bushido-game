@@ -188,7 +188,7 @@ public class LocalLobbyManager : MonoBehaviour {
 		// Check if countdown has expired
 		if (countDown == 0) {
 			// Countdown complete, head to game scene
-			Globals.Menu.LeaveMenu();
+			Globals.Menu.LeaveForDuelScene();
 		}
 		else {
 			// Not finished, continue count down

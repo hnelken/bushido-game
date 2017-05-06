@@ -112,13 +112,10 @@ public class MainMenuManager : MonoBehaviour {
 		// Exit current room to allow search for new opponent
 		PhotonNetwork.LeaveRoom();
 		ToggleLobbyMenu();
-
-		// Search for another opponent
-		Globals.MatchMaker.OnJoinedLobby();
 	}
 
 	// Begins the animations that lead to desired scene change
-	public void LeaveMenu() {
+	public void LeaveForDuelScene() {
 		nextSceneName = localLobbyOpen ? Globals.LocalDuelScene : Globals.NetDuelScene;
 		PUNNetworkPlayer.SignalBothPlayersLeaveLobby();
 		leavingMenu = true;
