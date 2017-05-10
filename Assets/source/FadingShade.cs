@@ -5,7 +5,8 @@ using System.Collections;
 public class FadingShade : Image {
 
 	public bool IsHidden, IsBusy;
-	private bool fadingIn, fadingOut;
+	private bool fadingIn, fadingOut, atHalf;
+	private float limit;
 	
 	// Manage animations
 	void Update() {
@@ -36,35 +37,39 @@ public class FadingShade : Image {
 
 	// Trigger animation fading in or out
 	public void Toggle() {
-		if (!enabled) {
+		if (!enabled || atHalf) {
 			// Fade  in
 			enabled = true;
 			fadingIn = true;
 			fadingOut = false;
+			limit = 1;
 		}
 		else {
 			// Fade  out
 			fadingOut = true;
 			fadingIn = false;
+			limit = 0;
 		}
 		IsBusy = true;
 	}
 
 	public void ToggleHalfAlpha() {
-		if (!enabled) {
-			enabled = true;
-			SetAlphaValue(0.5f);
-		}
-		else {
-			SetAlphaValue(0f);
-			enabled = false;
+		if (!IsBusy) {
+			if (!enabled) {
+				SetAlphaValue(0.5f);
+				enabled = true;
+				atHalf = true;
+			}
+			else {
+				SetAlphaValue(0f);
+				enabled = false;
+				atHalf = false;
+			}
 		}
 	}
 
 	// Handle fading in
 	private void RaiseAlpha() {
-		var limit = 1;
-
 		// Check if fade-in is complete
 		if (color.a < limit) {
 			// Fade in a little bit this frame
@@ -83,8 +88,6 @@ public class FadingShade : Image {
 
 	// Handle fading out
 	private void FadeAlpha() {
-		var limit = 0;
-
 		// Check if fade-out is complete
 		if (color.a > limit) {
 			// Fade the alpha a little bit this frame

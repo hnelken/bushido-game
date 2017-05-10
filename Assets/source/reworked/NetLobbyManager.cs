@@ -138,6 +138,10 @@ public class NetLobbyManager : MonoBehaviour {
 		players = new List<PUNNetworkPlayer>(PUNNetworkPlayer.GetAllPlayers());
 		UpdateLobbySamurai(false);
 
+		// Prevent players from joining while we look at the popup menu
+		PhotonNetwork.room.IsVisible = false;
+		PhotonNetwork.room.IsOpen = false;
+
 		// Trigger popup menu
 		ShowOkMenu(false);
 	}
@@ -149,8 +153,10 @@ public class NetLobbyManager : MonoBehaviour {
 
 	// Called when countdown completes 
 	public void LeaveForDuelScene() {
-		// Leave the lobby for the duel scene
-		Globals.Menu.LeaveForDuelScene();
+		if (PUNNetworkPlayer.GetAllPlayers().Length == 2) {
+			// Leave the lobby for the duel scene
+			Globals.Menu.LeaveForDuelScene();
+		}
 	}
 
 	// Called when ready status is reset
@@ -166,7 +172,6 @@ public class NetLobbyManager : MonoBehaviour {
 	}
 		
 	public void OnPlayerRequeueForGame() {
-		Globals.Audio.PlayMenuSound();
 		Globals.Menu.Shade.ToggleHalfAlpha();
 		ToggleUIInteractivity();
 
@@ -193,7 +198,6 @@ public class NetLobbyManager : MonoBehaviour {
 	#region Private API
 
 	private void HidePopup() {
-		Globals.Audio.PlayMenuSound();
 		Globals.Menu.Shade.ToggleHalfAlpha();
 		ToggleUIInteractivity();
 	}
@@ -263,6 +267,8 @@ public class NetLobbyManager : MonoBehaviour {
 	// Updates the samurai image elements based on presence of players
 	private void UpdateLobbySamurai(bool force) {
 		if (!force) {
+			hostInLobby = false;
+			clientInLobby = false;
 			// Get lobby info from player objects
 			foreach (PUNNetworkPlayer player in players) {
 				if (player.IsHost) {

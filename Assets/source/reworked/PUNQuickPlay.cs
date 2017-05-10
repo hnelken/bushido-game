@@ -23,11 +23,6 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 		PhotonNetwork.automaticallySyncScene = true;
 	}
 
-	void OnGUI()
-	{
-		GUILayout.Label(PhotonNetwork.connectionStateDetailed.ToString());
-	}
-
 	#endregion
 
 
@@ -52,15 +47,6 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 
 
 	#region PunBehaviour API
-
-	/*
-	// Called when a player joins your existing room
-	public override void OnPhotonPlayerConnected(PhotonPlayer player) {
-		if (PhotonNetwork.isMasterClient) {
-			Lobby.PrintLobbyStatus();
-			//Lobby.SyncLobbySettings();
-		}
-	}*/
 
 	// Called when a player disconnects from the room
 	public override void OnPhotonPlayerDisconnected(PhotonPlayer player) {
