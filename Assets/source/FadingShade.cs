@@ -54,17 +54,15 @@ public class FadingShade : Image {
 	}
 
 	public void ToggleHalfAlpha() {
-		if (!IsBusy) {
-			if (!enabled) {
-				SetAlphaValue(0.5f);
-				enabled = true;
-				atHalf = true;
-			}
-			else {
-				SetAlphaValue(0f);
-				enabled = false;
-				atHalf = false;
-			}
+		if (!enabled) {
+			SetAlphaValue(0.5f);
+			enabled = true;
+			atHalf = true;
+		}
+		else {
+			SetAlphaValue(0f);
+			enabled = false;
+			atHalf = false;
 		}
 	}
 

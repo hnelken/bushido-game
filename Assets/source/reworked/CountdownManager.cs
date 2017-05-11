@@ -81,6 +81,7 @@ public class CountdownManager : MonoBehaviour {
 	void Start() {
 		photonView = GetComponent<PhotonView>();
 		countDownText.enabled = false;
+		countDown = 5;
 	}
 
 	#endregion
@@ -112,6 +113,11 @@ public class CountdownManager : MonoBehaviour {
 		leftReady = false;
 		rightReady = false;
 
+		// Reset countdown
+		countDownText.enabled = false;
+		countingDown = false;
+		countDown = 5;
+
 		// Clear ready status on player objects
 		foreach (PUNNetworkPlayer player in PUNNetworkPlayer.GetAllPlayers()) {
 			player.ClearReadyStatus();
@@ -124,6 +130,10 @@ public class CountdownManager : MonoBehaviour {
 
 	public void HaltCountdown() {
 		countingDown = false;
+	}
+
+	public bool IsFinished() {
+		return countDown <= 1;
 	}
 
 	#endregion

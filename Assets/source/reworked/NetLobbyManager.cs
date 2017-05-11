@@ -78,6 +78,12 @@ public class NetLobbyManager : MonoBehaviour {
 		ChangeBestOfIndex(minus);
 	}
 
+	[PunRPC]
+	void SyncClearReadyStatus() {
+		// Reset the countdown and ready status
+		countdown.ClearReadyStatus();
+	}
+
 	// Directly set the best of index on all clients and update the UI
 	private void SetBestOfIndexOnAllClients(int index) {
 		photonView.RPC("SyncSetBestOfIndex", PhotonTargets.AllBuffered, index);
@@ -86,6 +92,11 @@ public class NetLobbyManager : MonoBehaviour {
 	// Increment or decrement the "best-of" index on all clients and update the UI
 	private void ChangeBestOfIndexOnAllClients(bool minus) {
 		photonView.RPC("SyncChangeBestOfIndex", PhotonTargets.All, minus);
+	}
+
+	// Reset the countdown and ready status for both players
+	private void ClearReadyStatusOnAllClients() {
+		photonView.RPC("SyncClearReadyStatus", PhotonTargets.All);
 	}
 
 	#endregion
@@ -161,8 +172,10 @@ public class NetLobbyManager : MonoBehaviour {
 
 	// Called when ready status is reset
 	public void ShowInteractiveUI() {
-		// Re-enable interactive UI
-		SetInteractiveUIVisible(true);
+		if (!Globals.Menu.PlayText.enabled) {
+			// Re-enable interactive UI
+			SetInteractiveUIVisible(true);
+		}
 	}
 
 	// Called when both players are ready
@@ -176,20 +189,24 @@ public class NetLobbyManager : MonoBehaviour {
 		ToggleUIInteractivity();
 
 		// Exit lobby and requeue for another game
-		LeaveForDuelScene(true);
+		LeaveLobby(true);
 	}
 
 	public void OnPlayerExitLobby() {
-		// Close popup
-		HidePopup();
+		if (!countdown.IsFinished()) {
+			// Close popup
+			HidePopup();
 
-		// Exit back to main menu
-		LeaveForDuelScene(false);
+			// Exit back to main menu
+			LeaveLobby(false);
+		}
 	}
 
 	public void CancelExitLobby() {
-		// Close popup
-		HidePopup();
+		if (!countdown.IsFinished()) {
+			// Close popup
+			HidePopup();
+		}
 	}
 
 	#endregion
@@ -210,6 +227,9 @@ public class NetLobbyManager : MonoBehaviour {
 		Globals.Menu.Shade.ToggleHalfAlpha();
 
 		if (manualExit) {
+			// Reset the ready status and stop countdown if in progress
+			ClearReadyStatusOnAllClients();
+
 			// Popup the notification asking if you want to leave the game
 			okMenu.Initialize(OnPlayerExitLobby, CancelExitLobby, "You  are  leaving\nthe  game", true);
 		}
@@ -307,7 +327,8 @@ public class NetLobbyManager : MonoBehaviour {
 	}
 
 	// Leave the lobby for the main menu or to find a different game
-	private void LeaveForDuelScene(bool playerLeft) {
+	private void LeaveLobby(bool playerLeft) {
+		
 		// Stop count down if it was in progress
 		LobbyText.enabled = false;
 		countdown.HaltCountdown();
