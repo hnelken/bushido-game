@@ -22,7 +22,7 @@ public class NetLobbyManager : MonoBehaviour {
 	#region Private Variables
 
 	// Component references
-	private PopupManager okMenu;						// The popup menu for leaving a lobby and requeuing for a game
+	private PopupManager popup;						// The popup menu for leaving a lobby and requeuing for a game
 	private PhotonView photonView;						// A reference to the photon view component used to make RPC calls
 	private CountdownManager countdown;					// A reference to the countdown manager component for beginning a match
 
@@ -45,7 +45,7 @@ public class NetLobbyManager : MonoBehaviour {
 	void Start() {
 		// Set references
 		this.photonView = GetComponent<PhotonView>();
-		this.okMenu = GetComponent<PopupManager>();
+		this.popup = GetComponent<PopupManager>();
 
 		// Setup countdown reference
 		this.countdown = GetComponent<CountdownManager>();
@@ -231,11 +231,11 @@ public class NetLobbyManager : MonoBehaviour {
 			ClearReadyStatusOnAllClients();
 
 			// Popup the notification asking if you want to leave the game
-			okMenu.Initialize(OnPlayerExitLobby, CancelExitLobby, "You  are  leaving\nthe  game", true);
+			popup.Initialize(OnPlayerExitLobby, CancelExitLobby, "You  are  leaving\nthe  game", true);
 		}
 		else {
 			// Popup the notification that a player has left
-			okMenu.Initialize(OnPlayerRequeueForGame, null, "Your  opponent\nhas  left", false);
+			popup.Initialize(OnPlayerRequeueForGame, null, "Your  opponent\nhas  left", false);
 		}
 	}
 

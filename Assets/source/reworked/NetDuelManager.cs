@@ -8,15 +8,6 @@ public class NetDuelManager : MonoBehaviour {
 
 	public NetSamurai LeftSamurai, RightSamurai;
 
-	public NetworkUtility Utility {
-		get {
-			if (!utility) {
-				utility = NetworkUtility.Get();
-			}
-			return utility;
-		}
-	}
-
 	// Safe reference to the manager of all UI elements
 	private NetUIManager gui;
 	public NetUIManager GUI {
@@ -33,12 +24,13 @@ public class NetDuelManager : MonoBehaviour {
 
 	#region Private Variables
 
-	private NetworkUtility utility;
-	private PhotonView photonView;
+	private PopupManager popup;								// The popup manager component for this scene
+	private PhotonView photonView;							// The photon view used to make rpc's
+
 	private const int strikeLimit = 2;						// Number of strikes required to lose a round
 	private int winLimit = 3;								// Number of wins required to win the match
 
-	private bool resultWasTie;
+	private bool resultWasTie;								// True if the last round resulted in a tie
 	private bool leftPlayerCausedResult; 					// True if the left samurai caused the latest round result
 	private bool waitingForInput;							// True from when round starts until after first input
 	private bool waitingForTie;								// True when waiting for tying input after first input
@@ -47,7 +39,7 @@ public class NetDuelManager : MonoBehaviour {
 	private bool flagPopped;								// True if the flag is showing
 	private bool timeRanOut;								// True if the round exceeded the time limit
 
-	private float randomWait;								// The random wait time
+	private float randomWait;								// The random wait time before the flag pops
 	private float startTime;								// The time at which the centerpiece icon was displayed
 
 	private int reactTime;									// The time at which the first valid input was received
