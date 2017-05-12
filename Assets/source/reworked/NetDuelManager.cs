@@ -62,6 +62,7 @@ public class NetDuelManager : MonoBehaviour {
 		 * 	Setup function for pausing the game and showing popup
 		 * 	Set disconnect event listener to above function
 		 *  Call said function if there are not 2 players at the start of the game
+		 */
 
 		// Setup PUN event listener
 		Globals.MatchMaker.InitializeForNewScene();
