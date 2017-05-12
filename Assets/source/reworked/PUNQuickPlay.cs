@@ -4,6 +4,16 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class PUNQuickPlay : Photon.PunBehaviour {
+	
+	public delegate void PUNEvent();
+	public static event PUNEvent Disconnect;	// Event for a player disconnecting
+
+	// Triggers "game start" event
+	public static void TriggerDisconnect() {
+		if (Disconnect != null) {
+			Disconnect();
+		}
+	}
 
 	public enum NetGameStatus {
 		NOTCONNECTED, CONNECTING, FINDING, ENTERING
@@ -31,6 +41,10 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 	public static PUNQuickPlay Get() {
 		return GameObject.FindObjectOfType<PUNQuickPlay>();
 	}
+
+	public void InitializeForNewScene() {
+		Disconnect = null;
+	}
 	
 	public void Connect() {
 		Globals.Menu.UpdateConnectionStatus(NetGameStatus.CONNECTING);
@@ -52,7 +66,8 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 	public override void OnPhotonPlayerDisconnected(PhotonPlayer player) {
 		Debug.Log("Disconnect");
 
-		Globals.NetLobby.OnOpponentLeftLobby();
+		TriggerDisconnect();
+		//Globals.NetLobby.OnOpponentLeftLobby();
 	}
 
 	// Called when a player connects to Photon successfully

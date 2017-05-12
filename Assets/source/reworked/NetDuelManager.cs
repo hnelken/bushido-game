@@ -50,15 +50,26 @@ public class NetDuelManager : MonoBehaviour {
 	#endregion
 
 
-	#region State Functions
+	#region MonoBehaviour API
 
 	// Initialization
 	void Awake() {
 
 		this.photonView = GetComponent<PhotonView>();
-		/*foreach (PUNNetworkPlayer player in PUNNetworkPlayer.GetAllPlayers()) {
-			player.LeaveLobby();
-		}*/
+
+		/**
+		 * TODO:
+		 * 	Setup function for pausing the game and showing popup
+		 * 	Set disconnect event listener to above function
+		 *  Call said function if there are not 2 players at the start of the game
+
+		// Setup PUN event listener
+		Globals.MatchMaker.InitializeForNewScene();
+		//PUNQuickPlay.Disconnect += OnOpponentLeftLobby;
+
+		if (PUNNetworkPlayer.GetAllPlayers().Length != 2) {
+			// Pause and show popup
+		}
 
 		// Get match limit from match info
 		winLimit = BushidoMatchInfo.Get().MatchLimit;

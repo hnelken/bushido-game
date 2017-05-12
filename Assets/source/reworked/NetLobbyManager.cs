@@ -56,6 +56,10 @@ public class NetLobbyManager : MonoBehaviour {
 		CountdownManager.ResetReady += ShowInteractiveUI;
 		CountdownManager.CountdownComplete += LeaveForDuelScene;
 
+		// Setup PUN event listener
+		Globals.MatchMaker.InitializeForNewScene();
+		PUNQuickPlay.Disconnect += OnOpponentLeftLobby;
+
 		// Initialize the mutable list of players in the lobby
 		this.players = new List<PUNNetworkPlayer>();
 	}
