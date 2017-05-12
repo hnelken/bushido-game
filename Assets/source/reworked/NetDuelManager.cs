@@ -30,6 +30,7 @@ public class NetDuelManager : MonoBehaviour {
 	private const int strikeLimit = 2;						// Number of strikes required to lose a round
 	private int winLimit = 3;								// Number of wins required to win the match
 
+	private bool paused;									// True if the game is paused, false if not
 	private bool resultWasTie;								// True if the last round resulted in a tie
 	private bool leftPlayerCausedResult; 					// True if the left samurai caused the latest round result
 	private bool waitingForInput;							// True from when round starts until after first input
@@ -226,6 +227,10 @@ public class NetDuelManager : MonoBehaviour {
 		return resultWasTie;
 	}
 
+	public bool IsGamePaused() {
+		return paused;
+	}
+
 	public float GetStartTime() {
 		return startTime;
 	}
@@ -239,10 +244,46 @@ public class NetDuelManager : MonoBehaviour {
 		return leftPlayerCausedResult;
 	}
 
+	public void OnPlayerLeftGame() {
+		Globals.Menu.Shade.ToggleHalfAlpha();
+		//ToggleUIInteractivity();
+
+		// Exit lobby and requeue for another game
+		//LeaveLobby(true);
+
+		/*
+		// Stop count down if it was in progress
+		LobbyText.enabled = false;
+		countdown.HaltCountdown();
+
+		if (playerLeft) {
+			// Close the lobby and look for another game
+			Globals.Menu.RequeueForGame();
+		}
+		else {
+			// Exit the lobby and go back to the main menu
+			Globals.Menu.ExitNetworkLobby();
+		}*/
+	}
+
 	#endregion
 
 
 	#region Private API
+
+	private void PauseAndShowPopup() {
+		paused = true;
+
+		// Prevent players from joining while we look at the popup menu
+		PhotonNetwork.room.IsVisible = false;
+		PhotonNetwork.room.IsOpen = false;
+
+		// Fade background a little
+		GUI.Shade.ToggleHalfAlpha();
+
+		// Show popup
+		popup.Initialize(OnPlayerLeftGame, null, "Your  opponent\nhas  left", false);
+	}
 
 	private void RecordReactionTime(bool leftSamurai, int time) {
 		if (leftSamurai) {

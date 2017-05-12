@@ -158,7 +158,7 @@ public class NetLobbyManager : MonoBehaviour {
 		PhotonNetwork.room.IsOpen = false;
 
 		// Trigger popup menu
-		ShowOkMenu(false);
+		ShowPopup(false);
 	}
 
 	#endregion 
@@ -223,7 +223,7 @@ public class NetLobbyManager : MonoBehaviour {
 		ToggleUIInteractivity();
 	}
 
-	private void ShowOkMenu(bool manualExit) {
+	private void ShowPopup(bool manualExit) {
 		// Disable lobby interactive UI
 		ToggleUIInteractivity();
 
@@ -385,7 +385,7 @@ public class NetLobbyManager : MonoBehaviour {
 		Globals.Audio.PlayMenuSound();
 
 		// Ask player if they want to leave via popup
-		ShowOkMenu(true);
+		ShowPopup(true);
 	}
 
 	#endregion

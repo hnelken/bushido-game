@@ -19,6 +19,16 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	private bool isReady;					// True if this player is ready to leave the lobby
 	private bool inputReceived;				// True if input has been received this round during gameplay
 
+	private NetDuelManager duelManager;
+	private NetDuelManager DuelManager {
+		get {
+			if (!duelManager) {
+				duelManager = NetDuelManager.Get();
+			}
+			return duelManager;
+		}
+	}
+
 	#endregion
 
 
@@ -39,7 +49,7 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 			inputReceived = true;
 
 			// Get reaction time from duel manager
-			int reactionTime = NetDuelManager.Get().GetCurrentTime();
+			int reactionTime = DuelManager.GetCurrentTime();
 
 			// Call reaction RPC to trigger input on all clients
 			photonView.RPC("TriggerReaction", PhotonTargets.All, isHost, reactionTime);
@@ -149,9 +159,10 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	// Decides if input should be checked for
 	private bool ShouldCheckForInput() {
 		// Check for input if...
-		return inGame	// ...player is not in lobby
-			&& photonView.isMine 	//...player is the owner of this component
-			&& !inputReceived;		//...player has not triggered input this round already
+		return inGame						//...player is not in lobby
+			&& photonView.isMine 			//...player is the owner of this component
+			&& !inputReceived				//...player has not triggered input this round already
+			&& !DuelManager.IsGamePaused(); //...the game is not currently paused
 	}
 
 	#endregion
@@ -166,7 +177,7 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 
 	[PunRPC]	// RPC to trigger reaction from this player on all clients
 	void TriggerReaction(bool hostSamurai, int reactionTime) {
-		NetDuelManager.Get().TriggerReaction(hostSamurai, reactionTime);
+		DuelManager.TriggerReaction(hostSamurai, reactionTime);
 	}
 
 	#endregion
