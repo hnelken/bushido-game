@@ -18,6 +18,10 @@ public class PopupManager : MonoBehaviour {
 		this.Popup.SetActive(false);
 	}
 
+	public void Initialize(Action okAction, string message) {
+		Initialize(okAction, null, message, false);
+	}
+
 	// Initialize the popup action and message
 	public void Initialize(Action okAction, Action cancelAction, string message, bool cancellable) {
 		// Set actions for "Ok" and Cancel"

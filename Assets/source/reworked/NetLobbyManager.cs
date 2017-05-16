@@ -189,7 +189,6 @@ public class NetLobbyManager : MonoBehaviour {
 	}
 		
 	public void OnPlayerRequeueForGame() {
-		Globals.Menu.Shade.ToggleHalfAlpha();
 		ToggleUIInteractivity();
 
 		// Exit lobby and requeue for another game
@@ -197,20 +196,16 @@ public class NetLobbyManager : MonoBehaviour {
 	}
 
 	public void OnPlayerExitLobby() {
-		if (!countdown.IsFinished()) {
-			// Close popup
-			HidePopup();
+		// Close popup
+		HidePopup();
 
-			// Exit back to main menu
-			LeaveLobby(false);
-		}
+		// Exit back to main menu
+		LeaveLobby(false);
 	}
 
 	public void CancelExitLobby() {
-		if (!countdown.IsFinished()) {
-			// Close popup
-			HidePopup();
-		}
+		// Close popup
+		HidePopup();
 	}
 
 	#endregion
@@ -219,16 +214,12 @@ public class NetLobbyManager : MonoBehaviour {
 	#region Private API
 
 	private void HidePopup() {
-		Globals.Menu.Shade.ToggleHalfAlpha();
 		ToggleUIInteractivity();
 	}
 
 	private void ShowPopup(bool manualExit) {
 		// Disable lobby interactive UI
 		ToggleUIInteractivity();
-
-		// Fade background a little
-		Globals.Menu.Shade.ToggleHalfAlpha();
 
 		if (manualExit) {
 			// Reset the ready status and stop countdown if in progress
@@ -237,10 +228,15 @@ public class NetLobbyManager : MonoBehaviour {
 			// Popup the notification asking if you want to leave the game
 			popup.Initialize(OnPlayerExitLobby, CancelExitLobby, "You  are  leaving\nthe  game", true);
 		}
-		else {
+		else if (!countdown.IsFinished()) {
+			Debug.Log("finished: " + countdown.IsFinished());
 			// Popup the notification that a player has left
 			popup.Initialize(OnPlayerRequeueForGame, null, "Your  opponent\nhas  left", false);
 		}
+		else {
+			Debug.Log("finished: " + countdown.IsFinished());
+		}
+		
 	}
 
 	private void ToggleUIInteractivity() {

@@ -57,26 +57,16 @@ public class NetDuelManager : MonoBehaviour {
 	void Awake() {
 
 		this.photonView = GetComponent<PhotonView>();
-
-		/**
-		 * TODO:
-		 * 	Setup function for pausing the game and showing popup
-		 * 	Set disconnect event listener to above function
-		 *  Call said function if there are not 2 players at the start of the game
-		 */
+		this.popup = GetComponent<PopupManager>();
 
 		// Setup PUN event listener
 		Globals.MatchMaker.InitializeForNewScene();
-		//PUNQuickPlay.Disconnect += OnOpponentLeftLobby;
-
-		if (PUNNetworkPlayer.GetAllPlayers().Length != 2) {
-			// Pause and show popup
-		}
+		PUNQuickPlay.Disconnect += PauseAndShowPopup;
 
 		// Get match limit from match info
 		winLimit = BushidoMatchInfo.Get().MatchLimit;
 
-
+		// Set reference for samurai info objects
 		LeftSamurai.SetManager(this);
 		RightSamurai.SetManager(this);
 
@@ -245,7 +235,6 @@ public class NetDuelManager : MonoBehaviour {
 	}
 
 	public void OnPlayerLeftGame() {
-		Globals.Menu.Shade.ToggleHalfAlpha();
 		//ToggleUIInteractivity();
 
 		// Exit lobby and requeue for another game
@@ -273,16 +262,14 @@ public class NetDuelManager : MonoBehaviour {
 
 	private void PauseAndShowPopup() {
 		paused = true;
+		Time.timeScale = 0;
 
 		// Prevent players from joining while we look at the popup menu
 		PhotonNetwork.room.IsVisible = false;
 		PhotonNetwork.room.IsOpen = false;
 
-		// Fade background a little
-		GUI.Shade.ToggleHalfAlpha();
-
 		// Show popup
-		popup.Initialize(OnPlayerLeftGame, null, "Your  opponent\nhas  left", false);
+		popup.Initialize(OnPlayerLeftGame, "Your  opponent\nhas  left");
 	}
 
 	private void RecordReactionTime(bool leftSamurai, int time) {
@@ -415,8 +402,18 @@ public class NetDuelManager : MonoBehaviour {
 
 		yield return new WaitForSeconds(2);
 
-		// Synchronize round start
-		if (PhotonNetwork.isMasterClient) {
+		// Check that both players are still present at start of round
+		if (PUNNetworkPlayer.GetAllPlayers().Length != 2) {
+			Debug.Log("Missing players");
+
+			// Players are missing, pause the game if not already paused
+			if (!paused) {
+				// Pause and show popup
+				PauseAndShowPopup();
+			}
+		}
+		else if (PhotonNetwork.isMasterClient) {
+			// Synchronize round start
 			TriggerGameStartOnAllClients();
 		}
 	}

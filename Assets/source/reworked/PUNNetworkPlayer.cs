@@ -158,11 +158,17 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 
 	// Decides if input should be checked for
 	private bool ShouldCheckForInput() {
+		
+		// Check for active game status
+		bool gameNotPaused = (DuelManager)
+			? !DuelManager.IsGamePaused()
+			: false;
+
 		// Check for input if...
-		return inGame						//...player is not in lobby
+		return inGame						//...player is in an active game
+			&& gameNotPaused				//...the active game is not paused
 			&& photonView.isMine 			//...player is the owner of this component
-			&& !inputReceived				//...player has not triggered input this round already
-			&& !DuelManager.IsGamePaused(); //...the game is not currently paused
+			&& !inputReceived;				//...player has not triggered input this round already
 	}
 
 	#endregion

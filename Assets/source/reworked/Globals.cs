@@ -14,7 +14,7 @@ public class Globals : MonoBehaviour {
 	public static PUNQuickPlay MatchMaker {
 		get {
 			if (!matchMaker) {
-				matchMaker = Get().GetComponent<PUNQuickPlay>();
+				matchMaker = GameObject.FindObjectOfType<PUNQuickPlay>();
 			}
 			return matchMaker;
 		}
