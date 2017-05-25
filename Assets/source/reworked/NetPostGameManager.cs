@@ -8,6 +8,7 @@ public class NetPostGameManager : MonoBehaviour {
 	#region Public References
 
 	public GameObject RematchButton;			// The button element used to vote for a rematch
+	public Image LeftSamurai, RightSamurai;		// The left and right samurai image elements
 	public Text LeftWinner, RightWinner;		// The text elements used to indicate the winner of the match
 	public Text LeftWins, RightWins;			// The text elements displaying each player's number of wins
 	public Text LeftBest, RightBest;			// The text elements displaying each player's best reaction time
@@ -84,6 +85,32 @@ public class NetPostGameManager : MonoBehaviour {
 	#region Private API
 
 	private void UpdateUIWithGameStats(BushidoMatchInfo matchInfo) {
+		// Hide any missing player's samurai
+		bool leftInRoom = false, rightInRoom = false;
+		foreach (PUNNetworkPlayer player in PUNNetworkPlayer.GetAllPlayers()) {
+			if (player.IsHost) {
+				leftInRoom = true;
+			}
+			else {
+				rightInRoom = true;
+			}
+		}
+		if (!leftInRoom) {	// Left player missing
+			LeftSamurai.enabled = false;
+			LeftWinner.enabled = false;
+			RightWinner.enabled = true;
+		}
+		else if (!rightInRoom) {	// Right player missing
+			RightSamurai.enabled = false;
+			LeftWinner.enabled = true;
+			RightWinner.enabled = false;
+		}
+		else {	// Both players present
+			// Show rematch controls
+			countdown.ShowControls();
+			RematchButton.SetActive(true);
+		}
+
 		// Change UI to show number of wins for each player
 		int leftWins = matchInfo.Results.LeftWins;
 		int rightWins = matchInfo.Results.RightWins;

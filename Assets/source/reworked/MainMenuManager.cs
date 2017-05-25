@@ -133,9 +133,6 @@ public class MainMenuManager : MonoBehaviour {
 		if (!Shade.IsHidden && leavingMenu) {
 			leavingMenu = false;
 
-			// Clear event listeners
-			EventManager.Nullify();
-
 			// Change scene depending on local/net duel
 			if (localLobbyOpen) {
 				// Local lobby, load duel scene

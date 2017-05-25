@@ -89,6 +89,11 @@ public class CountdownManager : MonoBehaviour {
 
 	#region Public API
 
+	public void ShowControls() {
+		LeftCheckbox.enabled = true;
+		RightCheckbox.enabled = true;
+	}
+
 	public void Initialize(Text countDownText) {
 		AllReady = null;
 		ResetReady = null;
@@ -231,7 +236,7 @@ public class CountdownManager : MonoBehaviour {
 
 	// Sets the text element to display the countdown
 	private void SetCountDownText(int countdown) {
-		if (!countDownText.enabled) {
+		if (countingDown && !countDownText.enabled) {
 			countDownText.enabled = true;
 		}
 		// Show countdown

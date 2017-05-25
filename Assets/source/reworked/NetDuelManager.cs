@@ -70,7 +70,8 @@ public class NetDuelManager : MonoBehaviour {
 		LeftSamurai.SetManager(this);
 		RightSamurai.SetManager(this);
 
-		// Set event listeners
+		// Clean and setup event listeners
+		EventManager.Nullify();
 		EventManager.GameStart += BeginRound;
 		EventManager.GameReset += ResetGame;
 
@@ -234,25 +235,9 @@ public class NetDuelManager : MonoBehaviour {
 		return leftPlayerCausedResult;
 	}
 
-	public void OnPlayerLeftGame() {
-		//ToggleUIInteractivity();
-
-		// Exit lobby and requeue for another game
-		//LeaveLobby(true);
-
-		/*
-		// Stop count down if it was in progress
-		LobbyText.enabled = false;
-		countdown.HaltCountdown();
-
-		if (playerLeft) {
-			// Close the lobby and look for another game
-			Globals.Menu.RequeueForGame();
-		}
-		else {
-			// Exit the lobby and go back to the main menu
-			Globals.Menu.ExitNetworkLobby();
-		}*/
+	public void OnPlayerLeftGameOK() {
+		// Leave the duel
+		LeaveForPostGame();
 	}
 
 	#endregion
@@ -269,7 +254,7 @@ public class NetDuelManager : MonoBehaviour {
 		PhotonNetwork.room.IsOpen = false;
 
 		// Show popup
-		popup.Initialize(OnPlayerLeftGame, "Your  opponent\nhas  left");
+		popup.Initialize(OnPlayerLeftGameOK, "Your  opponent\nhas  left");
 	}
 
 	private void RecordReactionTime(bool leftSamurai, int time) {
@@ -367,6 +352,16 @@ public class NetDuelManager : MonoBehaviour {
 			// Neither player struck out, just reset round
 			Get().StartCoroutine(WaitAndRestartGame());
 		}
+	}
+
+	private void LeaveForPostGame() {
+		// Set match results
+		BushidoMatchInfo.Get().SetMatchResults(
+			LeftSamurai.WinCount, RightSamurai.WinCount,
+			LeftSamurai.BestTime, RightSamurai.BestTime,
+			true);
+
+		GUI.ToggleShadeForMatchEnd();
 	}
 
 	private void UpdateCurrentTime() {
@@ -492,13 +487,7 @@ public class NetDuelManager : MonoBehaviour {
 
 		yield return new WaitForSeconds(4);
 
-		// Set match results
-		BushidoMatchInfo.Get().SetMatchResults(
-			LeftSamurai.WinCount, RightSamurai.WinCount,
-			LeftSamurai.BestTime, RightSamurai.BestTime,
-			true);
-
-		GUI.ToggleShadeForMatchEnd();
+		LeaveForPostGame();
 	}
 
 	#endregion
