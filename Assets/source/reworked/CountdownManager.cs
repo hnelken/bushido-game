@@ -89,9 +89,9 @@ public class CountdownManager : MonoBehaviour {
 
 	#region Public API
 
-	public void ShowControls() {
-		LeftCheckbox.enabled = true;
-		RightCheckbox.enabled = true;
+	public void ShowControls(bool visible) {
+		LeftCheckbox.enabled = visible;
+		RightCheckbox.enabled = visible;
 	}
 
 	public void Initialize(Text countDownText) {

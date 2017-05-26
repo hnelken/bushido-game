@@ -11,7 +11,17 @@ public class PopupManager : MonoBehaviour {
 	// UI references
 	public GameObject Popup;
 	public GameObject LeftOKButton, CenterOKButton, CancelButton;
-	public Text MessageText;
+
+	// Safe reference to variable 
+	public Text PopupText;
+	/*public Text PopupText {
+		get {
+			if (!popupText) {
+				popupText = GameObject.Find("PopupText").GetComponent<Text>();
+			}
+			return popupText;
+		}
+	}*/
 
 	// Use this for initialization
 	void Start () {
@@ -29,7 +39,7 @@ public class PopupManager : MonoBehaviour {
 		this.CancelAction = cancelAction;
 
 		// Set popup message
-		this.MessageText.text = message;
+		this.PopupText.text = message;
 
 		// Hide/Show UI
 		LeftOKButton.SetActive(cancellable);
