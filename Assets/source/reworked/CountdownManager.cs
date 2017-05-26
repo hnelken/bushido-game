@@ -133,8 +133,8 @@ public class CountdownManager : MonoBehaviour {
 		TriggerResetReady();
 	}
 
-	public void HaltCountdown() {
-		countingDown = false;
+	public void HaltCountdownOnAllClients() {
+		photonView.RPC("SyncHaltCountdown", PhotonTargets.All);
 	}
 
 	public bool IsFinished() {
@@ -163,6 +163,11 @@ public class CountdownManager : MonoBehaviour {
 	[PunRPC]
 	void SyncLeaveLobby() {
 		TriggerCountdownComplete();
+	}
+
+	[PunRPC]
+	void SyncHaltCountdown() {
+		countingDown = false;
 	}
 
 	#endregion
@@ -236,7 +241,7 @@ public class CountdownManager : MonoBehaviour {
 
 	// Sets the text element to display the countdown
 	private void SetCountDownText(int countdown) {
-		if (countingDown && !countDownText.enabled) {
+		if (!countDownText.enabled) {
 			countDownText.enabled = true;
 		}
 		// Show countdown

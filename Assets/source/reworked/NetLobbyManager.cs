@@ -331,7 +331,7 @@ public class NetLobbyManager : MonoBehaviour {
 		
 		// Stop count down if it was in progress
 		LobbyText.enabled = false;
-		countdown.HaltCountdown();
+		countdown.HaltCountdownOnAllClients();
 
 		if (playerLeft) {
 			// Close the lobby and look for another game
