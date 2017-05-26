@@ -74,15 +74,7 @@ public class LocalSamurai : MonoBehaviour {
 	// Returns whether a player has struck out following the last round
 	public bool StrikeOut(int strikeLimit, LocalSamurai opponent) {
 		// Player's strike count must exceed limit to strike out
-		bool strikeOut = strikeCount >= strikeLimit;
-
-		// Player's oppenent receives a win if a strike out occured
-		if (strikeOut) {
-			opponent.winCount++;
-		}
-
-		// Return whether strikeout occured
-		return strikeOut;
+		return strikeCount >= strikeLimit;
 	}
 
 	// Returns the display name for this player
