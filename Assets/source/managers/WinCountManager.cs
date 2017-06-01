@@ -102,6 +102,10 @@ public class WinCountManager : MonoBehaviour {
 		}
 	}
 
+	public void SignalTie() {
+		RefreshCircles();
+	}
+
 	private void SignalLeftWin() {
 		leftCount++;
 		RefreshCircles();

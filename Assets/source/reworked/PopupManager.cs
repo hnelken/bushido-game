@@ -12,16 +12,8 @@ public class PopupManager : MonoBehaviour {
 	public GameObject Popup;
 	public GameObject LeftOKButton, CenterOKButton, CancelButton;
 
-	// Safe reference to variable 
+	// Safe reference to variable popup text object
 	public Text PopupText;
-	/*public Text PopupText {
-		get {
-			if (!popupText) {
-				popupText = GameObject.Find("PopupText").GetComponent<Text>();
-			}
-			return popupText;
-		}
-	}*/
 
 	// Use this for initialization
 	void Start () {

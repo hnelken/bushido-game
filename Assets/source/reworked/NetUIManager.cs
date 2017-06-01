@@ -368,6 +368,7 @@ public class NetUIManager : MonoBehaviour {
 	private void ShowPlayersTied() {
 		LeftSamurai.color = Color.black;
 		RightSamurai.color = Color.black;
+		winCount.SignalTie();
 	}
 
 	// Sets the color of the player that lost to black
