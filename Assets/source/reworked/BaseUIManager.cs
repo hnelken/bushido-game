@@ -3,9 +3,9 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.Collections;
 
-public class LocalUIManager : MonoBehaviour {
+public class BaseUIManager : MonoBehaviour {
 
-	#region Editor References + Public Properties
+	#region Public References
 
 	public Color blueColor, yellowColor;
 
@@ -31,6 +31,8 @@ public class LocalUIManager : MonoBehaviour {
 		}
 	}
 
+	// The image element for the left samurai
+	private Image leftSamurai;
 	public Image LeftSamurai {
 		get {
 			if (!leftSamurai) {
@@ -40,6 +42,8 @@ public class LocalUIManager : MonoBehaviour {
 		}
 	}
 
+	// The image element for the right samurai
+	private Image rightSamurai;
 	public Image RightSamurai {
 		get {
 			if (!rightSamurai) {
@@ -49,6 +53,8 @@ public class LocalUIManager : MonoBehaviour {
 		}
 	}
 
+	// The image element for the flag 
+	private Image flag;
 	public Image Flag {
 		get {
 			if (!flag) {
@@ -58,15 +64,8 @@ public class LocalUIManager : MonoBehaviour {
 		}
 	}
 
-	public FadingShade Shade {										// The black and white image elements for visual effects
-		get {
-			if (!shade) {
-				shade = GameObject.Find("Shade").GetComponent<FadingShade>();
-			}
-			return shade;
-		}
-	}
-
+	// The image element for the white flash animation
+	private Image flash;
 	public Image Flash {
 		get {
 			if (!flash) {
@@ -76,6 +75,19 @@ public class LocalUIManager : MonoBehaviour {
 		}
 	}
 
+	// The custom image element for the black fading animation
+	private FadingShade shade;
+	public FadingShade Shade {
+		get {
+			if (!shade) {
+				shade = GameObject.Find("Shade").GetComponent<FadingShade>();
+			}
+			return shade;
+		}
+	}
+
+	// The text element for the reaction timer
+	private Text timer;
 	public Text ReactionTimer {
 		get {
 			if (!timer) {
@@ -85,6 +97,8 @@ public class LocalUIManager : MonoBehaviour {
 		}
 	}
 
+	// The text element for the central text message
+	private Text mainText;
 	public Text MainText {
 		get {
 			if (!mainText) {
@@ -94,66 +108,35 @@ public class LocalUIManager : MonoBehaviour {
 		}
 	}
 
-	/*
-	public Text LeftCount {
-		get {
-			if (!leftCount) {
-				leftCount = GameObject.Find("LeftCount").GetComponent<Text>();
-			}
-			return leftCount;
-		}
-	}
-
-	public Text RightCount {
-		get {
-			if (!rightCount) {
-				rightCount = GameObject.Find("RightCount").GetComponent<Text>();
-			}
-			return rightCount;
-		}
-	} */
-
 	#endregion
 
 
 	#region Private Variables
 
-	private Text timer, mainText;
-	private Text leftCount, rightCount;
-
-	private Image flag, flash;
-	private FadingShade shade;
-	private Image leftSamurai, rightSamurai;
-
 	private WinCountManager winCount;							// The win count UI manager
-	private LocalDuelManager manager;								// The required duel manager component
+	private BaseDuelManager manager;							// The required duel manager component
 
 	private bool timing;										// True if the timer is active, false otherwise
-	private bool roundStart, roundEnd, matchEnd;
-	private bool flashFadingOut, flashShouldFade;
+	private bool roundStart, roundEnd, matchEnd;				// Status variables that are true depending on the state of the duel
+	private bool flashFadingOut, flashShouldFade;				// Status variables governing the animation of the white flash
 
 	private Vector3 leftIdlePosition, rightIdlePosition;		// Default idle position of players
 
 	#endregion
 
-
-	#region State Functions
+	#region MonoBehaviour API
 
 	// Initialization
 	void Start() {
 		// Get required manager component
-		manager = GetComponent<LocalDuelManager>();
 		winCount = GetComponent<WinCountManager>();
 
 		// Set idle positions based on initial image positions
 		leftIdlePosition = LeftSamurai.rectTransform.anchoredPosition;
 		rightIdlePosition = RightSamurai.rectTransform.anchoredPosition;
 
-		// Disable all text elements at beginning of round
-		//.enabled = false;
-		//RightCount.enabled = false;
+		// Disable some UI elements for the start of the round
 		MainText.enabled = false;
-
 		Flag.enabled = false;
 
 		// Set shade over screen and hide flash screen
@@ -162,10 +145,8 @@ public class LocalUIManager : MonoBehaviour {
 
 		// Set event listeners
 		EventManager.GameStart += Shade.Toggle;
-
 		EventManager.GameReset += ClearForNewRound;
 		EventManager.GameOver += ShowMatchWin;
-
 		EventManager.GameResult += ShowResult;
 		EventManager.GameStrike += ShowStrike;
 		EventManager.GameReaction += ShowAttack;
@@ -174,21 +155,14 @@ public class LocalUIManager : MonoBehaviour {
 	// Update is called once per frame
 	void Update() {
 
-		// Flash
-
+		// Handle flash animation
 		if (flashFadingOut) {
 			FadeFlashAlpha();
 		}
 
-
-		// Shade
-		/*
-		if (shadeFadingOut) {
-			FadeShadeAlpha();
-		}
-*/
+		// Handle shade animation
 		if (Shade.IsHidden) {
-			//RaiseShadeAlpha();
+			// Do nothing
 		}
 		else if (roundStart) {
 			roundStart = false;
@@ -202,8 +176,7 @@ public class LocalUIManager : MonoBehaviour {
 			matchEnd = false;
 
 			EventManager.Nullify();
-			//AudioManager.Get().BackToMenu();
-			SceneManager.LoadScene(Globals.LocalPostScene);
+			SceneManager.LoadScene(Globals.NetPostScene);
 		}
 	}
 
@@ -343,11 +316,8 @@ public class LocalUIManager : MonoBehaviour {
 	}
 
 	private void ShowResult() {
-		// Refresh and display win count text elements
-		//RefreshWinCounts();
-		//LeftCount.enabled = true;
-		//RightCount.enabled = true;
 
+		// Check result of round
 		if (manager.ResultWasTie()) {
 			// Change the sprite color of both players
 			ShowPlayersTied();
@@ -399,9 +369,7 @@ public class LocalUIManager : MonoBehaviour {
 
 	// Clears the UI elements for a new round
 	private void ClearForNewRound() {
-		// Disables text elements
-		//LeftCount.enabled = false;
-		//RightCount.enabled = false;
+		// Disable text element
 		MainText.enabled = false;
 
 		// Set player sprites and positions to show idle state

@@ -56,6 +56,12 @@ public class LocalSamurai : MonoBehaviour {
 		}
 	}
 
+	public string DisplayName {
+		get {
+			return displayName;
+		}
+	}
+
 	// Sets the manager for the duel this player is in
 	public void SetManager(LocalDuelManager _manager) {
 		manager = _manager;
@@ -75,11 +81,6 @@ public class LocalSamurai : MonoBehaviour {
 	public bool StrikeOut(int strikeLimit, LocalSamurai opponent) {
 		// Player's strike count must exceed limit to strike out
 		return strikeCount >= strikeLimit;
-	}
-
-	// Returns the display name for this player
-	public string GetPlayerName() {
-		return displayName;
 	}
 
 	// Returns player win count
