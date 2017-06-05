@@ -3,16 +3,16 @@ using System.Collections;
 
 public class BaseDuelManager : MonoBehaviour {
 
-	#region Inspector References + Public Properties
+	#region Public References
 
-	public NetSamurai LeftSamurai, RightSamurai;
+	public BaseSamurai LeftSamurai, RightSamurai;
 
 	// Safe reference to the manager of all UI elements
-	private NetUIManager gui;
-	public NetUIManager GUI {
+	private BaseUIManager gui;
+	public BaseUIManager GUI {
 		get {
 			if (!gui) {
-				gui = GetComponent<NetUIManager>();
+				gui = GetComponent<BaseUIManager>();
 			}
 			return gui;
 		}
@@ -23,14 +23,10 @@ public class BaseDuelManager : MonoBehaviour {
 
 	#region Private Variables
 
-	private PopupManager popup;								// The popup manager component for this scene
-	private PhotonView photonView;							// The photon view used to make rpc's
-
 	private const int strikeLimit = 2;						// Number of strikes required to lose a round
 	private int winLimit = 3;								// Number of wins required to win the match
 
-	private bool paused;									// True if the game is paused, false if not
-	private bool resultWasTie;								// True if the last round resulted in a tie
+	private bool resultWasTie;
 	private bool leftPlayerCausedResult; 					// True if the left samurai caused the latest round result
 	private bool waitingForInput;							// True from when round starts until after first input
 	private bool waitingForTie;								// True when waiting for tying input after first input
@@ -39,7 +35,7 @@ public class BaseDuelManager : MonoBehaviour {
 	private bool flagPopped;								// True if the flag is showing
 	private bool timeRanOut;								// True if the round exceeded the time limit
 
-	private float randomWait;								// The random wait time before the flag pops
+	private float randomWait;								// The random wait time
 	private float startTime;								// The time at which the centerpiece icon was displayed
 
 	private int reactTime;									// The time at which the first valid input was received
@@ -55,22 +51,13 @@ public class BaseDuelManager : MonoBehaviour {
 	// Initialization
 	void Awake() {
 
-		this.photonView = GetComponent<PhotonView>();
-		this.popup = GetComponent<PopupManager>();
-
-		// Setup PUN event listener
-		Globals.MatchMaker.InitializeForNewScene();
-		PUNQuickPlay.Disconnect += PauseAndShowPopup;
-
 		// Get match limit from match info
 		winLimit = BushidoMatchInfo.Get().MatchLimit;
 
-		// Set reference for samurai info objects
 		//LeftSamurai.SetManager(this);
 		//RightSamurai.SetManager(this);
 
-		// Clean and setup event listeners
-		EventManager.Nullify();
+		// Set event listeners
 		EventManager.GameStart += BeginRound;
 		EventManager.GameReset += ResetGame;
 
@@ -89,76 +76,10 @@ public class BaseDuelManager : MonoBehaviour {
 	#endregion
 
 
-	#region Photon RPC's
-
-	[PunRPC]
-	public void SyncTriggerGameStart() {
-		TriggerGameStart();
-	}
-
-	[PunRPC]
-	public void SyncPopFlag() {
-		PopFlag();
-	}
-
-	[PunRPC]
-	private void SyncSetRandomWaitTime(float waitTime) {
-		SetWaitTime(waitTime);
-	}
-
-	private void TriggerGameStartOnAllClients() {
-		photonView.RPC("SyncTriggerGameStart", PhotonTargets.All);
-	}
-
-	private void PopFlagOnAllClients() {
-		photonView.RPC("SyncPopFlag", PhotonTargets.All);
-	}
-
-	private void SetRandomWaitTimeOnAllClients(float waitTime) {
-		photonView.RPC("SyncSetRandomWaitTime", PhotonTargets.All, waitTime);
-	}
-
-	#endregion
-
-
 	#region Public API
 
-	public static NetDuelManager Get() {
-		return FindObjectOfType<NetDuelManager>();
-	}
-
-	public void SetWaitTime(float waitTime) {
-		randomWait = waitTime;
-		Get().StartCoroutine(WaitAndPopFlag());
-	}
-
-	public void SetStartTime(float time) {
-		startTime = time;
-	}
-
-	public void SetCurrentTime(int time) {
-		currTime = time;
-	}
-
-	public void TriggerGameStart() {
-		// Begin to allow input from both players
-		PUNNetworkPlayer.ResetInputForBothPlayers();
-
-		GUI.ToggleShadeForRoundStart();
-		AudioManager.Get().StartMusic();
-	}
-
-	public void PopFlag() {
-		// No strike, record time of flag pop and start timer
-		startTime = Time.realtimeSinceStartup;
-
-		GUI.ToggleTimer();
-
-		// "Pop" the flag 
-		GUI.ToggleFlag();
-		flagPopped = true;
-
-		AudioManager.Get().PlayPopSound();
+	public static BaseDuelManager Get() {
+		return FindObjectOfType<BaseDuelManager>();
 	}
 
 	// Signal a player reaction during a round
@@ -217,10 +138,6 @@ public class BaseDuelManager : MonoBehaviour {
 		return resultWasTie;
 	}
 
-	public bool IsGamePaused() {
-		return paused;
-	}
-
 	public float GetStartTime() {
 		return startTime;
 	}
@@ -234,26 +151,27 @@ public class BaseDuelManager : MonoBehaviour {
 		return leftPlayerCausedResult;
 	}
 
-	public void OnPlayerLeftGameOK() {
-		// Leave the duel
-		LeaveForPostGame();
-	}
-
 	#endregion
 
 
 	#region Private API
 
-	private void PauseAndShowPopup() {
-		paused = true;
-		Time.timeScale = 0;
+	private void PopFlag() {
+		// No strike, record time of flag pop and start timer
+		startTime = Time.realtimeSinceStartup;
 
-		// Prevent players from joining while we look at the popup menu
-		PhotonNetwork.room.IsVisible = false;
-		PhotonNetwork.room.IsOpen = false;
+		GUI.ToggleTimer();
 
-		// Show popup
-		popup.Initialize(OnPlayerLeftGameOK, "Your  opponent\nhas  left");
+		// "Pop" the flag 
+		GUI.ToggleFlag();
+		flagPopped = true;
+
+		AudioManager.Get().PlayPopSound();
+	}
+
+	private void TriggerGameStart() {
+		GUI.ToggleShadeForRoundStart();
+		AudioManager.Get().StartMusic();
 	}
 
 	private void RecordReactionTime(bool leftSamurai, int time) {
@@ -290,9 +208,7 @@ public class BaseDuelManager : MonoBehaviour {
 		// Allow input and begin delayed flag display
 		waitingForInput = true;
 
-		if (PhotonNetwork.isMasterClient) {
-			SetRandomWaitTimeOnAllClients(Random.Range(4, 7));
-		}
+		StartCoroutine(WaitAndPopFlag());
 	}
 
 	// Reset the parameters of the manager before setting up for a new round
@@ -336,7 +252,6 @@ public class BaseDuelManager : MonoBehaviour {
 
 			// Show resulting winner after a delay
 			Get().StartCoroutine(WaitAndShowResult(false, true));
-			//Get().StartCoroutine(WaitAndShowWinner());
 		}
 		else if (RightSamurai.StrikeOut(strikeLimit, LeftSamurai)) {
 			// Change the result to be a win
@@ -345,7 +260,6 @@ public class BaseDuelManager : MonoBehaviour {
 
 			// Show resulting winner after a delay
 			Get().StartCoroutine(WaitAndShowResult(false, true));
-			//Get().StartCoroutine(WaitAndShowWinner());
 		}
 		else {
 			// Neither player struck out, just reset round
@@ -396,32 +310,19 @@ public class BaseDuelManager : MonoBehaviour {
 
 		yield return new WaitForSeconds(2);
 
-		// Check that both players are still present at start of round
-		if (PUNNetworkPlayer.GetAllPlayers().Length != 2) {
-			Debug.Log("Missing players");
-
-			// Players are missing, pause the game if not already paused
-			if (!paused) {
-				// Pause and show popup
-				PauseAndShowPopup();
-			}
-		}
-		else if (PhotonNetwork.isMasterClient) {
-			// Synchronize round start
-			TriggerGameStartOnAllClients();
-		}
+		TriggerGameStart();
 	}
 
 	// Displays the flag after a randomized wait time
 	public IEnumerator WaitAndPopFlag() {
 
+		randomWait = Random.Range(4, 7);
+
 		yield return new WaitForSeconds(randomWait);
 
 		// Only pop flag if the player has not struck early
 		if (!playerStrike) {
-			if (PhotonNetwork.isMasterClient) {
-				PopFlagOnAllClients();
-			}
+			PopFlag();
 		}
 	}
 
@@ -483,11 +384,11 @@ public class BaseDuelManager : MonoBehaviour {
 
 	// Leaves the duel scene after 4 seconds
 	public IEnumerator WaitAndEndGame() {
-
 		yield return new WaitForSeconds(4);
 
 		LeaveForPostGame();
 	}
 
 	#endregion
+
 }

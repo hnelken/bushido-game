@@ -114,7 +114,7 @@ public class BaseUIManager : MonoBehaviour {
 	#region Private Variables
 
 	private WinCountManager winCount;							// The win count UI manager
-	private BaseDuelManager manager;							// The required duel manager component
+	protected BaseDuelManager manager;							// The required duel manager component
 
 	private bool timing;										// True if the timer is active, false otherwise
 	private bool roundStart, roundEnd, matchEnd;				// Status variables that are true depending on the state of the duel
@@ -128,7 +128,8 @@ public class BaseUIManager : MonoBehaviour {
 
 	// Initialization
 	void Start() {
-		// Get required manager component
+		// Get required manager components
+		manager = GetComponent<BaseDuelManager>();
 		winCount = GetComponent<WinCountManager>();
 
 		// Set idle positions based on initial image positions

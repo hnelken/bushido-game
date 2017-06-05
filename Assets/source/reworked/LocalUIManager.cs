@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.Collections;
 
-public class LocalUIManager : MonoBehaviour {
+public class LocalUIManager : BaseUIManager {
 
 	#region Editor References + Public Properties
 

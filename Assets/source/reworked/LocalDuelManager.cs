@@ -54,8 +54,8 @@ public class LocalDuelManager : MonoBehaviour {
 		// Get match limit from match info
 		winLimit = BushidoMatchInfo.Get().MatchLimit;
 
-		LeftSamurai.SetManager(this);
-		RightSamurai.SetManager(this);
+		//LeftSamurai.SetManager(this);
+		//RightSamurai.SetManager(this);
 
 		// Set event listeners
 		EventManager.GameStart += BeginRound;
@@ -278,8 +278,8 @@ public class LocalDuelManager : MonoBehaviour {
 
 	// Checks if either player has enough wins to claim the match
 	private bool MatchWon() {
-		return LeftSamurai.GetWinCount() > winLimit / 2
-			|| RightSamurai.GetWinCount() > winLimit / 2;
+		return LeftSamurai.WinCount > winLimit / 2
+			|| RightSamurai.WinCount > winLimit / 2;
 	}
 
 	// Checks if both players have entered the room

@@ -30,7 +30,11 @@ public class NetDuelManager : MonoBehaviour {
 	private const int strikeLimit = 2;						// Number of strikes required to lose a round
 	private int winLimit = 3;								// Number of wins required to win the match
 
+
+	// LEAVE THIS IN SUBCLASS
 	private bool paused;									// True if the game is paused, false if not
+
+
 	private bool resultWasTie;								// True if the last round resulted in a tie
 	private bool leftPlayerCausedResult; 					// True if the left samurai caused the latest round result
 	private bool waitingForInput;							// True from when round starts until after first input
@@ -62,6 +66,9 @@ public class NetDuelManager : MonoBehaviour {
 		// Setup PUN event listener
 		Globals.MatchMaker.InitializeForNewScene();
 		PUNQuickPlay.Disconnect += PauseAndShowPopup;
+
+		// LEAVE THE ABOVE IN THE SUBCLASS
+
 
 		// Get match limit from match info
 		winLimit = BushidoMatchInfo.Get().MatchLimit;
@@ -162,6 +169,17 @@ public class NetDuelManager : MonoBehaviour {
 		AudioManager.Get().PlayPopSound();
 	}
 
+	public void OnPlayerLeftGameOK() {
+		// Leave the duel
+		LeaveForPostGame();
+	}
+		
+	public bool IsGamePaused() {
+		return paused;
+	}
+
+	// LEAVE ABOVE IN SUBCLASS
+
 	// Signal a player reaction during a round
 	// - leftSamurai: A boolean representing which player triggered this event
 	public void TriggerReaction(bool leftSamurai, int reactionTime) {
@@ -218,9 +236,6 @@ public class NetDuelManager : MonoBehaviour {
 		return resultWasTie;
 	}
 
-	public bool IsGamePaused() {
-		return paused;
-	}
 
 	public float GetStartTime() {
 		return startTime;
@@ -235,10 +250,6 @@ public class NetDuelManager : MonoBehaviour {
 		return leftPlayerCausedResult;
 	}
 
-	public void OnPlayerLeftGameOK() {
-		// Leave the duel
-		LeaveForPostGame();
-	}
 
 	#endregion
 
@@ -284,7 +295,7 @@ public class NetDuelManager : MonoBehaviour {
 	}
 
 	// Enables input and begins the randomly timed wait before popping the flag
-	private void BeginRound() {
+	private override void BeginRound() {
 		// Delayed negation of strike status to avoid UI issues
 		playerStrike = false;
 
@@ -337,7 +348,6 @@ public class NetDuelManager : MonoBehaviour {
 
 			// Show resulting winner after a delay
 			Get().StartCoroutine(WaitAndShowResult(false, true));
-			//Get().StartCoroutine(WaitAndShowWinner());
 		}
 		else if (RightSamurai.StrikeOut(strikeLimit, LeftSamurai)) {
 			// Change the result to be a win
@@ -346,7 +356,6 @@ public class NetDuelManager : MonoBehaviour {
 
 			// Show resulting winner after a delay
 			Get().StartCoroutine(WaitAndShowResult(false, true));
-			//Get().StartCoroutine(WaitAndShowWinner());
 		}
 		else {
 			// Neither player struck out, just reset round
@@ -393,7 +402,7 @@ public class NetDuelManager : MonoBehaviour {
 	#region Delayed Routines
 
 	// Triggers the "game start" event after 2 second
-	public IEnumerator WaitAndStartRound() {
+	public override IEnumerator WaitAndStartRound() {
 
 		yield return new WaitForSeconds(2);
 
@@ -414,7 +423,7 @@ public class NetDuelManager : MonoBehaviour {
 	}
 
 	// Displays the flag after a randomized wait time
-	public IEnumerator WaitAndPopFlag() {
+	public override IEnumerator WaitAndPopFlag() {
 
 		yield return new WaitForSeconds(randomWait);
 
