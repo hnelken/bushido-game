@@ -8,7 +8,7 @@ public class BaseDuelManager : MonoBehaviour {
 	public BaseSamurai LeftSamurai, RightSamurai;
 
 	// Safe reference to the manager of all UI elements
-	private BaseUIManager gui;
+	protected BaseUIManager gui;
 	public BaseUIManager GUI {
 		get {
 			if (!gui) {
@@ -21,27 +21,27 @@ public class BaseDuelManager : MonoBehaviour {
 	#endregion
 
 
-	#region Private Variables
+	#region protected Variables
 
-	private const int strikeLimit = 2;						// Number of strikes required to lose a round
-	private int winLimit = 3;								// Number of wins required to win the match
+	protected const int strikeLimit = 2;					// Number of strikes required to lose a round
+	protected int winLimit = 3;								// Number of wins required to win the match
 
-	private bool resultWasTie;
-	private bool leftPlayerCausedResult; 					// True if the left samurai caused the latest round result
-	private bool waitingForInput;							// True from when round starts until after first input
-	private bool waitingForTie;								// True when waiting for tying input after first input
-	private bool playerStrike;								// True if a player has committed a strike
-	private bool tyingInput;								// True if there was tying input
-	private bool flagPopped;								// True if the flag is showing
-	private bool timeRanOut;								// True if the round exceeded the time limit
+	protected bool resultWasTie;
+	protected bool leftPlayerCausedResult; 					// True if the left samurai caused the latest round result
+	protected bool waitingForInput;							// True from when round starts until after first input
+	protected bool waitingForTie;								// True when waiting for tying input after first input
+	protected bool playerStrike;								// True if a player has committed a strike
+	protected bool tyingInput;								// True if there was tying input
+	protected bool flagPopped;								// True if the flag is showing
+	protected bool timeRanOut;								// True if the round exceeded the time limit
 
-	private float randomWait;								// The random wait time
-	private float startTime;								// The time at which the centerpiece icon was displayed
+	protected float randomWait;								// The random wait time
+	protected float startTime;								// The time at which the centerpiece icon was displayed
 
-	private int reactTime;									// The time at which the first valid input was received
-	private int tieTime;									// The time at which the potentially tying input was received
-	private int currTime;									// The current synchronized time elapsed this round
-	private int maxTime = 100;								// The time limit for a round to be called before player input
+	protected int reactTime;									// The time at which the first valid input was received
+	protected int tieTime;									// The time at which the potentially tying input was received
+	protected int currTime;									// The current synchronized time elapsed this round
+	protected int maxTime = 100;								// The time limit for a round to be called before player input
 
 	#endregion
 
@@ -54,8 +54,8 @@ public class BaseDuelManager : MonoBehaviour {
 		// Get match limit from match info
 		winLimit = BushidoMatchInfo.Get().MatchLimit;
 
-		//LeftSamurai.SetManager(this);
-		//RightSamurai.SetManager(this);
+		LeftSamurai.SetManager(this);
+		RightSamurai.SetManager(this);
 
 		// Set event listeners
 		EventManager.GameStart += BeginRound;
@@ -156,7 +156,7 @@ public class BaseDuelManager : MonoBehaviour {
 
 	#region Private API
 
-	private void PopFlag() {
+	protected void PopFlag() {
 		// No strike, record time of flag pop and start timer
 		startTime = Time.realtimeSinceStartup;
 
@@ -169,12 +169,12 @@ public class BaseDuelManager : MonoBehaviour {
 		AudioManager.Get().PlayPopSound();
 	}
 
-	private void TriggerGameStart() {
+	protected void TriggerGameStart() {
 		GUI.ToggleShadeForRoundStart();
 		AudioManager.Get().StartMusic();
 	}
 
-	private void RecordReactionTime(bool leftSamurai, int time) {
+	protected void RecordReactionTime(bool leftSamurai, int time) {
 		if (leftSamurai) {
 			LeftSamurai.RecordReactionTime(time);
 		}
@@ -183,7 +183,7 @@ public class BaseDuelManager : MonoBehaviour {
 		}
 	}
 
-	private void CheckForTimeout() {
+	protected void CheckForTimeout() {
 		if (currTime >= maxTime) {
 			AudioManager.Get().PlayStrikeSound();
 
@@ -201,18 +201,18 @@ public class BaseDuelManager : MonoBehaviour {
 	}
 
 	// Enables input and begins the randomly timed wait before popping the flag
-	private void BeginRound() {
+	protected void BeginRound() {
 		// Delayed negation of strike status to avoid UI issues
 		playerStrike = false;
 
 		// Allow input and begin delayed flag display
 		waitingForInput = true;
 
-		StartCoroutine(WaitAndPopFlag());
+		Get().StartCoroutine(WaitAndPopFlag());
 	}
 
 	// Reset the parameters of the manager before setting up for a new round
-	private void ResetGame() {
+	protected void ResetGame() {
 		// Reset parameters
 		tyingInput = false;
 		flagPopped = false;
@@ -231,7 +231,7 @@ public class BaseDuelManager : MonoBehaviour {
 
 	// Signal that a player's input was too early
 	// - leftSamurai: A boolean representing which player triggered this event
-	private void TriggerStrike(bool leftSamurai) {
+	protected void TriggerStrike(bool leftSamurai) {
 		// Set the round result following the strike
 		leftPlayerCausedResult = leftSamurai;
 
@@ -267,7 +267,7 @@ public class BaseDuelManager : MonoBehaviour {
 		}
 	}
 
-	private void LeaveForPostGame() {
+	protected void LeaveForPostGame() {
 		// Set match results
 		BushidoMatchInfo.Get().SetMatchResults(
 			LeftSamurai.WinCount, RightSamurai.WinCount,
@@ -277,7 +277,7 @@ public class BaseDuelManager : MonoBehaviour {
 		GUI.ToggleShadeForMatchEnd();
 	}
 
-	private void UpdateCurrentTime() {
+	protected void UpdateCurrentTime() {
 		currTime = GetReactionTime();
 		if (!timeRanOut) {
 			GUI.UpdateTimer();
@@ -285,21 +285,16 @@ public class BaseDuelManager : MonoBehaviour {
 	}
 
 	// Calculates the rounded-off reaction time since the flag popped
-	private int GetReactionTime() {
+	protected int GetReactionTime() {
 		return (int)((100 * (Time.realtimeSinceStartup - startTime)) / 2);
 	}
 
 	// Checks if either player has enough wins to claim the match
-	private bool MatchWon() {
+	protected bool MatchWon() {
 		return LeftSamurai.WinCount > winLimit / 2
 			|| RightSamurai.WinCount > winLimit / 2;
 	}
-
-	// Checks if both players have entered the room
-	private bool BothPlayersInMatch() {
-		return FindObjectsOfType<NetworkInput>().Length == 2;
-	}
-
+		
 	#endregion
 
 
