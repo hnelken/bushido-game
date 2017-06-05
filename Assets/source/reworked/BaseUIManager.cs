@@ -10,8 +10,8 @@ public class BaseUIManager : MonoBehaviour {
 	public Color blueColor, yellowColor;
 
 	// The sprite for the checked box
-	private Sprite idleSprite;
-	private Sprite IdleSprite {
+	protected Sprite idleSprite;
+	protected Sprite IdleSprite {
 		get {
 			if (!idleSprite) {
 				idleSprite = Resources.Load<Sprite>("sprites/samurai-standing");
@@ -21,8 +21,8 @@ public class BaseUIManager : MonoBehaviour {
 	}
 
 	// The sprite for the checked box
-	private Sprite attackSprite;
-	private Sprite AttackSprite {
+	protected Sprite attackSprite;
+	protected Sprite AttackSprite {
 		get {
 			if (!attackSprite) {
 				attackSprite = Resources.Load<Sprite>("sprites/samurai-slash");
@@ -32,7 +32,7 @@ public class BaseUIManager : MonoBehaviour {
 	}
 
 	// The image element for the left samurai
-	private Image leftSamurai;
+	protected Image leftSamurai;
 	public Image LeftSamurai {
 		get {
 			if (!leftSamurai) {
@@ -43,7 +43,7 @@ public class BaseUIManager : MonoBehaviour {
 	}
 
 	// The image element for the right samurai
-	private Image rightSamurai;
+	protected Image rightSamurai;
 	public Image RightSamurai {
 		get {
 			if (!rightSamurai) {
@@ -54,7 +54,7 @@ public class BaseUIManager : MonoBehaviour {
 	}
 
 	// The image element for the flag 
-	private Image flag;
+	protected Image flag;
 	public Image Flag {
 		get {
 			if (!flag) {
@@ -65,7 +65,7 @@ public class BaseUIManager : MonoBehaviour {
 	}
 
 	// The image element for the white flash animation
-	private Image flash;
+	protected Image flash;
 	public Image Flash {
 		get {
 			if (!flash) {
@@ -76,7 +76,7 @@ public class BaseUIManager : MonoBehaviour {
 	}
 
 	// The custom image element for the black fading animation
-	private FadingShade shade;
+	protected FadingShade shade;
 	public FadingShade Shade {
 		get {
 			if (!shade) {
@@ -87,7 +87,7 @@ public class BaseUIManager : MonoBehaviour {
 	}
 
 	// The text element for the reaction timer
-	private Text timer;
+	protected Text timer;
 	public Text ReactionTimer {
 		get {
 			if (!timer) {
@@ -98,7 +98,7 @@ public class BaseUIManager : MonoBehaviour {
 	}
 
 	// The text element for the central text message
-	private Text mainText;
+	protected Text mainText;
 	public Text MainText {
 		get {
 			if (!mainText) {
@@ -113,14 +113,14 @@ public class BaseUIManager : MonoBehaviour {
 
 	#region Private Variables
 
-	private WinCountManager winCount;							// The win count UI manager
+	protected WinCountManager winCount;							// The win count UI manager
 	protected BaseDuelManager manager;							// The required duel manager component
 
-	private bool timing;										// True if the timer is active, false otherwise
-	private bool roundStart, roundEnd, matchEnd;				// Status variables that are true depending on the state of the duel
-	private bool flashFadingOut, flashShouldFade;				// Status variables governing the animation of the white flash
+	protected bool timing;										// True if the timer is active, false otherwise
+	protected bool roundStart, roundEnd, matchEnd;				// Status variables that are true depending on the state of the duel
+	protected bool flashFadingOut, flashShouldFade;				// Status variables governing the animation of the white flash
 
-	private Vector3 leftIdlePosition, rightIdlePosition;		// Default idle position of players
+	protected Vector3 leftIdlePosition, rightIdlePosition;		// Default idle position of players
 
 	#endregion
 
@@ -175,9 +175,7 @@ public class BaseUIManager : MonoBehaviour {
 		}
 		else if (matchEnd) {
 			matchEnd = false;
-
-			EventManager.Nullify();
-			SceneManager.LoadScene(Globals.NetPostScene);
+			LeaveScene();
 		}
 	}
 
@@ -240,8 +238,13 @@ public class BaseUIManager : MonoBehaviour {
 
 	#region Private API
 
+	protected virtual void LeaveScene() {
+		EventManager.Nullify();
+		SceneManager.LoadScene(Globals.LocalPostScene);
+	}
+
 	// Returns the display name of the player that caused the given result
-	private string GetPlayerString(bool roundWon) {
+	protected string GetPlayerString(bool roundWon) {
 		// Get the players name depending if the left or right player caused the result
 		return (manager.LeftPlayerCausedResult()) 
 			? manager.LeftSamurai.DisplayName 
@@ -249,13 +252,13 @@ public class BaseUIManager : MonoBehaviour {
 	}
 
 	// Sets both samurai image elements to given positions
-	private void SetPlayerPositions(Vector2 leftPlayer, Vector2 rightPlayer) {
+	protected void SetPlayerPositions(Vector2 leftPlayer, Vector2 rightPlayer) {
 		LeftSamurai.rectTransform.anchoredPosition = leftPlayer;
 		RightSamurai.rectTransform.anchoredPosition = rightPlayer;
 	}
 
 	// Sets a given UI element's color to have a designated alpha value
-	private void SetGraphicAlpha(Graphic graphic, float alphaValue) {
+	protected void SetGraphicAlpha(Graphic graphic, float alphaValue) {
 		var color = graphic.color;
 		color.a = alphaValue;
 		graphic.color = color;
@@ -266,7 +269,7 @@ public class BaseUIManager : MonoBehaviour {
 
 	#region Flash Animations
 
-	private void ToggleFlash() {
+	protected void ToggleFlash() {
 		if (!Flash.enabled) {
 			SetGraphicAlpha(Flash, 1);
 			Flash.enabled = true;
@@ -276,7 +279,7 @@ public class BaseUIManager : MonoBehaviour {
 		}
 	}	
 
-	private void FadeFlashAlpha() {
+	protected void FadeFlashAlpha() {
 		var alpha = Flash.color.a;
 		if (alpha > 0) {
 			SetGraphicAlpha(Flash, alpha - .05f);
@@ -294,7 +297,7 @@ public class BaseUIManager : MonoBehaviour {
 	#region Game Event Listeners
 
 	// Displays UI representing a valid attack
-	private void ShowAttack() {
+	protected void ShowAttack() {
 
 		// Sets the players sprite and position to show the attacking state
 		LeftSamurai.sprite = AttackSprite;
@@ -306,7 +309,7 @@ public class BaseUIManager : MonoBehaviour {
 	}
 
 	// Displays UI representing an early attack
-	private void ShowStrike() {
+	protected void ShowStrike() {
 		// Change the sprite color of the player who struck early
 		ShowPlayerLoss(false);
 
@@ -316,7 +319,7 @@ public class BaseUIManager : MonoBehaviour {
 		MainText.enabled = true;
 	}
 
-	private void ShowResult() {
+	protected void ShowResult() {
 
 		// Check result of round
 		if (manager.ResultWasTie()) {
@@ -338,14 +341,14 @@ public class BaseUIManager : MonoBehaviour {
 		MainText.enabled = true;
 	}
 
-	private void ShowPlayersTied() {
+	protected void ShowPlayersTied() {
 		LeftSamurai.color = Color.black;
 		RightSamurai.color = Color.black;
 		winCount.SignalTie();
 	}
 
 	// Sets the color of the player that lost to black
-	private void ShowPlayerLoss(bool roundWon) {
+	protected void ShowPlayerLoss(bool roundWon) {
 		// Check if the round ended in a win or a strike
 		if (roundWon) {
 			// Round was won, change the color of the losing player to black
@@ -361,7 +364,7 @@ public class BaseUIManager : MonoBehaviour {
 	}
 
 	// Displays UI representing a match win
-	private void ShowMatchWin() {
+	protected void ShowMatchWin() {
 		// Set main text element to reflect match win
 		string player = GetPlayerString(true);
 		MainText.text = player + " wins the match!";
@@ -369,7 +372,7 @@ public class BaseUIManager : MonoBehaviour {
 	}
 
 	// Clears the UI elements for a new round
-	private void ClearForNewRound() {
+	protected void ClearForNewRound() {
 		// Disable text element
 		MainText.enabled = false;
 

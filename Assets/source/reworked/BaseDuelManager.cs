@@ -49,7 +49,7 @@ public class BaseDuelManager : MonoBehaviour {
 	#region MonoBehaviour API
 
 	// Initialization
-	void Awake() {
+	public virtual void Awake() {
 
 		// Get match limit from match info
 		winLimit = BushidoMatchInfo.Get().MatchLimit;
@@ -64,7 +64,7 @@ public class BaseDuelManager : MonoBehaviour {
 		Get().StartCoroutine(WaitAndStartRound());
 	}
 
-	void Update() {
+	public void Update() {
 		if (flagPopped) {
 			UpdateCurrentTime();
 			if (waitingForInput && !timeRanOut) {
@@ -129,6 +129,36 @@ public class BaseDuelManager : MonoBehaviour {
 		}
 	}
 
+	// Enables input and begins the randomly timed wait before popping the flag
+	public virtual void BeginRound() {
+		// Delayed negation of strike status to avoid UI issues
+		playerStrike = false;
+
+		// Allow input and begin delayed flag display
+		waitingForInput = true;
+
+		Get().StartCoroutine(WaitAndPopFlag());
+	}
+		
+	// Starts the reaction timer and shows the flag image
+	public virtual void PopFlag() {
+		// No strike, record time of flag pop and start timer
+		startTime = Time.realtimeSinceStartup;
+
+		GUI.ToggleTimer();
+
+		// "Pop" the flag 
+		GUI.ToggleFlag();
+		flagPopped = true;
+
+		AudioManager.Get().PlayPopSound();
+	}
+		
+	public virtual void TriggerGameStart() {
+		GUI.ToggleShadeForRoundStart();
+		AudioManager.Get().StartMusic();
+	}
+
 	// Returns whether or not input will count as a reaction
 	public bool WaitingForInput() {
 		return waitingForInput;
@@ -156,24 +186,6 @@ public class BaseDuelManager : MonoBehaviour {
 
 	#region Private API
 
-	protected void PopFlag() {
-		// No strike, record time of flag pop and start timer
-		startTime = Time.realtimeSinceStartup;
-
-		GUI.ToggleTimer();
-
-		// "Pop" the flag 
-		GUI.ToggleFlag();
-		flagPopped = true;
-
-		AudioManager.Get().PlayPopSound();
-	}
-
-	protected void TriggerGameStart() {
-		GUI.ToggleShadeForRoundStart();
-		AudioManager.Get().StartMusic();
-	}
-
 	protected void RecordReactionTime(bool leftSamurai, int time) {
 		if (leftSamurai) {
 			LeftSamurai.RecordReactionTime(time);
@@ -198,17 +210,6 @@ public class BaseDuelManager : MonoBehaviour {
 			EventManager.TriggerGameResult();
 			Get().StartCoroutine(WaitAndRestartGame());
 		}
-	}
-
-	// Enables input and begins the randomly timed wait before popping the flag
-	protected void BeginRound() {
-		// Delayed negation of strike status to avoid UI issues
-		playerStrike = false;
-
-		// Allow input and begin delayed flag display
-		waitingForInput = true;
-
-		Get().StartCoroutine(WaitAndPopFlag());
 	}
 
 	// Reset the parameters of the manager before setting up for a new round
@@ -301,7 +302,7 @@ public class BaseDuelManager : MonoBehaviour {
 	#region Delayed Routines
 
 	// Triggers the "game start" event after 2 second
-	public IEnumerator WaitAndStartRound() {
+	public virtual IEnumerator WaitAndStartRound() {
 
 		yield return new WaitForSeconds(2);
 
@@ -309,7 +310,7 @@ public class BaseDuelManager : MonoBehaviour {
 	}
 
 	// Displays the flag after a randomized wait time
-	public IEnumerator WaitAndPopFlag() {
+	public virtual IEnumerator WaitAndPopFlag() {
 
 		randomWait = Random.Range(4, 7);
 

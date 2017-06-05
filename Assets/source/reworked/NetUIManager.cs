@@ -5,9 +5,9 @@ using System.Collections;
 
 public class NetUIManager : BaseUIManager {
 
-	// Initialization
-	void Start() {
-		// Get required manager component
-		manager = GetComponent<BaseDuelManager>();
+	// Provide correct scene for post game
+	protected override void LeaveScene() {
+		EventManager.Nullify();
+		SceneManager.LoadScene(Globals.NetPostScene);
 	}
 }

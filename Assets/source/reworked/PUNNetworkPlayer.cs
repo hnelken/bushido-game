@@ -23,7 +23,7 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	private NetDuelManager DuelManager {
 		get {
 			if (!duelManager) {
-				duelManager = NetDuelManager.Get();
+				duelManager = (NetDuelManager)NetDuelManager.Get();
 			}
 			return duelManager;
 		}
