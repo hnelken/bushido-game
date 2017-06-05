@@ -8,12 +8,15 @@ public class NetPostGameManager : MonoBehaviour {
 	#region Public References
 
 	public Button Exit;							// The button element used to leave the post game scene
-	public GameObject RematchButton;			// The button element used to vote for a rematch
+
 	public Image LeftSamurai, RightSamurai;		// The left and right samurai image elements
+
+	public GameObject RematchButton;			// The button element used to vote for a rematch
 	public Text LeftWinner, RightWinner;		// The text elements used to indicate the winner of the match
 	public Text LeftWins, RightWins;			// The text elements displaying each player's number of wins
 	public Text LeftBest, RightBest;			// The text elements displaying each player's best reaction time
 	public Text MainText;						// The text element used to show the countdown to a rematch
+
 	public FadingShade Shade;					// The UI element used to fade in and out of scenes
 
 	#endregion
@@ -26,6 +29,7 @@ public class NetPostGameManager : MonoBehaviour {
 	private CountdownManager countdown;			// A private reference to the countdown manager for a potential rematch
 
 	private bool bothPlayersPresent;			// True when both players are present in the post game
+
 	private bool rematching;					// True when a rematch has been confirmed by both players
 	private bool exiting;						// True when a player is exiting the post game with no rematch
 
@@ -57,6 +61,11 @@ public class NetPostGameManager : MonoBehaviour {
 
 		// Clear ready status of both players
 		PUNNetworkPlayer.GetLocalPlayer().ClearReadyStatus();
+
+		// Update UI if any player left during the game
+		CheckForMissingPlayers();
+
+		// LEAVE ABOVE IN SUBCLASS
 
 		// Fill UI with stats from finished match
 		UpdateUIWithGameStats(BushidoMatchInfo.Get());
@@ -154,31 +163,6 @@ public class NetPostGameManager : MonoBehaviour {
 
 	}
 
-	private void UpdateUIWithGameStats(BushidoMatchInfo matchInfo) {
-		// Update UI if any player left during the game
-		CheckForMissingPlayers();
-
-		// Change UI to show number of wins for each player
-		int leftWins = matchInfo.Results.LeftWins;
-		int rightWins = matchInfo.Results.RightWins;
-		LeftWins.text = "" + leftWins;
-		RightWins.text = "" + rightWins;
-		if (leftWins > rightWins) {
-			LeftWinner.enabled = true;
-			RightWinner.enabled = false;
-		}
-		else {
-			LeftWinner.enabled = false;
-			RightWinner.enabled = true;
-		}
-
-		// Change UI to show the best reaction time of each player
-		int leftBest = matchInfo.Results.LeftBest;
-		int rightBest = matchInfo.Results.RightBest;
-		LeftBest.text = (leftBest == -1) ? "xx" : "" + leftBest;
-		RightBest.text = (rightBest == -1) ? "xx" : "" + rightBest;
-	}
-
 	private void CheckForMissingPlayers() {
 		// Hide any missing player's samurai
 		bool leftInRoom = false, rightInRoom = false;
@@ -210,6 +194,28 @@ public class NetPostGameManager : MonoBehaviour {
 		}
 	}
 
+	private void UpdateUIWithGameStats(BushidoMatchInfo matchInfo) {
+		// Change UI to show number of wins for each player
+		int leftWins = matchInfo.Results.LeftWins;
+		int rightWins = matchInfo.Results.RightWins;
+		LeftWins.text = "" + leftWins;
+		RightWins.text = "" + rightWins;
+		if (leftWins > rightWins) {
+			LeftWinner.enabled = true;
+			RightWinner.enabled = false;
+		}
+		else {
+			LeftWinner.enabled = false;
+			RightWinner.enabled = true;
+		}
+
+		// Change UI to show the best reaction time of each player
+		int leftBest = matchInfo.Results.LeftBest;
+		int rightBest = matchInfo.Results.RightBest;
+		LeftBest.text = (leftBest == -1) ? "xx" : "" + leftBest;
+		RightBest.text = (rightBest == -1) ? "xx" : "" + rightBest;
+	}
+
 	private void CheckForExit() {
 		if (exiting) {
 			exiting = false;
@@ -225,14 +231,14 @@ public class NetPostGameManager : MonoBehaviour {
 			PhotonNetwork.LoadLevel(Globals.NetDuelScene);
 		}
 	}
-		
-	private void StartLeavingScene() {
-		rematching = true;
-		Shade.Toggle();
-	}
 
 	private bool IsLeavingScene() {
 		return (exiting || rematching) && !Shade.IsHidden && !Shade.IsBusy;
+	}
+
+	private void StartLeavingScene() {
+		rematching = true;
+		Shade.Toggle();
 	}
 
 	#endregion
