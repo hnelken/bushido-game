@@ -12,7 +12,6 @@ public class BasePostGameManager : MonoBehaviour {
 	public Text LeftWins, RightWins; 				// The text elements showing the number of rounds won by each player
 	public Text LeftBest, RightBest;				// The text elements showing the best reaction time each player had
 	public Text MainText;							// The central text element used to display the countdown
-
 	public FadingShade Shade;						// The UI element used to fade in and out of the scene
 
 	#endregion
@@ -102,6 +101,11 @@ public class BasePostGameManager : MonoBehaviour {
 		}
 	}
 
+	protected void StartLeavingScene() {
+		leavingScene = true;
+		Shade.Toggle();
+	}
+
 	// Returns whether the scene should change this frame
 	protected bool IsLeavingScene() {
 		return leavingScene && !Shade.IsHidden && !Shade.IsBusy;
@@ -144,9 +148,8 @@ public class BasePostGameManager : MonoBehaviour {
 
 		// Check if countdown is over
 		if (countDown == 0) {
-			leavingScene = true;
 			rematching = true;
-			Shade.Toggle();
+			StartLeavingScene();
 		}
 		else {
 			// Not canceled or complete, continue count down
@@ -178,9 +181,8 @@ public class BasePostGameManager : MonoBehaviour {
 	public virtual void LeaveMatchPressed() {
 		Globals.Audio.PlayMenuSound();
 
-		leavingScene = true;
 		exiting = true;
-		Shade.Toggle();
+		StartLeavingScene();
 	}
 
 	#endregion

@@ -3,21 +3,12 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.Collections;
 
-public class NetPostGameManager : MonoBehaviour {
+public class NetPostGameManager : BasePostGameManager {
 
 	#region Public References
 
 	public Button Exit;							// The button element used to leave the post game scene
-
 	public Image LeftSamurai, RightSamurai;		// The left and right samurai image elements
-
-	public GameObject RematchButton;			// The button element used to vote for a rematch
-	public Text LeftWinner, RightWinner;		// The text elements used to indicate the winner of the match
-	public Text LeftWins, RightWins;			// The text elements displaying each player's number of wins
-	public Text LeftBest, RightBest;			// The text elements displaying each player's best reaction time
-	public Text MainText;						// The text element used to show the countdown to a rematch
-
-	public FadingShade Shade;					// The UI element used to fade in and out of scenes
 
 	#endregion
 
@@ -30,16 +21,13 @@ public class NetPostGameManager : MonoBehaviour {
 
 	private bool bothPlayersPresent;			// True when both players are present in the post game
 
-	private bool rematching;					// True when a rematch has been confirmed by both players
-	private bool exiting;						// True when a player is exiting the post game with no rematch
-
 	#endregion 
 
 
 	#region MonoBehaviour API
 
 	// Use this for initialization
-	void Start() {
+	public override void Start() {
 		// Initialize some UI
 		Shade.Initialize();
 
@@ -57,7 +45,7 @@ public class NetPostGameManager : MonoBehaviour {
 
 		// Setup countdown event block
 		CountdownManager.ResetReady += ShowRematchButton;
-		CountdownManager.CountdownComplete += StartLeavingScene;
+		CountdownManager.CountdownComplete += OnCountdownComplete;
 
 		// Clear ready status of both players
 		PUNNetworkPlayer.GetLocalPlayer().ClearReadyStatus();
@@ -65,17 +53,8 @@ public class NetPostGameManager : MonoBehaviour {
 		// Update UI if any player left during the game
 		CheckForMissingPlayers();
 
-		// LEAVE ABOVE IN SUBCLASS
-
 		// Fill UI with stats from finished match
 		UpdateUIWithGameStats(BushidoMatchInfo.Get());
-	}
-
-	void Update() {
-		if (IsLeavingScene()) {
-			CheckForRematch();
-			CheckForExit();
-		}
 	}
 
 	#endregion
@@ -119,7 +98,7 @@ public class NetPostGameManager : MonoBehaviour {
 		// Disconnect player and leave post game scene
 		PhotonNetwork.Disconnect();
 		exiting = true;
-		Shade.Toggle();
+		StartLeavingScene();
 	}
 
 	public void HidePopup() {
@@ -129,6 +108,20 @@ public class NetPostGameManager : MonoBehaviour {
 	public void ShowRematchButton() {
 		if (bothPlayersPresent) {
 			RematchButton.SetActive(true);
+		}
+	}
+
+	#endregion
+
+
+	#region Derived API
+
+	// Check if there will be a rematch when the scene changes
+	protected override void CheckForRematch() {
+		if (rematching) {
+			// Go back to local duel scene if not leaving match
+			rematching = false;
+			SceneManager.LoadScene(Globals.NetDuelScene);
 		}
 	}
 
@@ -194,51 +187,9 @@ public class NetPostGameManager : MonoBehaviour {
 		}
 	}
 
-	private void UpdateUIWithGameStats(BushidoMatchInfo matchInfo) {
-		// Change UI to show number of wins for each player
-		int leftWins = matchInfo.Results.LeftWins;
-		int rightWins = matchInfo.Results.RightWins;
-		LeftWins.text = "" + leftWins;
-		RightWins.text = "" + rightWins;
-		if (leftWins > rightWins) {
-			LeftWinner.enabled = true;
-			RightWinner.enabled = false;
-		}
-		else {
-			LeftWinner.enabled = false;
-			RightWinner.enabled = true;
-		}
-
-		// Change UI to show the best reaction time of each player
-		int leftBest = matchInfo.Results.LeftBest;
-		int rightBest = matchInfo.Results.RightBest;
-		LeftBest.text = (leftBest == -1) ? "xx" : "" + leftBest;
-		RightBest.text = (rightBest == -1) ? "xx" : "" + rightBest;
-	}
-
-	private void CheckForExit() {
-		if (exiting) {
-			exiting = false;
-			AudioManager.Get().BackToMenu();
-			BushidoMatchInfo.Get().EndMatch();
-			PhotonNetwork.LoadLevel(Globals.MainMenuScene);
-		}
-	}
-
-	private void CheckForRematch() {
-		if (rematching) {
-			rematching = false;
-			PhotonNetwork.LoadLevel(Globals.NetDuelScene);
-		}
-	}
-
-	private bool IsLeavingScene() {
-		return (exiting || rematching) && !Shade.IsHidden && !Shade.IsBusy;
-	}
-
-	private void StartLeavingScene() {
+	private void OnCountdownComplete() {
 		rematching = true;
-		Shade.Toggle();
+		StartLeavingScene();
 	}
 
 	#endregion
@@ -247,7 +198,7 @@ public class NetPostGameManager : MonoBehaviour {
 	#region Button Events
 
 	// Send rematch signal
-	public void RematchPressed() {
+	public override void RematchPressed() {
 		Globals.Audio.PlayMenuSound();
 
 		// Signal local player ready
@@ -257,7 +208,7 @@ public class NetPostGameManager : MonoBehaviour {
 	}
 
 	// Prepare to leave the match
-	public void LeaveMatchPressed() {
+	public override void LeaveMatchPressed() {
 		Globals.Audio.PlayMenuSound();
 
 		// Show popup for leaving match
