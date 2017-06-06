@@ -9,7 +9,7 @@ public class NetPostGameManager : BasePostGameManager {
 
 	public Button Exit;							// The button element used to leave the post game scene
 	public Image LeftSamurai, RightSamurai;		// The left and right samurai image elements
-
+	public Image LeftCheckbox, RightCheckbox;	// The left and right checkbox image elements
 	#endregion
 
 
@@ -41,7 +41,7 @@ public class NetPostGameManager : BasePostGameManager {
 
 		// Setup countdown reference
 		countdown = GetComponent<CountdownManager>();
-		countdown.Initialize(MainText);
+		countdown.Initialize(MainText, LeftCheckbox, RightCheckbox, true);
 
 		// Setup countdown event block
 		CountdownManager.ResetReady += ShowRematchButton;

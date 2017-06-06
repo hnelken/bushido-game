@@ -8,11 +8,11 @@ public class NetLobbyManager : MonoBehaviour {
 	#region Editor References
 
 	public Button Exit, NetReady;						// The exit button and the ready button elements
-	public Button LeftArrow, RightArrow;				// The left and right arrow button elements
-
 	public Image LeftSamurai, RightSamurai;				// The left and right samurai image elements
-
+	public Image LeftCheckbox, RightCheckbox;
 	public Text LeftText, RightText;					// The text element displaying the status of each player's presence in lobby
+
+	public Button LeftArrow, RightArrow;				// The left and right arrow button elements
 	public Text BestOfNumText;							// The text element displaying the number of matches to be played
 	public Text LobbyText;								// The text element displaying the status of the lobby
 
@@ -22,7 +22,7 @@ public class NetLobbyManager : MonoBehaviour {
 	#region Private Variables
 
 	// Component references
-	private PopupManager popup;						// The popup menu for leaving a lobby and requeuing for a game
+	private PopupManager popup;							// The popup menu for leaving a lobby and requeuing for a game
 	private PhotonView photonView;						// A reference to the photon view component used to make RPC calls
 	private CountdownManager countdown;					// A reference to the countdown manager component for beginning a match
 
@@ -49,12 +49,6 @@ public class NetLobbyManager : MonoBehaviour {
 
 		// Setup countdown reference
 		this.countdown = GetComponent<CountdownManager>();
-		this.countdown.Initialize(LobbyText);
-
-		// Setup countdown event blocks
-		CountdownManager.AllReady += SetMatchWinLimit;
-		CountdownManager.ResetReady += ShowInteractiveUI;
-		CountdownManager.CountdownComplete += LeaveForDuelScene;
 
 		// Setup PUN event listener
 		Globals.MatchMaker.InitializeForNewScene();
@@ -114,13 +108,13 @@ public class NetLobbyManager : MonoBehaviour {
 		
 	// Prepare the lobby menu for a network lobby
 	public void PrepareNetworkLobby(bool asHost) {
+		// Initialize countdown
+		InitializeCountdown();
+
 		// Initialize lobby settings if the host, client syncs automatically
 		if (asHost) {
 			// Initialize "best of" selector for all clients
 			SetBestOfIndexOnAllClients(1);
-
-			// Set both players as not ready
-			countdown.ClearReadyStatus();
 
 			// Set client as not present
 			clientInLobby = false;
@@ -213,6 +207,16 @@ public class NetLobbyManager : MonoBehaviour {
 
 	#region Private API
 
+	private void InitializeCountdown() {
+		this.countdown.Initialize(LobbyText, LeftCheckbox, RightCheckbox, true);
+		countdown.ClearReadyStatus();
+
+		// Setup countdown event blocks
+		CountdownManager.AllReady += SetMatchWinLimit;
+		CountdownManager.ResetReady += ShowInteractiveUI;
+		CountdownManager.CountdownComplete += LeaveForDuelScene;
+	}
+
 	private void HidePopup() {
 		ToggleUIInteractivity();
 	}
@@ -265,14 +269,10 @@ public class NetLobbyManager : MonoBehaviour {
 
 		// Increment or decrement the index with wraparound
 		if (minus) {
-			bestOfIndex = (bestOfIndex > 0) 
-				? bestOfIndex - 1 
-				: bestOfOptions.Length - 1;
+			bestOfIndex = (bestOfIndex > 0) ? bestOfIndex - 1 : bestOfOptions.Length - 1;
 		}
 		else {
-			bestOfIndex = (bestOfIndex < bestOfOptions.Length - 1) 
-				? bestOfIndex + 1 
-				: 0;
+			bestOfIndex = (bestOfIndex < bestOfOptions.Length - 1) ? bestOfIndex + 1 : 0;
 		}
 
 		// Update UI

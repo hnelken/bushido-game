@@ -6,11 +6,10 @@ public class LocalLobbyManager : MonoBehaviour {
 
 	#region Editor References
 
-	public Button LeftReady, RightReady;				// The left, right, and center ready button elements
-	public Button LeftArrow, RightArrow;				// The left and right arrow button elements
-
+	public Button LeftReady, RightReady;				// The left, right, and center ready button element
 	public Image LeftCheckbox, RightCheckbox;			// The left and right checkbox image elements
 
+	public Button LeftArrow, RightArrow;				// The left and right arrow button elements
 	public Text BestOfNumText;							// The text element displaying the number of matches to be played
 	public Text LobbyText;								// The text element displaying the status of the lobby
 
@@ -20,11 +19,11 @@ public class LocalLobbyManager : MonoBehaviour {
 	#region Private Variables
 
 	// Ready toggle variables
-	private bool leftReady, rightReady;					// True if a player has signalled they are ready to begin a match, false if not
+//	private bool leftReady, rightReady;					// True if a player has signalled they are ready to begin a match, false if not
 
 	// Countdown variables
-	private bool countingDown;							// True if the countdown to match start is active, false if not
-	private int countDown;								// The remaining number of seconds in the countdown
+//	private bool countingDown;							// True if the countdown to match start is active, false if not
+//	private int countDown;								// The remaining number of seconds in the countdown
 
 	// "Best of" variables
 	private int bestOfIndex = 1;						// The index in the array of options for the win limit
@@ -32,6 +31,9 @@ public class LocalLobbyManager : MonoBehaviour {
 		"3", "5", "7"
 	};
 
+	private CountdownManager countdown;					// A reference to the countdown manager component for beginning a match
+
+	/*
 	// The sprite for the checked box
 	private Sprite checkedBox;
 	private Sprite CheckedBox {
@@ -53,15 +55,17 @@ public class LocalLobbyManager : MonoBehaviour {
 			return uncheckedBox;
 		}
 	}
-
+	*/
 	#endregion
 
 
 	#region MonoBehaviour API
 
 	void Start() {
-		LeftCheckbox.sprite = UncheckedBox;
-		RightCheckbox.sprite = UncheckedBox;
+		//LeftCheckbox.sprite = UncheckedBox;
+		//RightCheckbox.sprite = UncheckedBox;
+		this.countdown = GetComponent<CountdownManager>();
+		InitializeCountdown();
 	}
 
 	#endregion
@@ -76,7 +80,28 @@ public class LocalLobbyManager : MonoBehaviour {
 	public void PrepareLocalLobby() {
 		bestOfIndex = 1;
 		UpdateBestOfText();
-		ClearReadyStatus();
+		ShowInteractiveUI();
+		InitializeCountdown();
+	}
+
+	// Called when both players are ready
+	public void OnAllPlayersReady() {
+		// Hide the game settings controls
+		HideInteractiveUI();
+
+		// Set the win limit in the game scene
+		BushidoMatchInfo.Get().SetMatchLimit(BestOfNumText.text);
+	}	
+
+	// Called when ready status is reset
+	public void ShowInteractiveUI() {
+		// Re-enable interactive UI
+		SetInteractiveUIVisible(true);
+	}
+
+	public void LeaveForDuelScene() {
+		Debug.Log("Leaving for duel scene");
+		Globals.Menu.LeaveForDuelScene();
 	}
 
 	#endregion
@@ -84,10 +109,34 @@ public class LocalLobbyManager : MonoBehaviour {
 
 	#region Private API
 
+	private void InitializeCountdown() {
+		this.countdown.Initialize(LobbyText, LeftCheckbox, RightCheckbox, false);
+		countdown.ClearReadyStatus();
+
+		// Setup countdown event blocks
+		CountdownManager.AllReady += OnAllPlayersReady;
+		CountdownManager.ResetReady += ShowInteractiveUI;
+		CountdownManager.CountdownComplete += LeaveForDuelScene;
+	}
+
+	// Disable use of the interactive UI
+	private void HideInteractiveUI() {
+		SetInteractiveUIVisible(false);
+	}
+
+	// Change visibility of the "best-of" selector and the ready button
+	private void SetInteractiveUIVisible(bool visible) {
+		LeftArrow.gameObject.SetActive(visible);
+		RightArrow.gameObject.SetActive(visible);
+		LeftReady.gameObject.SetActive(visible);
+		RightReady.gameObject.SetActive(visible);
+	}
+
 	// Change the current win limit selection
 	private void ChangeBestOfIndex(bool minus) {
 		// Changing match parameters resets ready status
-		ClearReadyStatus();
+		//ClearReadyStatus();
+		countdown.ClearReadyStatus();
 
 		// Increment or decrement the index with wraparound
 		if (minus) {
@@ -106,6 +155,7 @@ public class LocalLobbyManager : MonoBehaviour {
 		BestOfNumText.text = bestOfOptions[bestOfIndex];
 	}
 
+	/*
 	// Update the big text element that displays the countdown when leaving the lobby
 	private void UpdateLobbyText(int countdown) {
 		Debug.Log("Update countdown");
@@ -194,7 +244,7 @@ public class LocalLobbyManager : MonoBehaviour {
 			// Not finished, continue count down
 			StartCoroutine(CountDown());
 		}
-	}
+	}*/
 
 	#endregion
 
@@ -206,11 +256,12 @@ public class LocalLobbyManager : MonoBehaviour {
 		Globals.Audio.PlayMenuSound();
 
 		// Set host as ready
-		leftReady = true;
+		//leftReady = true;
+		countdown.SignalPlayerReady(true);
 
 		// Update UI
 		LeftReady.gameObject.SetActive(false);
-		UpdateLobbyReadyStatus();
+		//UpdateLobbyReadyStatus();
 	}
 
 	// Handle the local right-side player signalling ready
@@ -218,11 +269,12 @@ public class LocalLobbyManager : MonoBehaviour {
 		Globals.Audio.PlayMenuSound();
 
 		// Set client as ready
-		rightReady = true;
+		//rightReady = true;
+		countdown.SignalPlayerReady(false);
 
 		// Update UI
 		RightReady.gameObject.SetActive(false);
-		UpdateLobbyReadyStatus();
+		//UpdateLobbyReadyStatus();
 	}
 
 	// Handle the left arrow button being pressed
@@ -247,7 +299,7 @@ public class LocalLobbyManager : MonoBehaviour {
 
 		// Stop count down if it was in progress
 		LobbyText.enabled = false;
-		countingDown = false;
+		//countingDown = false;
 
 		// Exit the local lobby
 		Globals.Menu.ExitLocalLobby();

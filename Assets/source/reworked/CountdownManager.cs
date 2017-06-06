@@ -36,7 +36,7 @@ public class CountdownManager : MonoBehaviour {
 
 	#region Editor References
 
-	public Image LeftCheckbox, RightCheckbox;
+	//public Image leftCheckbox, rightCheckbox;
 
 	#endregion
 
@@ -44,8 +44,11 @@ public class CountdownManager : MonoBehaviour {
 	#region Private Variables
 
 	private Text countDownText;
+	private Image leftCheckbox, rightCheckbox;
+
 	private PhotonView photonView;
 	private bool leftReady, rightReady;
+	private bool networked;
 
 	// Countdown variables
 	private bool countingDown;							// True if the countdown to match start is active, false if not
@@ -90,15 +93,18 @@ public class CountdownManager : MonoBehaviour {
 	#region Public API
 
 	public void ShowControls(bool visible) {
-		LeftCheckbox.enabled = visible;
-		RightCheckbox.enabled = visible;
+		leftCheckbox.enabled = visible;
+		rightCheckbox.enabled = visible;
 	}
 
-	public void Initialize(Text countDownText) {
+	public void Initialize(Text countDownText, Image leftCheckbox, Image rightCheckbox, bool networked) {
 		AllReady = null;
 		ResetReady = null;
 		CountdownComplete = null;
 		this.countDownText = countDownText;
+		this.leftCheckbox = leftCheckbox;
+		this.rightCheckbox = rightCheckbox;
+		this.networked = networked;
 	}
 
 	public void SignalPlayerReady(bool left) {
@@ -109,7 +115,12 @@ public class CountdownManager : MonoBehaviour {
 			rightReady = true;
 		}
 
-		SyncReadyStatusOnAllClients();
+		if (networked) {
+			SyncReadyStatusOnAllClients();
+		}
+		else {
+			UpdateReadyStatus();
+		}
 	}
 
 	// Reset ready status of both players and refresh UI
@@ -123,18 +134,16 @@ public class CountdownManager : MonoBehaviour {
 		countingDown = false;
 		countDown = 5;
 
-		// Clear ready status on player objects
-		foreach (PUNNetworkPlayer player in PUNNetworkPlayer.GetAllPlayers()) {
-			player.ClearReadyStatus();
+		if (networked) {
+			// Clear ready status on player objects
+			foreach (PUNNetworkPlayer player in PUNNetworkPlayer.GetAllPlayers()) {
+				player.ClearReadyStatus();
+			}
 		}
 
 		// Update UI
 		UpdateReadyStatus();
 		TriggerResetReady();
-	}
-
-	public void HaltCountdownOnAllClients() {
-		photonView.RPC("SyncHaltCountdown", PhotonTargets.All);
 	}
 
 	public bool IsFinished() {
@@ -170,10 +179,9 @@ public class CountdownManager : MonoBehaviour {
 		countingDown = false;
 	}
 
-	#endregion
-
-
-	#region Private API
+	public void HaltCountdownOnAllClients() {
+		photonView.RPC("SyncHaltCountdown", PhotonTargets.All);
+	}
 
 	// Synchronize lobby settings for players just entering a network game
 	private void SyncReadyStatusOnAllClients() {
@@ -188,11 +196,16 @@ public class CountdownManager : MonoBehaviour {
 		photonView.RPC("SyncLeaveLobby", PhotonTargets.All);
 	}
 
+	#endregion
+
+
+	#region Private API
+
 	// Updates the lobby ready checkbox images based on player ready status
 	private void UpdateReadyStatus() {
 		// Update the checkbox images
-		LeftCheckbox.sprite = (leftReady) ? CheckedBox : UncheckedBox;
-		RightCheckbox.sprite = (rightReady) ? CheckedBox : UncheckedBox;
+		leftCheckbox.sprite = (leftReady) ? CheckedBox : UncheckedBox;
+		rightCheckbox.sprite = (rightReady) ? CheckedBox : UncheckedBox;
 
 		// Check if both players are ready
 		CheckReadyStatus();
@@ -205,14 +218,24 @@ public class CountdownManager : MonoBehaviour {
 			// Set the win limit in the game scene
 			TriggerAllReady();
 
-			if (PhotonNetwork.isMasterClient) {
-				// Begin countdown to game start
-				countDown = 5;								// Set countdown to 5
-				countingDown = true;						// Set countdown as active
-				SetCountDownTextOnAllClients(countDown);	// Update countdown UI
-				StartCoroutine(CountDown());				// Begin counting interval
+			if (networked) {
+				if (PhotonNetwork.isMasterClient) {
+					StartCountdown();
+				}
+			}
+			else {
+				StartCountdown();
 			}
 		}
+	}
+
+	private void StartCountdown() {
+		// Begin countdown to game start
+		countDown = 5;								// Set countdown to 5
+		countingDown = true;						// Set countdown as active
+
+		UpdateCountDownStatus();
+		StartCoroutine(CountDown());				// Begin counting interval
 	}
 
 	// Take a step in the countdown towards leaving the lobby
@@ -222,8 +245,18 @@ public class CountdownManager : MonoBehaviour {
 		// Check if the countdown was cancelled
 		if (countingDown) {
 			countDown -= 1;								// Decrement the countdown
-			SetCountDownTextOnAllClients(countDown);	// Update the countdown UI
+
+			UpdateCountDownStatus();
 			CheckCountDownStatus();						// Check if the countdown finished
+		}
+	}
+
+	private void UpdateCountDownStatus() {
+		if (networked) {
+			SetCountDownTextOnAllClients(countDown);	// Update countdown UI
+		}
+		else {
+			SetCountDownText(countDown);
 		}
 	}
 
@@ -231,7 +264,12 @@ public class CountdownManager : MonoBehaviour {
 	private void CheckCountDownStatus() {
 		// Check if countdown has expired
 		if (countDown == 0) {
-			LeaveMenuOnAllClients();
+			if (networked) {
+				LeaveMenuOnAllClients();
+			}
+			else {
+				TriggerCountdownComplete();
+			}
 		}
 		else {
 			// Not finished, continue count down
