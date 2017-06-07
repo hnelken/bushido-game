@@ -83,14 +83,18 @@ public class CountdownManager : MonoBehaviour {
 
 	void Start() {
 		photonView = GetComponent<PhotonView>();
-		countDownText.enabled = false;
-		countDown = 5;
+		HaltCountdown();
 	}
 
 	#endregion
 
 
 	#region Public API
+
+	public void HaltCountdown() {
+		countingDown = false;
+		countDown = 5;
+	}
 
 	public void ShowControls(bool visible) {
 		leftCheckbox.enabled = visible;
@@ -165,8 +169,8 @@ public class CountdownManager : MonoBehaviour {
 	}
 
 	[PunRPC]
-	void SyncCountDownText(int countDown) {
-		SetCountDownText(countDown);
+	void SyncCountDownText(int countDown, bool firstTime) {
+		SetCountDownText(countDown, firstTime);
 	}
 
 	[PunRPC]
@@ -176,7 +180,7 @@ public class CountdownManager : MonoBehaviour {
 
 	[PunRPC]
 	void SyncHaltCountdown() {
-		countingDown = false;
+		HaltCountdown();
 	}
 
 	public void HaltCountdownOnAllClients() {
@@ -188,8 +192,8 @@ public class CountdownManager : MonoBehaviour {
 		photonView.RPC("SyncReadyStatus", PhotonTargets.All, leftReady, rightReady);
 	}
 
-	private void SetCountDownTextOnAllClients(int countDown) {
-		photonView.RPC("SyncCountDownText", PhotonTargets.All, countDown);
+	private void SetCountDownTextOnAllClients(int countDown, bool firstTime) {
+		photonView.RPC("SyncCountDownText", PhotonTargets.All, countDown, firstTime);
 	}
 
 	private void LeaveMenuOnAllClients() {
@@ -233,8 +237,9 @@ public class CountdownManager : MonoBehaviour {
 		// Begin countdown to game start
 		countDown = 5;								// Set countdown to 5
 		countingDown = true;						// Set countdown as active
+		countDownText.enabled = true;
 
-		UpdateCountDownStatus();
+		UpdateCountDownStatus(true);
 		StartCoroutine(CountDown());				// Begin counting interval
 	}
 
@@ -246,17 +251,17 @@ public class CountdownManager : MonoBehaviour {
 		if (countingDown) {
 			countDown -= 1;								// Decrement the countdown
 
-			UpdateCountDownStatus();
+			UpdateCountDownStatus(false);
 			CheckCountDownStatus();						// Check if the countdown finished
 		}
 	}
 
-	private void UpdateCountDownStatus() {
+	private void UpdateCountDownStatus(bool firstTime) {
 		if (networked) {
-			SetCountDownTextOnAllClients(countDown);	// Update countdown UI
+			SetCountDownTextOnAllClients(countDown, firstTime);	// Update countdown UI
 		}
 		else {
-			SetCountDownText(countDown);
+			SetCountDownText(countDown, firstTime);
 		}
 	}
 
@@ -278,12 +283,13 @@ public class CountdownManager : MonoBehaviour {
 	}
 
 	// Sets the text element to display the countdown
-	private void SetCountDownText(int countdown) {
-		if (!countDownText.enabled) {
-			countDownText.enabled = true;
-		}
+	private void SetCountDownText(int countdown, bool firstTime) {
 		// Show countdown
 		countDownText.text = "Game starting in  " + countdown;
+
+		if (firstTime && !countDownText.enabled) {
+			countDownText.enabled = true;
+		}
 	}
 
 	#endregion

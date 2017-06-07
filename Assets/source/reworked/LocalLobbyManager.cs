@@ -299,6 +299,7 @@ public class LocalLobbyManager : MonoBehaviour {
 
 		// Stop count down if it was in progress
 		LobbyText.enabled = false;
+		countdown.HaltCountdown();
 		//countingDown = false;
 
 		// Exit the local lobby
