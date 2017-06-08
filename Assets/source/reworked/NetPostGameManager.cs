@@ -55,6 +55,7 @@ public class NetPostGameManager : BasePostGameManager {
 
 		// Fill UI with stats from finished match
 		UpdateUIWithGameStats(BushidoMatchInfo.Get());
+		
 	}
 
 	#endregion
