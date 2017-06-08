@@ -134,9 +134,11 @@ public class CountdownManager : MonoBehaviour {
 		rightReady = false;
 
 		// Reset countdown
-		countDownText.enabled = false;
-		countingDown = false;
-		countDown = 5;
+		if (countDownText) {
+			countDownText.enabled = false;
+			countingDown = false;
+			countDown = 5;
+		}
 
 		if (networked) {
 			// Clear ready status on player objects
@@ -208,8 +210,10 @@ public class CountdownManager : MonoBehaviour {
 	// Updates the lobby ready checkbox images based on player ready status
 	private void UpdateReadyStatus() {
 		// Update the checkbox images
-		leftCheckbox.sprite = (leftReady) ? CheckedBox : UncheckedBox;
-		rightCheckbox.sprite = (rightReady) ? CheckedBox : UncheckedBox;
+		if (leftCheckbox && rightCheckbox) {
+			leftCheckbox.sprite = (leftReady) ? CheckedBox : UncheckedBox;
+			rightCheckbox.sprite = (rightReady) ? CheckedBox : UncheckedBox;
+		}
 
 		// Check if both players are ready
 		CheckReadyStatus();

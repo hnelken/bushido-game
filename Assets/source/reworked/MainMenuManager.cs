@@ -84,6 +84,7 @@ public class MainMenuManager : MonoBehaviour {
 
 	// Manage UI to show a network lobby
 	public void ShowNetworkLobby(bool asHost) {
+		Debug.Log("ShowLobby");
 		PlayText.enabled = false;
 		ToggleNetworkLobby(asHost);
 	}
@@ -184,7 +185,7 @@ public class MainMenuManager : MonoBehaviour {
 	private void ToggleNetworkLobby(bool asHost) {
 		// Prepare network lobby if menu is not visible
 		if (!NetLobby.activeSelf) {
-			Globals.NetLobby.PrepareNetworkLobby(asHost);
+			Globals.NetLobby.PrepareLobby(asHost);
 		}
 		ToggleLobbyMenu();
 	}

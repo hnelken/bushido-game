@@ -36,28 +36,10 @@ public abstract class BaseLobbyManager : MonoBehaviour {
 	#endregion
 
 
-	#region Public API
-
-	public abstract void PrepareLobby();
-
-	// Called when ready status is reset
-	public void ShowInteractiveUI() {
-		// Re-enable interactive UI
-		SetInteractiveUIVisible(true);
-	}
-
-	#endregion
-
-
 	#region Private API
 
 	// Change visibility of the "best-of" selector and the ready button
 	protected abstract void SetInteractiveUIVisible(bool visible);
-
-	// Disable use of the interactive UI
-	protected void HideInteractiveUI() {
-		SetInteractiveUIVisible(false);
-	}
 		
 	// Initialize the countdown component with event listeners
 	protected void InitializeCountdown(bool networked) {

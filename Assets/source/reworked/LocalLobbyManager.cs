@@ -25,7 +25,7 @@ public class LocalLobbyManager : BaseLobbyManager {
 	// Called when both players are ready
 	protected override void OnAllPlayersReady() {
 		// Hide the game settings controls
-		HideInteractiveUI();
+		SetInteractiveUIVisible(false);
 
 		// Set the win limit in the game scene
 		BushidoMatchInfo.Get().SetMatchLimit(BestOfNumText.text);
@@ -34,10 +34,10 @@ public class LocalLobbyManager : BaseLobbyManager {
 	// Called when the ready status is reset
 	protected override void OnClearReadyStatus() {
 		// Show the ready buttons and win limit selector
-		ShowInteractiveUI();
+		SetInteractiveUIVisible(true);
 	}
 
-	// Called when the countdown has finished and the scene is being left
+	// Called when the countdown reaches zero
 	protected override void OnCountdownComplete() {
 		// Leave the scene and head to the duel
 		Globals.Menu.LeaveForDuelScene();
@@ -49,10 +49,10 @@ public class LocalLobbyManager : BaseLobbyManager {
 
 	#region Public API
 
-	public override void PrepareLobby() {
+	public void PrepareLobby() {
 		bestOfIndex = 1;
 		UpdateBestOfText();
-		ShowInteractiveUI();
+		SetInteractiveUIVisible(true);
 		InitializeCountdown(false);
 	}
 

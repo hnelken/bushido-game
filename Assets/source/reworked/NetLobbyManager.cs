@@ -3,18 +3,13 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
-public class NetLobbyManager : MonoBehaviour {
+public class NetLobbyManager : BaseLobbyManager {
 
 	#region Editor References
 
 	public Button Exit, NetReady;						// The exit button and the ready button elements
 	public Image LeftSamurai, RightSamurai;				// The left and right samurai image elements
-	public Image LeftCheckbox, RightCheckbox;			//
-	public Text LeftText, RightText;					// The text element displaying the status of each player's presence in lobby
-
-	public Button LeftArrow, RightArrow;				// The left and right arrow button elements
-	public Text BestOfNumText;							// The text element displaying the number of matches to be played
-	public Text LobbyText;								// The text element displaying the status of the lobby
+	public Text LeftText, RightText;					// The text elements displaying the player numbers
 
 	#endregion
 
@@ -24,31 +19,21 @@ public class NetLobbyManager : MonoBehaviour {
 	// Component references
 	private PopupManager popup;							// The popup menu for leaving a lobby and requeuing for a game
 	private PhotonView photonView;						// A reference to the photon view component used to make RPC calls
-	private CountdownManager countdown;					// A reference to the countdown manager component for beginning a match
 
 	// Lobby status variables
 	private List<PUNNetworkPlayer> players;				// The mutable list of players in the lobby
 	private bool hostInLobby, clientInLobby;			// True if the host/client is present in the lobby, false if not
 
-	// "Best of" variables
-	private int bestOfIndex = 1;						// The index in the array of options for the win limit
-	private string[] bestOfOptions =  {					// The array of options for the "best of" text
-		"3", "5", "7"
-	};
-
 	#endregion
 
 
-	#region Photon Behaviour API
+	#region Life Cycle API
 
-	// Use this for initialization
 	void Start() {
-		// Setup countdown reference
-		this.countdown = GetComponent<CountdownManager>();
-
-		// Set references
+		// Set component references
 		this.photonView = GetComponent<PhotonView>();
 		this.popup = GetComponent<PopupManager>();
+		this.countdown = GetComponent<CountdownManager>();
 
 		// Setup PUN event listener
 		Globals.MatchMaker.InitializeForNewScene();
@@ -100,12 +85,68 @@ public class NetLobbyManager : MonoBehaviour {
 	#endregion
 
 
+	#region Delegate Event Blocks
+
+	/**** COUNTDOWN EVENTS ****/
+
+	// Called when both players are ready
+	protected override void OnAllPlayersReady () {
+		// Set the win limit in the game scene
+		BushidoMatchInfo.Get().SetMatchLimit(BestOfNumText.text);
+	}
+
+	// Called when the ready status is reset
+	protected override void OnClearReadyStatus() {
+		if (!Globals.Menu.PlayText.enabled) {
+			// Re-enable interactive UI
+			SetInteractiveUIVisible(true);
+		}
+	}
+
+	// Called when the countdown reaches zero
+	protected override void OnCountdownComplete() {
+		if (PUNNetworkPlayer.GetAllPlayers().Length == 2) {
+			// Leave the lobby for the duel scene
+			Globals.Menu.LeaveForDuelScene();
+		}
+	}
+
+
+	/**** POPUP EVENTS ****/
+
+	// Called when a player OK's their opponent leaving the game
+	public void OnPlayerRequeueForGame() {
+		// Reenable interactive UI
+		SetUIInteractable(true);
+
+		// Exit lobby and requeue for another game
+		LeaveLobby(true);
+	}
+
+	// Called when a player acknowledges leaving the game
+	public void OnPlayerExitLobby() {
+		// Reenable interactive UI
+		SetUIInteractable(true);
+
+		// Exit back to main menu
+		LeaveLobby(false);
+	}
+
+	// Called when a player cancels leaving the game
+	public void CancelExitLobby() {
+		// Reenable interactive UI
+		SetUIInteractable(true);
+	}
+
+	#endregion
+
+
 	#region Public API
 		
-	// Prepare the lobby menu for a network lobby
-	public void PrepareNetworkLobby(bool asHost) {
-		// Initialize countdown
-		InitializeCountdown();
+	// Prepare the menu to display a network game lobby
+	public void PrepareLobby(bool asHost) {
+		// Initialize countdown component
+		InitializeCountdown(true);
 
 		// Initialize lobby settings if the host, client syncs automatically
 		if (asHost) {
@@ -121,7 +162,7 @@ public class NetLobbyManager : MonoBehaviour {
 			Globals.Menu.PlayText.enabled = true;
 
 			// Hide host UI until client joins
-			HideInteractiveUI();
+			SetInteractiveUIVisible(false);
 		}
 	}
 
@@ -154,72 +195,27 @@ public class NetLobbyManager : MonoBehaviour {
 	#endregion 
 
 
-	#region Delegate Event Blocks
-
-	// Called when countdown completes 
-	public void LeaveForDuelScene() {
-		if (PUNNetworkPlayer.GetAllPlayers().Length == 2) {
-			// Leave the lobby for the duel scene
-			Globals.Menu.LeaveForDuelScene();
-		}
-	}
-
-	// Called when ready status is reset
-	public void ShowInteractiveUI() {
-		if (!Globals.Menu.PlayText.enabled) {
-			// Re-enable interactive UI
-			SetInteractiveUIVisible(true);
-		}
-	}
-
-	// Called when both players are ready
-	public void SetMatchWinLimit() {
-		// Set the win limit in the game scene
-		BushidoMatchInfo.Get().SetMatchLimit(BestOfNumText.text);
-	}
-		
-	public void OnPlayerRequeueForGame() {
-		ToggleUIInteractivity();
-
-		// Exit lobby and requeue for another game
-		LeaveLobby(true);
-	}
-
-	public void OnPlayerExitLobby() {
-		// Close popup
-		HidePopup();
-
-		// Exit back to main menu
-		LeaveLobby(false);
-	}
-
-	public void CancelExitLobby() {
-		// Close popup
-		HidePopup();
-	}
-
-	#endregion
-
-
 	#region Private API
 
-	private void InitializeCountdown() {
-		this.countdown.Initialize(LobbyText, LeftCheckbox, RightCheckbox, true);
-		countdown.ClearReadyStatus();
-
-		// Setup countdown event blocks
-		CountdownManager.AllReady += SetMatchWinLimit;
-		CountdownManager.ResetReady += ShowInteractiveUI;
-		CountdownManager.CountdownComplete += LeaveForDuelScene;
+	// Change visibility of the selector arrows and the ready button
+	protected override void SetInteractiveUIVisible(bool visible) {
+		LeftArrow.gameObject.SetActive(visible);
+		RightArrow.gameObject.SetActive(visible);
+		NetReady.gameObject.SetActive(visible);
 	}
 
-	private void HidePopup() {
-		ToggleUIInteractivity();
+	// Change interact-ability of the selector arrows and the ready button
+	private void SetUIInteractable(bool interactable) {
+		LeftArrow.interactable = interactable;
+		RightArrow.interactable = interactable;
+		NetReady.interactable = interactable;
+		Exit.interactable = interactable;
 	}
 
+	// Initialize and display the popup based on cause
 	private void ShowPopup(bool manualExit) {
 		// Disable lobby interactive UI
-		ToggleUIInteractivity();
+		SetUIInteractable(false);
 
 		if (manualExit) {
 			// Reset the ready status and stop countdown if in progress
@@ -236,48 +232,6 @@ public class NetLobbyManager : MonoBehaviour {
 		else {
 			Debug.Log("finished: " + countdown.IsFinished());
 		}
-		
-	}
-
-	private void ToggleUIInteractivity() {
-		LeftArrow.interactable = !LeftArrow.interactable;
-		RightArrow.interactable = !RightArrow.interactable;
-		NetReady.interactable = !NetReady.interactable;
-		Exit.interactable = !Exit.interactable;
-	}
-
-	// Disable use of the interactive UI
-	private void HideInteractiveUI() {
-		SetInteractiveUIVisible(false);
-	}
-
-	// Change visibility of the "best-of" selector and the ready button
-	private void SetInteractiveUIVisible(bool visible) {
-		LeftArrow.gameObject.SetActive(visible);
-		RightArrow.gameObject.SetActive(visible);
-		NetReady.gameObject.SetActive(visible);
-	}
-
-	// Change the current win limit selection
-	private void ChangeBestOfIndex(bool minus) {
-		// Changing match parameters resets ready status
-		countdown.ClearReadyStatus();
-
-		// Increment or decrement the index with wraparound
-		if (minus) {
-			bestOfIndex = (bestOfIndex > 0) ? bestOfIndex - 1 : bestOfOptions.Length - 1;
-		}
-		else {
-			bestOfIndex = (bestOfIndex < bestOfOptions.Length - 1) ? bestOfIndex + 1 : 0;
-		}
-
-		// Update UI
-		UpdateBestOfText();
-	}
-
-	// Updates "best of" text from index in options array
-	private void UpdateBestOfText() {
-		BestOfNumText.text = bestOfOptions[bestOfIndex];
 	}
 
 	// Updates the samurai image elements based on presence of players
@@ -314,7 +268,7 @@ public class NetLobbyManager : MonoBehaviour {
 				
 				// Hide "waiting for player" text
 				Globals.Menu.PlayText.enabled = false;
-				ShowInteractiveUI();
+				SetInteractiveUIVisible(true);
 			}
 		}
 		else {	// Show UI for client
@@ -324,11 +278,11 @@ public class NetLobbyManager : MonoBehaviour {
 
 	// Leave the lobby for the main menu or to find a different game
 	private void LeaveLobby(bool playerLeft) {
-		
 		// Stop count down if it was in progress
 		LobbyText.enabled = false;
 		countdown.HaltCountdownOnAllClients();
 
+		// Check the reason for leaving
 		if (playerLeft) {
 			// Close the lobby and look for another game
 			Globals.Menu.RequeueForGame();
@@ -349,7 +303,7 @@ public class NetLobbyManager : MonoBehaviour {
 		Globals.Audio.PlayMenuSound();
 
 		// Hide "best of" selector arrows for local player
-		HideInteractiveUI();
+		SetInteractiveUIVisible(false);
 
 		// Signal local player ready
 		PUNNetworkPlayer.GetLocalPlayer().SetAsReady();
