@@ -193,7 +193,7 @@ public class MainMenuManager : MonoBehaviour {
 	private void ToggleLocalLobby() {
 		// Prepare local lobby if menu is not visible
 		if (!LocalLobby.activeSelf) {
-			Globals.LocalLobby.PrepareLocalLobby();
+			Globals.LocalLobby.PrepareLobby();
 		}
 		ToggleLobbyMenu();
 	}

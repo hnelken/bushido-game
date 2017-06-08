@@ -9,7 +9,7 @@ public class NetLobbyManager : MonoBehaviour {
 
 	public Button Exit, NetReady;						// The exit button and the ready button elements
 	public Image LeftSamurai, RightSamurai;				// The left and right samurai image elements
-	public Image LeftCheckbox, RightCheckbox;
+	public Image LeftCheckbox, RightCheckbox;			//
 	public Text LeftText, RightText;					// The text element displaying the status of each player's presence in lobby
 
 	public Button LeftArrow, RightArrow;				// The left and right arrow button elements
@@ -43,12 +43,12 @@ public class NetLobbyManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start() {
+		// Setup countdown reference
+		this.countdown = GetComponent<CountdownManager>();
+
 		// Set references
 		this.photonView = GetComponent<PhotonView>();
 		this.popup = GetComponent<PopupManager>();
-
-		// Setup countdown reference
-		this.countdown = GetComponent<CountdownManager>();
 
 		// Setup PUN event listener
 		Globals.MatchMaker.InitializeForNewScene();
@@ -101,10 +101,6 @@ public class NetLobbyManager : MonoBehaviour {
 
 
 	#region Public API
-
-	public static PUNLobbyManager Get() {
-		return FindObjectOfType<PUNLobbyManager>();
-	}
 		
 	// Prepare the lobby menu for a network lobby
 	public void PrepareNetworkLobby(bool asHost) {
