@@ -7,9 +7,11 @@ public class NetPostGameManager : BasePostGameManager {
 
 	#region Public References
 
-	public Button Exit;							// The button element used to leave the post game scene
-	public Image LeftSamurai, RightSamurai;		// The left and right samurai image elements
-	public Image LeftCheckbox, RightCheckbox;	// The left and right checkbox image elements
+	public Button Exit;								// The button element used to leave the post game scene
+	public Image LeftSamurai, RightSamurai;			// The left and right samurai image elements
+	public Image LeftCheckbox, RightCheckbox;		// The left and right checkbox image elements
+	public Text LeftPlayerText, RightPlayerText;	// The left and right player name text elements
+
 	#endregion
 
 
@@ -46,6 +48,14 @@ public class NetPostGameManager : BasePostGameManager {
 		// Setup countdown event block
 		CountdownManager.ResetReady += ShowRematchButton;
 		CountdownManager.CountdownComplete += OnCountdownComplete;
+
+		// Set player name text
+		if (Globals.LocalPlayerIsHost) {
+			LeftPlayerText.text = "You";
+		}
+		else {
+			RightPlayerText.text = "You";
+		}
 
 		// Clear ready status of both players
 		PUNNetworkPlayer.GetLocalPlayer().ClearReadyStatus();

@@ -257,6 +257,17 @@ public class NetLobbyManager : BaseLobbyManager {
 		// Set the lobby text to show presence of each player
 		LeftText.enabled = hostInLobby;
 		RightText.enabled = clientInLobby;
+
+		UpdatePlayerText();
+	}
+
+	private void UpdatePlayerText() {
+		if (Globals.LocalPlayerIsHost) {
+			LeftText.text = "You";
+		}
+		else {
+			RightText.text = "You";
+		}
 	}
 
 	// Check for UI changes due to players entering the lobby

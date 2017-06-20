@@ -108,6 +108,26 @@ public class BaseUIManager : MonoBehaviour {
 		}
 	}
 
+	protected Text leftPlayerText;
+	public Text LeftPlayerText {
+		get {
+			if (!leftPlayerText) {
+				leftPlayerText = GameObject.Find("LeftCount").GetComponent<Text>();
+			}
+			return leftPlayerText;
+		}
+	}
+
+	protected Text rightPlayerText;
+	public Text RightPlayerText {
+		get {
+			if (!rightPlayerText) {
+				rightPlayerText = GameObject.Find("RightCount").GetComponent<Text>();
+			}
+			return rightPlayerText;
+		}
+	}
+
 	#endregion
 
 
@@ -135,6 +155,14 @@ public class BaseUIManager : MonoBehaviour {
 		// Set idle positions based on initial image positions
 		leftIdlePosition = LeftSamurai.rectTransform.anchoredPosition;
 		rightIdlePosition = RightSamurai.rectTransform.anchoredPosition;
+
+		// Set player names at top
+		if (Globals.LocalPlayerIsHost) {
+			LeftPlayerText.text = "You";
+		}
+		else {
+			RightPlayerText.text = "You";
+		}
 
 		// Disable some UI elements for the start of the round
 		MainText.enabled = false;
