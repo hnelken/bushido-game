@@ -6,7 +6,7 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 
 	#region Public Accessors
 
-	public bool IsHost { get { return isHost; } }
+	//public bool IsHost { get { return isHost; } }
 	public bool IsReady { get { return isReady; } }
 
 	#endregion
@@ -15,7 +15,7 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	#region Private Variables
 
 	private bool inGame;					// True if this player is in a game
-	private bool isHost;					// True if this player created the current room
+	//private bool isHost;					// True if this player created the current room
 	private bool isReady;					// True if this player is ready to leave the lobby
 	private bool inputReceived;				// True if input has been received this round during gameplay
 
@@ -52,20 +52,20 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 			int reactionTime = DuelManager.GetCurrentTime();
 
 			// Call reaction RPC to trigger input on all clients
-			photonView.RPC("TriggerReaction", PhotonTargets.All, isHost, reactionTime);
+			photonView.RPC("TriggerReaction", PhotonTargets.All, IsPlayerHost(), reactionTime);
 		}
 	}
 
 	// Sync this component on all clients
 	public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info) {
 		if (stream.isWriting) {
-			stream.SendNext(isHost);
+			//stream.SendNext(isHost);
 			stream.SendNext(isReady);
 			stream.SendNext(inGame);
 			stream.SendNext(inputReceived);
 		}
 		else {
-			this.isHost = (bool) stream.ReceiveNext();
+			//this.isHost = (bool) stream.ReceiveNext();
 			this.isReady = (bool) stream.ReceiveNext();
 			this.inGame = (bool) stream.ReceiveNext();
 			this.inputReceived = (bool) stream.ReceiveNext();
@@ -77,9 +77,9 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 
 	#region Public API
 		
-	public static bool LocalPlayerIsHost() {
-		return PhotonNetwork.isMasterClient;
-	}
+	//public static bool LocalPlayerIsHost() {
+	//	return PhotonNetwork.isMasterClient;
+	//}
 
 	public static PUNNetworkPlayer GetLocalPlayer() {
 		foreach (PUNNetworkPlayer player in GetAllPlayers()) {
@@ -128,9 +128,9 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	}
 
 	// Set this player as host
-	public void SetAsHost() {
-		this.isHost = true;
-	}
+	//public void SetAsHost() {
+	//	this.isHost = true;
+	//}
 
 	// Set this player as in-game
 	public void LeaveLobby() {
@@ -141,6 +141,10 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 
 
 	#region Private API
+
+	private bool IsPlayerHost() {
+		return Globals.IsNetPlayerHost(this);
+	}
 
 	// Checks for touch input beginning this frame
 	private bool TouchInput() {

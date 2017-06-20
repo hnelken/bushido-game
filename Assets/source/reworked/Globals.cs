@@ -8,6 +8,16 @@ public class Globals : MonoBehaviour {
 	public static string LocalPostScene = "LocalPostGame";
 	public static string NetDuelScene = "NetworkDuel-Fix";
 	public static string NetPostScene = "NetPostGame";
+	public static bool LocalPlayerIsHost;
+
+	public static bool IsNetPlayerHost(PUNNetworkPlayer player) {
+		if (player.photonView.isMine) {
+			return LocalPlayerIsHost;
+		}
+		else {
+			return !LocalPlayerIsHost;
+		}
+	}
 
 	// Safe reference to the PUN match maker
 	private static PUNQuickPlay matchMaker;

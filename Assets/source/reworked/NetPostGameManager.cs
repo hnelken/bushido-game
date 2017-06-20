@@ -161,7 +161,7 @@ public class NetPostGameManager : BasePostGameManager {
 		// Hide any missing player's samurai
 		bool leftInRoom = false, rightInRoom = false;
 		foreach (PUNNetworkPlayer player in PUNNetworkPlayer.GetAllPlayers()) {
-			if (player.IsHost) {
+			if (Globals.IsNetPlayerHost(player)) {//player.IsHost) {
 				leftInRoom = true;
 			}
 			else {

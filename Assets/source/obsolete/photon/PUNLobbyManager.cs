@@ -179,7 +179,7 @@ public class PUNLobbyManager : MonoBehaviour {
 	public void UpdateLobbyUI() {
 		// Get lobby info from player objects
 		foreach (PUNNetworkPlayer player in players) {
-			if (player.IsHost) {
+			if (Globals.IsNetPlayerHost(player)) {//player.IsHost) {
 				hostInLobby = true;
 				hostReady = player.IsReady;
 			}

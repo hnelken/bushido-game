@@ -78,6 +78,7 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 	// Called when there are no rooms to join immediately
 	public override void OnPhotonRandomJoinFailed(object[] codeAndMsg) {
 		// Must create a room, player will be the host
+		Globals.LocalPlayerIsHost = true;
 		this.playerIsHost = true;
 		PhotonNetwork.CreateRoom(null);
 	}
@@ -92,9 +93,9 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 		thisPlayer.enabled = true;
 
 		// Set the player as host or client
-		if (this.playerIsHost) {
-			thisPlayer.SetAsHost();
-		}
+		//if (this.playerIsHost) {
+			//thisPlayer.SetAsHost();
+		//}
 
 		// Signal to the lobby that a player has entered
 		StartCoroutine(WaitAndShowLobby());
@@ -108,7 +109,7 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 		thisPlayer.EnterLobby();
 
 		// Show the lobby for the local player
-		Globals.Menu.ShowNetworkLobby(thisPlayer.IsHost);
+		Globals.Menu.ShowNetworkLobby(Globals.IsNetPlayerHost(thisPlayer));
 	}
 
 	public void QuickPlay() {
@@ -116,6 +117,7 @@ public class PUNQuickPlay : Photon.PunBehaviour {
 
 		// Try quickly joining a random room as client
 		this.playerIsHost = false;
+		Globals.LocalPlayerIsHost = false;
 		PhotonNetwork.JoinRandomRoom();
 	}
 

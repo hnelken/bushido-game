@@ -241,7 +241,7 @@ public class NetLobbyManager : BaseLobbyManager {
 			clientInLobby = false;
 			// Get lobby info from player objects
 			foreach (PUNNetworkPlayer player in players) {
-				if (player.IsHost) {
+				if (Globals.IsNetPlayerHost(player)) {//player.IsHost) {
 					hostInLobby = true;
 				}
 				else {
