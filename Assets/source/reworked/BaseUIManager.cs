@@ -272,11 +272,14 @@ public class BaseUIManager : MonoBehaviour {
 	}
 
 	// Returns the display name of the player that caused the given result
-	protected string GetPlayerString(bool roundWon) {
+	protected string GetPlayerString() {
 		// Get the players name depending if the left or right player caused the result
-		return (manager.LeftPlayerCausedResult()) 
-			? manager.LeftSamurai.DisplayName 
-				: manager.RightSamurai.DisplayName;
+		if (manager.LeftPlayerCausedResult()) {
+			return (Globals.LocalPlayerIsHost) ? "You" : manager.LeftSamurai.DisplayName;
+		}
+		else {
+			return (Globals.LocalPlayerIsHost) ? manager.RightSamurai.DisplayName : "You";
+		}
 	}
 
 	// Sets both samurai image elements to given positions
@@ -342,7 +345,7 @@ public class BaseUIManager : MonoBehaviour {
 		ShowPlayerLoss(false);
 
 		// Set the main text element to reflect early strike
-		string player = GetPlayerString(false);
+		string player = GetPlayerString();
 		MainText.text = player + " struck too early!";
 		MainText.enabled = true;
 	}
@@ -362,8 +365,8 @@ public class BaseUIManager : MonoBehaviour {
 			ShowPlayerLoss(true);
 
 			// Set main text element to reflect round win
-			string player = GetPlayerString(true);
-			MainText.text = player + " wins!";
+			string player = GetPlayerString();
+			MainText.text = player + " won the round!";
 		}
 
 		MainText.enabled = true;
@@ -394,8 +397,8 @@ public class BaseUIManager : MonoBehaviour {
 	// Displays UI representing a match win
 	protected void ShowMatchWin() {
 		// Set main text element to reflect match win
-		string player = GetPlayerString(true);
-		MainText.text = player + " wins the match!";
+		string player = GetPlayerString();
+		MainText.text = player + " won the match!";
 		MainText.enabled = true;
 	}
 
