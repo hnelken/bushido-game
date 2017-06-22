@@ -246,7 +246,7 @@ public class BaseDuelManager : MonoBehaviour {
 		EventManager.TriggerGameStrike();
 
 		// Check if either player exceeds the strike limit (strikes out)
-		if (LeftSamurai.StrikeOut(strikeLimit, RightSamurai)) {
+		if (LeftSamurai.StrikeOut(strikeLimit)) {
 			// Change the result to be a win
 			// Left player struck out, right player gets a win
 			leftPlayerCausedResult = false;
@@ -254,7 +254,7 @@ public class BaseDuelManager : MonoBehaviour {
 			// Show resulting winner after a delay
 			Get().StartCoroutine(WaitAndShowResult(false, true));
 		}
-		else if (RightSamurai.StrikeOut(strikeLimit, LeftSamurai)) {
+		else if (RightSamurai.StrikeOut(strikeLimit)) {
 			// Change the result to be a win
 			// Right player struck out, left player gets a win
 			leftPlayerCausedResult = true;

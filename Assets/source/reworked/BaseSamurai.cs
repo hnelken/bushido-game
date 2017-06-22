@@ -79,7 +79,7 @@ public class BaseSamurai : MonoBehaviour {
 	}
 
 	// Returns whether a player has struck out following the last round
-	public bool StrikeOut(int strikeLimit, BaseSamurai opponent) {
+	public bool StrikeOut(int strikeLimit) {
 		// Player's strike count must reach limit to strike out
 		return strikeCount >= strikeLimit;
 	}
