@@ -61,6 +61,7 @@ public class BaseDuelManager : MonoBehaviour {
 		EventManager.GameStart += BeginRound;
 		EventManager.GameReset += ResetGame;
 
+		Debug.Log("Waiting for round start");
 		Get().StartCoroutine(WaitAndStartRound());
 	}
 
@@ -263,6 +264,7 @@ public class BaseDuelManager : MonoBehaviour {
 			Get().StartCoroutine(WaitAndShowResult(false, true));
 		}
 		else {
+			Debug.Log("Waiting to restart round after strike");
 			// Neither player struck out, just reset round
 			Get().StartCoroutine(WaitAndRestartGame());
 		}
@@ -306,6 +308,7 @@ public class BaseDuelManager : MonoBehaviour {
 
 		yield return new WaitForSeconds(2);
 
+		Debug.Log("Starting round");
 		TriggerGameStart();
 	}
 
@@ -363,6 +366,7 @@ public class BaseDuelManager : MonoBehaviour {
 	public IEnumerator WaitAndRestartGame() {
 		yield return new WaitForSeconds(4);
 
+		Debug.Log("Restarting round");
 		// Checks if either player has won the match after this round
 		if (MatchWon()) {
 			// Trigger the "match win" event

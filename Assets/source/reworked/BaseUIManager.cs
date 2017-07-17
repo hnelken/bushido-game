@@ -173,7 +173,6 @@ public class BaseUIManager : MonoBehaviour {
 		Flash.enabled = false;
 
 		// Set event listeners
-		EventManager.GameStart += Shade.Toggle;
 		EventManager.GameReset += ClearForNewRound;
 		EventManager.GameOver += ShowMatchWin;
 		EventManager.GameResult += ShowResult;
@@ -191,11 +190,10 @@ public class BaseUIManager : MonoBehaviour {
 
 		// Handle shade animation
 		if (Shade.IsHidden) {
-			// Do nothing
-		}
-		else if (roundStart) {
-			roundStart = false;
-			EventManager.TriggerGameStart();
+			if (roundStart) {
+				roundStart = false;
+				EventManager.TriggerGameStart();
+			}
 		}
 		else if (roundEnd) {
 			roundEnd = false;
