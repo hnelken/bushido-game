@@ -6,8 +6,8 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 
 	#region Public Accessors
 
-	//public bool IsHost { get { return isHost; } }
-	public bool IsReady { get { return isReady; } }
+	public bool IsReadyForMatchStart { get { return isReadyForMatchStart; } }
+	public bool IsReadyForRoundStart { get { return isReadyForRoundStart; } }
 
 	#endregion
 
@@ -15,9 +15,9 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	#region Private Variables
 
 	private bool inGame;					// True if this player is in a game
-	//private bool isHost;					// True if this player created the current room
-	private bool isReady;					// True if this player is ready to leave the lobby
 	private bool inputReceived;				// True if input has been received this round during gameplay
+	private bool isReadyForMatchStart;		// True if this player is ready to leave the lobby
+	private bool isReadyForRoundStart;		// True if this player is ready for the round to begin
 
 	private NetDuelManager duelManager;
 	private NetDuelManager DuelManager {
@@ -59,16 +59,16 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	// Sync this component on all clients
 	public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info) {
 		if (stream.isWriting) {
-			//stream.SendNext(isHost);
-			stream.SendNext(isReady);
 			stream.SendNext(inGame);
 			stream.SendNext(inputReceived);
+			stream.SendNext(isReadyForMatchStart);
+			stream.SendNext(isReadyForRoundStart);
 		}
 		else {
-			//this.isHost = (bool) stream.ReceiveNext();
-			this.isReady = (bool) stream.ReceiveNext();
 			this.inGame = (bool) stream.ReceiveNext();
 			this.inputReceived = (bool) stream.ReceiveNext();
+			this.isReadyForMatchStart = (bool) stream.ReceiveNext();
+			this.isReadyForRoundStart = (bool) stream.ReceiveNext();
 		}
 	}
 
@@ -103,10 +103,11 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 		}
 	}
 
-	public static void ResetInputForBothPlayers() {
+	public static void ResetBothPlayersForNewRound() {
 		// Set each player to be in game
 		foreach (PUNNetworkPlayer player in GetAllPlayers()) {
 			player.ResetInput();
+			player.ClearRoundReadyStatus();
 		}
 	}
 
@@ -119,12 +120,21 @@ public class PUNNetworkPlayer : Photon.MonoBehaviour {
 	}
 
 	// Set this player as ready and 
-	public void SetAsReady() {
-		this.isReady = true;
+	public void SetAsReadyForRoundStart() {
+		this.isReadyForRoundStart = true;
 	}
 
-	public void ClearReadyStatus() {
-		this.isReady = false;
+	public void ClearRoundReadyStatus() {
+		this.isReadyForRoundStart = false;
+	}
+
+	// Set this player as ready and 
+	public void SetAsReadyForMatchStart() {
+		this.isReadyForMatchStart = true;
+	}
+
+	public void ClearMatchReadyStatus() {
+		this.isReadyForMatchStart = false;
 	}
 
 	// Set this player as host

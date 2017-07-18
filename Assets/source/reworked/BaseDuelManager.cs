@@ -41,7 +41,7 @@ public class BaseDuelManager : MonoBehaviour {
 	protected int reactTime;									// The time at which the first valid input was received
 	protected int tieTime;									// The time at which the potentially tying input was received
 	protected int currTime;									// The current synchronized time elapsed this round
-	protected int maxTime = 100;								// The time limit for a round to be called before player input
+	protected int maxTime = 100;							// The time limit for a round to be called before player input
 
 	#endregion
 
@@ -61,8 +61,7 @@ public class BaseDuelManager : MonoBehaviour {
 		EventManager.GameStart += BeginRound;
 		EventManager.GameReset += ResetGame;
 
-		Debug.Log("Waiting for round start");
-		Get().StartCoroutine(WaitAndStartRound());
+		Get().StartCoroutine(WaitAndSetupRound());
 	}
 
 	public void Update() {
@@ -187,6 +186,11 @@ public class BaseDuelManager : MonoBehaviour {
 
 	#region Private API
 
+	protected virtual void SetupRound() {
+		Debug.Log("Starting round");
+		TriggerGameStart();
+	}
+
 	protected void RecordReactionTime(bool leftSamurai, int time) {
 		if (leftSamurai) {
 			LeftSamurai.RecordReactionTime(time);
@@ -228,7 +232,7 @@ public class BaseDuelManager : MonoBehaviour {
 		currTime = 0;
 
 		// Start delayed wait before round start
-		Get().StartCoroutine(WaitAndStartRound());
+		Get().StartCoroutine(WaitAndSetupRound());
 	}
 
 	// Signal that a player's input was too early
@@ -303,15 +307,6 @@ public class BaseDuelManager : MonoBehaviour {
 
 	#region Delayed Routines
 
-	// Triggers the "game start" event after 2 second
-	public virtual IEnumerator WaitAndStartRound() {
-
-		yield return new WaitForSeconds(2);
-
-		Debug.Log("Starting round");
-		TriggerGameStart();
-	}
-
 	// Displays the flag after a randomized wait time
 	public virtual IEnumerator WaitAndPopFlag() {
 
@@ -323,6 +318,14 @@ public class BaseDuelManager : MonoBehaviour {
 		if (!playerStrike) {
 			PopFlag();
 		}
+	}
+
+	// Triggers the "game start" event after 2 second
+	public IEnumerator WaitAndSetupRound() {
+
+		yield return new WaitForSeconds(1);
+
+		SetupRound();
 	}
 
 	public IEnumerator WaitAndShowReaction(bool leftSamurai) {

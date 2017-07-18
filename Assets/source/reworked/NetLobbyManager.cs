@@ -317,7 +317,7 @@ public class NetLobbyManager : BaseLobbyManager {
 		SetInteractiveUIVisible(false);
 
 		// Signal local player ready
-		PUNNetworkPlayer.GetLocalPlayer().SetAsReady();
+		PUNNetworkPlayer.GetLocalPlayer().SetAsReadyForMatchStart();
 		countdown.SignalPlayerReady(PhotonNetwork.isMasterClient);
 	}
 

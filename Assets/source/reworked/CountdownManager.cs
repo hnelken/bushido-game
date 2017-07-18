@@ -143,7 +143,7 @@ public class CountdownManager : MonoBehaviour {
 		if (networked) {
 			// Clear ready status on player objects
 			foreach (PUNNetworkPlayer player in PUNNetworkPlayer.GetAllPlayers()) {
-				player.ClearReadyStatus();
+				player.ClearMatchReadyStatus();
 			}
 		}
 

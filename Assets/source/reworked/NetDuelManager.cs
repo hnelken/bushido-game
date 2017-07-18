@@ -7,6 +7,7 @@ public class NetDuelManager : BaseDuelManager {
 	private PopupManager popup;								// The popup manager component for this scene
 	private PhotonView photonView;							// The photon view used to make rpc's
 
+	private bool leftPlayerReady, rightPlayerReady;
 	private bool paused;									// True if the game is paused, false if not
 
 	#region MonoBehaviour API
@@ -33,7 +34,8 @@ public class NetDuelManager : BaseDuelManager {
 		EventManager.GameStart += BeginRound;
 		EventManager.GameReset += ResetGame;
 
-		Get().StartCoroutine(WaitAndStartRound());
+		//SetupRound();
+		Get().StartCoroutine(WaitAndSetupRound());
 	}
 
 	#endregion
@@ -88,8 +90,7 @@ public class NetDuelManager : BaseDuelManager {
 
 	public override void TriggerGameStart() {
 		// Begin to allow input from both players
-		PUNNetworkPlayer.ResetInputForBothPlayers();
-
+		PUNNetworkPlayer.ResetBothPlayersForNewRound();
 		GUI.ToggleShadeForRoundStart();
 		AudioManager.Get().StartMusic();
 	}
@@ -109,14 +110,26 @@ public class NetDuelManager : BaseDuelManager {
 
 	// Enables input and begins the randomly timed wait before popping the flag
 	public override void BeginRound() {
-		// Delayed negation of strike status to avoid UI issues
-		playerStrike = false;
 
-		// Allow input and begin delayed flag display
-		waitingForInput = true;
+		// Set local player as ready to begin the round
+		PUNNetworkPlayer localPlayer = PUNNetworkPlayer.GetLocalPlayer();
+		if (!localPlayer.IsReadyForRoundStart) {
+			localPlayer.SetAsReadyForRoundStart();
+		}
 
-		if (PhotonNetwork.isMasterClient) {
-			SetRandomWaitTimeOnAllClients(Random.Range(4, 7));
+		if (ReadyToStartRound(PUNNetworkPlayer.GetAllPlayers())) {
+			// Delayed negation of strike status to avoid UI issues
+			playerStrike = false;
+
+			// Allow input and begin delayed flag display
+			waitingForInput = true;
+
+			if (PhotonNetwork.isMasterClient) {
+				SetRandomWaitTimeOnAllClients(Random.Range(4, 7));
+			}
+		}
+		else {
+			Get().StartCoroutine(WaitAndStartRound());
 		}
 	}
 
@@ -133,6 +146,32 @@ public class NetDuelManager : BaseDuelManager {
 
 
 	#region Private API
+
+	protected override void SetupRound() {
+		// Check that both players are still present at start of round
+		if (PUNNetworkPlayer.GetAllPlayers().Length != 2) {
+			Debug.Log("Missing players");
+
+			// Players are missing, pause the game if not already paused
+			if (!paused) {
+				// Pause and show popup
+				PauseAndShowPopup();
+			}
+		}
+		else if (PhotonNetwork.isMasterClient) {
+			// Synchronize round start
+			TriggerGameStartOnAllClients();
+		}
+	}
+
+	private bool ReadyToStartRound(PUNNetworkPlayer[] players) {
+		foreach (PUNNetworkPlayer player in players) {
+			if (!player.IsReadyForRoundStart) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 	private void PauseAndShowPopup() {
 		paused = true;
@@ -151,27 +190,6 @@ public class NetDuelManager : BaseDuelManager {
 
 	#region Delayed Routines
 
-	// Triggers the "game start" event after 2 second
-	public override IEnumerator WaitAndStartRound() {
-
-		yield return new WaitForSeconds(2);
-
-		// Check that both players are still present at start of round
-		if (PUNNetworkPlayer.GetAllPlayers().Length != 2) {
-			Debug.Log("Missing players");
-
-			// Players are missing, pause the game if not already paused
-			if (!paused) {
-				// Pause and show popup
-				PauseAndShowPopup();
-			}
-		}
-		else if (PhotonNetwork.isMasterClient) {
-			// Synchronize round start
-			TriggerGameStartOnAllClients();
-		}
-	}
-
 	// Displays the flag after a randomized wait time
 	public override IEnumerator WaitAndPopFlag() {
 
@@ -183,6 +201,13 @@ public class NetDuelManager : BaseDuelManager {
 				PopFlagOnAllClients();
 			}
 		}
+	}
+
+	public IEnumerator WaitAndStartRound() {
+
+		yield return new WaitForSeconds(1);
+
+		BeginRound();
 	}
 
 	#endregion

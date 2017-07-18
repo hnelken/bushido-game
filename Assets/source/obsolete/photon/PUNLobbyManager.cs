@@ -181,11 +181,11 @@ public class PUNLobbyManager : MonoBehaviour {
 		foreach (PUNNetworkPlayer player in players) {
 			if (Globals.IsNetPlayerHost(player)) {//player.IsHost) {
 				hostInLobby = true;
-				hostReady = player.IsReady;
+				hostReady = player.IsReadyForMatchStart;
 			}
 			else {
 				clientInLobby = true;
-				clientReady = player.IsReady;
+				clientReady = player.IsReadyForMatchStart;
 			}
 		}
 
@@ -263,7 +263,7 @@ public class PUNLobbyManager : MonoBehaviour {
 		clientReady = false;
 
 		foreach (PUNNetworkPlayer player in this.players) {
-			player.ClearReadyStatus();
+			player.ClearMatchReadyStatus();
 		}
 
 		// Best-of selector arrows become available again
@@ -409,7 +409,7 @@ public class PUNLobbyManager : MonoBehaviour {
 		LeftArrow.gameObject.SetActive(false);
 		RightArrow.gameObject.SetActive(false);
 
-		PUNNetworkPlayer.GetLocalPlayer().SetAsReady();
+		PUNNetworkPlayer.GetLocalPlayer().SetAsReadyForMatchStart();
 		OnPlayerSignalReady();
 	}
 

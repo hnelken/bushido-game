@@ -58,7 +58,7 @@ public class NetPostGameManager : BasePostGameManager {
 		}
 
 		// Clear ready status of both players
-		PUNNetworkPlayer.GetLocalPlayer().ClearReadyStatus();
+		PUNNetworkPlayer.GetLocalPlayer().ClearMatchReadyStatus();
 
 		// Update UI if any player left during the game
 		CheckForMissingPlayers();
@@ -214,7 +214,7 @@ public class NetPostGameManager : BasePostGameManager {
 
 		// Signal local player ready
 		RematchButton.SetActive(false);
-		PUNNetworkPlayer.GetLocalPlayer().SetAsReady();
+		PUNNetworkPlayer.GetLocalPlayer().SetAsReadyForMatchStart();
 		countdown.SignalPlayerReady(PhotonNetwork.isMasterClient);
 	}
 
