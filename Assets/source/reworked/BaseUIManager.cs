@@ -8,6 +8,7 @@ public class BaseUIManager : MonoBehaviour {
 	#region Public References
 
 	public Color blueColor, yellowColor;
+	public bool networked;
 
 	// The sprite for the checked box
 	protected Sprite idleSprite;
@@ -157,13 +158,15 @@ public class BaseUIManager : MonoBehaviour {
 		rightIdlePosition = RightSamurai.rectTransform.anchoredPosition;
 
 		// Set player names at top
-		if (Globals.LocalPlayerIsHost) {
-			LeftPlayerText.text = "You";
+		if (networked) {
+			if (Globals.LocalPlayerIsHost) {
+				LeftPlayerText.text = "You";
+			}
+			else {
+				RightPlayerText.text = "You";
+			}
 		}
-		else {
-			RightPlayerText.text = "You";
-		}
-
+				
 		// Disable some UI elements for the start of the round
 		MainText.enabled = false;
 		Flag.enabled = false;
@@ -273,10 +276,20 @@ public class BaseUIManager : MonoBehaviour {
 	protected string GetPlayerString() {
 		// Get the players name depending if the left or right player caused the result
 		if (manager.LeftPlayerCausedResult()) {
-			return (Globals.LocalPlayerIsHost) ? "You" : manager.LeftSamurai.DisplayName;
+			if (networked && Globals.LocalPlayerIsHost) {
+				return "You";
+			}
+			else {
+				return manager.LeftSamurai.DisplayName;
+			}
 		}
 		else {
-			return (Globals.LocalPlayerIsHost) ? manager.RightSamurai.DisplayName : "You";
+			if (networked && !Globals.LocalPlayerIsHost) {
+				return "You";
+			}
+			else {
+				return manager.RightSamurai.DisplayName;
+			}
 		}
 	}
 
