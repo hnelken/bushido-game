@@ -3,6 +3,11 @@ using System.Collections;
 
 public class SoloDuelManager : BaseDuelManager {
 
+	#region Private Variables
+
+	private Difficulty[] difficulties = new Difficulty[] {
+		Difficulty.SLOW, Difficulty.NORMAL, Difficulty.FAST
+	};
 
 	private int[] timesToBeat =	new int[] {
 		32, 26, 20,		// Slow reactions
@@ -10,71 +15,47 @@ public class SoloDuelManager : BaseDuelManager {
 		20, 14, 8		// Fast reactions
 	};
 		
-	private enum Difficulty {
-		SLOW = 1, 
-		NORMAL = 4, 
-		FAST = 7
+	public enum Difficulty {
+		SLOW = 0, 
+		NORMAL = 3, 
+		FAST = 6
 	}
 
 	private Difficulty currentDifficulty;
 	private int currentLevel;
-	private int timeToBeat;
 
-	// Use this for initialization
-	void Start () {
-		currentDifficulty = Difficulty.NORMAL;
-		currentLevel = 1;
-		SetTimeToBeat();
+	#endregion
+
+
+	#region Private API
+
+	protected override void SetupMatch() {
+		SetMatchDifficulty(BushidoMatchInfo.Get().SoloDifficulty);
+		UpdateMatchSettings(-1);
 	}
 
-	public override void TriggerReaction (bool leftSamurai, int reactionTime) {
-		// Check if the input is valid
-		if (waitingForInput) {
-
-			// Check if the player was early or not
-			if (flagPopped) {
-				// Stop the updating of the timer UI element
-				GUI.StopTimer(reactionTime);
-
-				// Hide the "!" flag
-				GUI.ToggleFlag();
-
-				// Flash a white screen
-				GUI.ShowFlash();
-
-				// Flag was out, reaction counts. Save reaction time.
-				reactTime = reactionTime;
-				flagPopped = false;
-
-				// Set all further input as tying input and wait to call the round.
-				waitingForInput = false;
-				waitingForTie = true;
-
-				// Compare time against samurai's current best
-				RecordReactionTime(leftSamurai, reactionTime);
-
-				Get().StartCoroutine(WaitAndShowReaction(leftSamurai));
-			}
-			else {
-				// The flag was not out, input is a strike.
-				TriggerStrike(leftSamurai);
-			}
+	protected void SetMatchDifficulty(int difficulty) {
+		if (difficulty > 0 && difficulty < 3) {
+			currentDifficulty = difficulties[difficulty];
 		}
-		// Check if input counts as a tie
-		else if (GetCurrentTime() > timeToBeat) {//waitingForTie) {
-			// Get time of tying reaction
-			tieTime = reactionTime;
-			waitingForTie = false;
-			tyingInput = true;
-
-			// Compare time against samurai's current best
-			RecordReactionTime(leftSamurai, reactionTime);
+		else {
+			Debug.Log("ERROR: Invalid difficulty");
 		}
 	}
 
-	private void SetTimeToBeat() {
-		Debug.Log((int)currentDifficulty);
-		timeToBeat = timesToBeat[(int)currentDifficulty + currentLevel];
+	protected void UpdateMatchSettings(int level) {
+		currentLevel = level + 1;
+		maxTime = timesToBeat[(int)currentDifficulty + currentLevel];
+		maxTime += (int)Random.Range(-2, 2);
 	}
 
+	protected override void CheckForTimeout () {
+		if (currTime >= maxTime) {
+
+			// Trigger NPC reaction
+			TriggerReaction(false, maxTime);
+		}
+	}
+
+	#endregion
 }

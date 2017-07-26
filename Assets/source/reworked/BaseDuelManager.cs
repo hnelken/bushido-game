@@ -49,15 +49,14 @@ public class BaseDuelManager : MonoBehaviour {
 	#region MonoBehaviour API
 
 	// Initialization
-	public virtual void Awake() {
-
-		// Get match limit from match info
-		winLimit = BushidoMatchInfo.Get().MatchLimit;
+	public void Awake() {
+		SetupMatch();
 
 		LeftSamurai.SetManager(this);
 		RightSamurai.SetManager(this);
 
 		// Set event listeners
+		EventManager.Nullify();
 		EventManager.GameStart += BeginRound;
 		EventManager.GameReset += ResetGame;
 
@@ -186,21 +185,17 @@ public class BaseDuelManager : MonoBehaviour {
 
 	#region Private API
 
+	protected virtual void SetupMatch() {
+		// Get match limit from match info
+		winLimit = BushidoMatchInfo.Get().MatchLimit;
+	}
+
 	protected virtual void SetupRound() {
 		Debug.Log("Starting round");
 		TriggerGameStart();
 	}
 
-	protected void RecordReactionTime(bool leftSamurai, int time) {
-		if (leftSamurai) {
-			LeftSamurai.RecordReactionTime(time);
-		}
-		else {
-			RightSamurai.RecordReactionTime(time);
-		}
-	}
-
-	protected void CheckForTimeout() {
+	protected virtual void CheckForTimeout() {
 		if (currTime >= maxTime) {
 			AudioManager.Get().PlayStrikeSound();
 
@@ -214,6 +209,15 @@ public class BaseDuelManager : MonoBehaviour {
 			// Show round result and prepare to restart game
 			EventManager.TriggerGameResult();
 			Get().StartCoroutine(WaitAndRestartGame());
+		}
+	}
+
+	protected void RecordReactionTime(bool leftSamurai, int time) {
+		if (leftSamurai) {
+			LeftSamurai.RecordReactionTime(time);
+		}
+		else {
+			RightSamurai.RecordReactionTime(time);
 		}
 	}
 

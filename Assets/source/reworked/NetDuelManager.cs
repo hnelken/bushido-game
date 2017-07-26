@@ -10,36 +10,6 @@ public class NetDuelManager : BaseDuelManager {
 	private bool leftPlayerReady, rightPlayerReady;
 	private bool paused;									// True if the game is paused, false if not
 
-	#region MonoBehaviour API
-
-	// Initialization
-	public override void Awake() {
-
-		this.photonView = GetComponent<PhotonView>();
-		this.popup = GetComponent<PopupManager>();
-
-		// Setup PUN event listener
-		Globals.MatchMaker.InitializeForNewScene();
-		PUNQuickPlay.Disconnect += PauseAndShowPopup;
-
-		// Get match limit from match info
-		winLimit = BushidoMatchInfo.Get().MatchLimit;
-
-		// Set reference for samurai info objects
-		LeftSamurai.SetManager(this);
-		RightSamurai.SetManager(this);
-
-		// Clean and setup event listeners
-		EventManager.Nullify();
-		EventManager.GameStart += BeginRound;
-		EventManager.GameReset += ResetGame;
-
-		//SetupRound();
-		Get().StartCoroutine(WaitAndSetupRound());
-	}
-
-	#endregion
-
 
 	#region Photon RPC's
 
@@ -146,6 +116,18 @@ public class NetDuelManager : BaseDuelManager {
 
 
 	#region Private API
+
+	protected override void SetupMatch () {
+		this.photonView = GetComponent<PhotonView>();
+		this.popup = GetComponent<PopupManager>();
+
+		// Setup PUN event listener
+		Globals.MatchMaker.InitializeForNewScene();
+		PUNQuickPlay.Disconnect += PauseAndShowPopup;
+
+		// Get match limit from match info
+		winLimit = BushidoMatchInfo.Get().MatchLimit;
+	}
 
 	protected override void SetupRound() {
 		// Check that both players are still present at start of round

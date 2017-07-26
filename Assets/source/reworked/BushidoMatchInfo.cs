@@ -3,6 +3,14 @@ using System.Collections;
 
 public class BushidoMatchInfo : MonoBehaviour {
 
+	// The selected difficulty level of a solo game
+	private int soloDifficulty;
+	public int SoloDifficulty {
+		get {
+			return soloDifficulty;
+		}
+	}
+
 	// The last match limit set in a lobby
 	private int matchLimit;
 	public int MatchLimit {
@@ -27,6 +35,10 @@ public class BushidoMatchInfo : MonoBehaviour {
 
 	public void EndMatch() {
 		Destroy(gameObject);
+	}
+
+	public void SetSinglePlayerSettings(int difficulty) {
+		soloDifficulty = difficulty;
 	}
 
 	public void SetMatchLimit(string limitText) {
