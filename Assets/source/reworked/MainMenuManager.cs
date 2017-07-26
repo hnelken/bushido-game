@@ -204,6 +204,12 @@ public class MainMenuManager : MonoBehaviour {
 
 	#region ButtonEvents
 
+	// Open the solo game lobby
+	public void OnSoloGameSelect() {
+		Globals.Audio.PlayMenuSound();
+		localLobbyOpen = false;
+	}
+
 	// Open the local game lobby
 	public void OnLocalGameSelect() {
 		Globals.Audio.PlayMenuSound();

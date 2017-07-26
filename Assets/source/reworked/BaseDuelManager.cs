@@ -84,7 +84,7 @@ public class BaseDuelManager : MonoBehaviour {
 
 	// Signal a player reaction during a round
 	// - leftSamurai: A boolean representing which player triggered this event
-	public void TriggerReaction(bool leftSamurai, int reactionTime) {
+	public virtual void TriggerReaction(bool leftSamurai, int reactionTime) {
 		// Check if the input is valid
 		if (waitingForInput){
 
@@ -139,7 +139,7 @@ public class BaseDuelManager : MonoBehaviour {
 
 		Get().StartCoroutine(WaitAndPopFlag());
 	}
-		
+
 	// Starts the reaction timer and shows the flag image
 	public virtual void PopFlag() {
 		// No strike, record time of flag pop and start timer
@@ -153,7 +153,7 @@ public class BaseDuelManager : MonoBehaviour {
 
 		AudioManager.Get().PlayPopSound();
 	}
-		
+
 	public virtual void TriggerGameStart() {
 		GUI.ToggleShadeForRoundStart();
 		AudioManager.Get().StartMusic();
@@ -301,7 +301,7 @@ public class BaseDuelManager : MonoBehaviour {
 		return LeftSamurai.WinCount > winLimit / 2
 			|| RightSamurai.WinCount > winLimit / 2;
 	}
-		
+
 	#endregion
 
 
