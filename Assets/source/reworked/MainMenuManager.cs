@@ -7,12 +7,12 @@ public class MainMenuManager : MonoBehaviour {
 
 	#region Public References
 
-	public Text TitleText;							// The title text element
-	public GlowingText PlayText;					// The glowing "tap-to-play" text element
-	public FadingShade Shade;						// The black image used for fading in and out of scenes
+	public Text TitleText;									// The title text element
+	public GlowingText PlayText;							// The glowing "tap-to-play" text element
+	public FadingShade Shade;								// The black image used for fading in and out of scenes
 
-	public GameObject MultiPlayMenu;				// The parent objects for the multiplayer menu
-	public GameObject LocalLobby, NetLobby;			// The parent objects for the lobby menus
+	public GameObject MultiPlayMenu;						// The parent objects for the multiplayer menu
+	public GameObject SoloLobby, LocalLobby, NetLobby;		// The parent objects for the lobby menus
 
 	#endregion
 
@@ -199,6 +199,13 @@ public class MainMenuManager : MonoBehaviour {
 		ToggleLobbyMenu();
 	}
 
+	private void ToggleSoloLobby() {
+		if (!SoloLobby.activeSelf) {
+			Globals.SoloLobby.PrepareLobby();
+		}
+		ToggleLobbyMenu();
+	}
+
 	#endregion
 
 
@@ -208,6 +215,9 @@ public class MainMenuManager : MonoBehaviour {
 	public void OnSoloGameSelect() {
 		Globals.Audio.PlayMenuSound();
 		localLobbyOpen = false;
+
+		TogglePlayMenu();
+		ToggleSoloLobby();
 	}
 
 	// Open the local game lobby

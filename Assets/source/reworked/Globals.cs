@@ -4,6 +4,7 @@ using System.Collections;
 public class Globals : MonoBehaviour {
 
 	public static string MainMenuScene = "Menu-Fix";
+	public static string SoloDuelScene = "SoloDuel";
 	public static string LocalDuelScene = "LocalDuel-Fix";
 	public static string LocalPostScene = "LocalPostGame";
 	public static string NetDuelScene = "NetworkDuel-Fix";
@@ -38,6 +39,16 @@ public class Globals : MonoBehaviour {
 				menu = Get().GetComponent<MainMenuManager>();
 			}
 			return menu;
+		}
+	}
+
+	private static SoloLobbyManager soloLobby;
+	public static SoloLobbyManager SoloLobby {
+		get {
+			if (!soloLobby) {
+				soloLobby = Get().GetComponent<SoloLobbyManager>();
+			}
+			return soloLobby;
 		}
 	}
 

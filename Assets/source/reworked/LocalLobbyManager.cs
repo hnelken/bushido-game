@@ -42,8 +42,7 @@ public class LocalLobbyManager : BaseLobbyManager {
 		// Leave the scene and head to the duel
 		Globals.Menu.LeaveForDuelScene();
 	}
-
-
+		
 	#endregion
 
 
