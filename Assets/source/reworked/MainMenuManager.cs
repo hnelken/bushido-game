@@ -176,7 +176,7 @@ public class MainMenuManager : MonoBehaviour {
 
 	// Toggle visibility of lobby menu
 	private void ToggleLobbyMenu() {
-		GameObject lobbyMenu = (localLobbyOpen) ? LocalLobby : NetLobby;
+		GameObject lobbyMenu = (localLobbyOpen) ? LocalLobby : SoloLobby; // NetLobby
 		TitleText.gameObject.SetActive(lobbyMenu.activeSelf);
 		lobbyMenu.SetActive(!lobbyMenu.activeSelf);
 	}
