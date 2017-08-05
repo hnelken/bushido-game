@@ -35,7 +35,7 @@ public class SoloDuelManager : BaseDuelManager {
 	}
 
 	protected void SetMatchDifficulty(int difficulty) {
-		if (difficulty > 0 && difficulty < 3) {
+		if (difficulty >= 0 && difficulty < 3) {
 			currentDifficulty = difficulties[difficulty];
 		}
 		else {

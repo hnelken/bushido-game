@@ -20,7 +20,7 @@ public class SoloLobbyManager : MonoBehaviour {
 
 	private int colorIndex;
 	private Color[] colorOptions = {
-		Color.blue, Color.yellow, Color.white, Color.red, Color.magenta, Color.green, Color.cyan
+		Color.cyan, Color.yellow, Color.white, Color.red, Color.magenta, Color.green, Color.blue
 	};
 	private int speedIndex;
 	private string[] speedOptions = {
@@ -67,7 +67,12 @@ public class SoloLobbyManager : MonoBehaviour {
 	#region Public API
 
 	public void PrepareLobby() {
-
+		colorIndex = 0;
+		speedIndex = 1;
+		UpdateSpeedText();
+		UpdatePlayerColor();
+		SetInteractiveUIVisible(true);
+		InitializeCountdown();
 	}
 
 	#endregion
@@ -76,7 +81,7 @@ public class SoloLobbyManager : MonoBehaviour {
 	#region Private API
 
 	protected void InitializeCountdown() {
-		//this.countdown.Initialize(CountdownText, LeftCheckbox, RightCheckbox, networked);
+		this.countdown.Initialize(CountdownText, null, null, false);
 		countdown.ClearReadyStatus();
 
 		// Setup countdown event blocks
@@ -87,8 +92,11 @@ public class SoloLobbyManager : MonoBehaviour {
 
 	// Change visibility of the "best-of" selector and the ready button
 	protected void SetInteractiveUIVisible(bool visible) {
-		//LeftArrow.gameObject.SetActive(visible);
-		//RightArrow.gameObject.SetActive(visible);
+		LeftColorButton.SetActive(visible);
+		RightColorButton.SetActive(visible);
+		LeftSpeedButton.SetActive(visible);
+		RightSpeedButton.SetActive(visible);
+		SoloReadyButton.SetActive(visible);
 	}
 
 	// Change the current win limit selection
@@ -159,6 +167,26 @@ public class SoloLobbyManager : MonoBehaviour {
 	public void OnSpeedRightPressed() {
 		Globals.Audio.PlayMenuSound();
 		ChangeSpeedIndex(false);
+	}
+
+	// Handle starting the solo game
+	public void OnSoloReadyPressed() {
+		Globals.Audio.PlayMenuSound();
+
+		countdown.SignalPlayerReady(true);
+		countdown.SignalPlayerReady(false);
+	}
+
+	// Handle the lobby exit button being pressed
+	public void OnLobbyExit() {
+		Globals.Audio.PlayMenuSound();
+
+		// Stop count down if it was in progress
+		CountdownText.enabled = false;
+		countdown.HaltCountdown();
+
+		// Exit the local lobby
+		Globals.Menu.ExitLocalLobby();
 	}
 
 	#endregion

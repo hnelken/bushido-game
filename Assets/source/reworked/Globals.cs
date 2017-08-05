@@ -2,7 +2,7 @@
 using System.Collections;
 
 public class Globals : MonoBehaviour {
-
+	
 	public static string MainMenuScene = "Menu-Fix";
 	public static string SoloDuelScene = "SoloDuel";
 	public static string LocalDuelScene = "LocalDuel-Fix";
