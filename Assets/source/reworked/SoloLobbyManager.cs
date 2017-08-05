@@ -23,9 +23,9 @@ public class SoloLobbyManager : MonoBehaviour {
 		Color.cyan, Color.yellow, Color.white, Color.red, Color.magenta, Color.green, Color.blue
 	};
 	private int speedIndex;
-	private string[] speedOptions = {
-		"SLOW", "NORMAL", "FAST"
-	};
+	//private string[] speedOptions = {
+//		"SLOW", "NORMAL", "FAST"
+//	};
 	private CountdownManager countdown;
 
 	#endregion
@@ -101,7 +101,7 @@ public class SoloLobbyManager : MonoBehaviour {
 
 	// Change the current win limit selection
 	protected void ChangeSpeedIndex(bool minus) {
-		speedIndex = ChangeIndex(speedIndex, speedOptions.Length, minus);
+		speedIndex = ChangeIndex(speedIndex, Globals.Difficulties.Length, minus);
 		UpdateSpeedText();
 	}
 
@@ -136,7 +136,7 @@ public class SoloLobbyManager : MonoBehaviour {
 
 	// Updates player color on the lobby
 	protected void UpdateSpeedText() {
-		GameSpeedText.text = speedOptions[speedIndex];
+		GameSpeedText.text = Globals.Difficulties[speedIndex].ToString();
 	}
 	
 	// Updates difficulty text on the lobby

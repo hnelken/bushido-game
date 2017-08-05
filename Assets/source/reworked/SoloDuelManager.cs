@@ -5,23 +5,13 @@ public class SoloDuelManager : BaseDuelManager {
 
 	#region Private Variables
 
-	private Difficulty[] difficulties = new Difficulty[] {
-		Difficulty.SLOW, Difficulty.NORMAL, Difficulty.FAST
-	};
-
 	private int[] timesToBeat =	new int[] {
 		32, 26, 20,		// Slow reactions
 		26, 20, 14,		// Normal reactions
 		20, 14, 8		// Fast reactions
 	};
 		
-	public enum Difficulty {
-		SLOW = 0, 
-		NORMAL = 3, 
-		FAST = 6
-	}
-
-	private Difficulty currentDifficulty;
+	private Globals.Difficulty currentDifficulty;
 	private int currentLevel;
 
 	#endregion
@@ -36,7 +26,18 @@ public class SoloDuelManager : BaseDuelManager {
 
 	protected void SetMatchDifficulty(int difficulty) {
 		if (difficulty >= 0 && difficulty < 3) {
-			currentDifficulty = difficulties[difficulty];
+			currentDifficulty = Globals.Difficulties[difficulty];
+			switch (currentDifficulty) {
+			case Globals.Difficulty.SLOW:
+				winLimit = 3;
+				break;
+			case Globals.Difficulty.NORMAL:
+				winLimit = 5;
+				break;
+			case Globals.Difficulty.FAST:
+				winLimit = 7;
+				break;
+			}
 		}
 		else {
 			Debug.Log("ERROR: Invalid difficulty");

@@ -11,6 +11,16 @@ public class Globals : MonoBehaviour {
 	public static string NetPostScene = "NetPostGame";
 	public static bool LocalPlayerIsHost;
 
+	public enum Difficulty {
+		SLOW = 0, 
+		NORMAL = 3, 
+		FAST = 6
+	}
+
+	public static Difficulty[] Difficulties = new Difficulty[] {
+		Difficulty.SLOW, Difficulty.NORMAL, Difficulty.FAST
+	};
+
 	public static bool IsNetPlayerHost(PUNNetworkPlayer player) {
 		if (player.photonView.isMine) {
 			return LocalPlayerIsHost;
