@@ -285,7 +285,7 @@ public class BaseDuelManager : MonoBehaviour {
 			LeftSamurai.BestTime, RightSamurai.BestTime,
 			true);
 
-		GUI.ToggleShadeForMatchEnd();
+		GUI.ToggleShadeForMatchEnd(false);
 	}
 
 	protected void UpdateCurrentTime() {
@@ -370,7 +370,7 @@ public class BaseDuelManager : MonoBehaviour {
 	}
 
 	// Resets for a new round after 4 seconds
-	public IEnumerator WaitAndRestartGame() {
+	public virtual IEnumerator WaitAndRestartGame() {
 		yield return new WaitForSeconds(4);
 
 		Debug.Log("Restarting round");

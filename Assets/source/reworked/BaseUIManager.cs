@@ -138,6 +138,7 @@ public class BaseUIManager : MonoBehaviour {
 	protected BaseDuelManager manager;							// The required duel manager component
 
 	protected bool timing;										// True if the timer is active, false otherwise
+	protected bool newLevel;
 	protected bool roundStart, roundEnd, matchEnd;				// Status variables that are true depending on the state of the duel
 	protected bool flashFadingOut, flashShouldFade;				// Status variables governing the animation of the white flash
 
@@ -145,7 +146,7 @@ public class BaseUIManager : MonoBehaviour {
 
 	#endregion
 
-	#region MonoBehaviour API
+	#region Unity Lifecycle API
 
 	// Initialization
 	void Start() {
@@ -204,7 +205,14 @@ public class BaseUIManager : MonoBehaviour {
 		}
 		else if (matchEnd) {
 			matchEnd = false;
-			LeaveScene();
+			if (newLevel) {
+				newLevel = false;
+				manager.
+				EventManager.TriggerGameReset();
+			}
+			else {
+				LeaveScene();
+			}
 		}
 	}
 
@@ -257,7 +265,8 @@ public class BaseUIManager : MonoBehaviour {
 		Shade.Toggle();
 	}
 
-	public void ToggleShadeForMatchEnd() {
+	public void ToggleShadeForMatchEnd(bool newLevel) {
+		this.newLevel = newLevel;
 		matchEnd = true;
 		Shade.Toggle();
 	}

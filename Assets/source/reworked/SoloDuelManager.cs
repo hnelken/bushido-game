@@ -21,12 +21,13 @@ public class SoloDuelManager : BaseDuelManager {
 
 	protected override void SetupMatch() {
 		SetMatchDifficulty(BushidoMatchInfo.Get().SoloDifficulty);
-		UpdateMatchSettings(-1);
+		UpdateMatchSettings();
 	}
 
 	protected void SetMatchDifficulty(int difficulty) {
 		if (difficulty >= 0 && difficulty < 3) {
 			currentDifficulty = Globals.Difficulties[difficulty];
+			currentLevel = (int)currentDifficulty;
 			switch (currentDifficulty) {
 			case Globals.Difficulty.SLOW:
 				winLimit = 3;
@@ -44,8 +45,7 @@ public class SoloDuelManager : BaseDuelManager {
 		}
 	}
 
-	protected void UpdateMatchSettings(int level) {
-		currentLevel = level + 1;
+	protected void UpdateMatchSettings() {
 		maxTime = timesToBeat[(int)currentDifficulty + currentLevel];
 		maxTime += (int)Random.Range(-2, 2);
 	}
@@ -55,6 +55,39 @@ public class SoloDuelManager : BaseDuelManager {
 
 			// Trigger NPC reaction
 			TriggerReaction(false, maxTime);
+		}
+	}
+
+	#endregion
+
+
+	#region Delayed Routines
+
+	// Resets for a new round after 4 seconds
+	public override IEnumerator WaitAndRestartGame() {
+		yield return new WaitForSeconds(4);
+
+		Debug.Log("Restarting round");
+		// Checks if either player has won the match after this round
+		if (MatchWon()) {
+			if (currentLevel == (int)currentDifficulty + 2) {
+				// Trigger the "match win" event
+				EventManager.TriggerGameOver();
+
+				// Leave the duel scene after a delay
+				Get().StartCoroutine(WaitAndEndGame());
+			}
+			else {
+				currentLevel++;
+				UpdateMatchSettings();
+
+				GUI.ToggleShadeForRoundEnd();
+			}
+		}
+		else {
+			// No player has won the match
+			// Trigger the "reset for new round" event
+			GUI.ToggleShadeForRoundEnd();
 		}
 	}
 

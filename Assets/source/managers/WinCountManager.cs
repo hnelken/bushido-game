@@ -88,6 +88,10 @@ public class WinCountManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		ResetWinCount();
+	}
+
+	public void ResetWinCount() {
 		leftCount = 0;
 		rightCount = 0;
 		RefreshCircles();
