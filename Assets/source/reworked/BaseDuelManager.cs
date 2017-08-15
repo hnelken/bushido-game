@@ -21,7 +21,7 @@ public class BaseDuelManager : MonoBehaviour {
 	#endregion
 
 
-	#region protected Variables
+	#region Protected Variables
 
 	protected const int strikeLimit = 2;					// Number of strikes required to lose a round
 	protected int winLimit = 3;								// Number of wins required to win the match

@@ -138,7 +138,7 @@ public class BaseUIManager : MonoBehaviour {
 	protected BaseDuelManager manager;							// The required duel manager component
 
 	protected bool timing;										// True if the timer is active, false otherwise
-	protected bool newLevel;
+	protected bool nextLevel;
 	protected bool roundStart, roundEnd, matchEnd;				// Status variables that are true depending on the state of the duel
 	protected bool flashFadingOut, flashShouldFade;				// Status variables governing the animation of the white flash
 
@@ -205,9 +205,10 @@ public class BaseUIManager : MonoBehaviour {
 		}
 		else if (matchEnd) {
 			matchEnd = false;
-			if (newLevel) {
-				newLevel = false;
-				manager.
+			if (nextLevel) {
+				nextLevel = false;
+				((SoloDuelManager)manager).NextLevel();
+				winCount.ResetWinCount();
 				EventManager.TriggerGameReset();
 			}
 			else {
@@ -265,8 +266,8 @@ public class BaseUIManager : MonoBehaviour {
 		Shade.Toggle();
 	}
 
-	public void ToggleShadeForMatchEnd(bool newLevel) {
-		this.newLevel = newLevel;
+	public void ToggleShadeForMatchEnd(bool nextLevel) {
+		this.nextLevel = nextLevel;
 		matchEnd = true;
 		Shade.Toggle();
 	}

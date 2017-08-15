@@ -5,6 +5,7 @@ public class SoloDuelManager : BaseDuelManager {
 
 	#region Private Variables
 
+	private bool firstDuelSetup = true;
 	private int[] timesToBeat =	new int[] {
 		32, 26, 20,		// Slow reactions
 		26, 20, 14,		// Normal reactions
@@ -16,18 +17,29 @@ public class SoloDuelManager : BaseDuelManager {
 
 	#endregion
 
+	#region Public API
+
+	public void NextLevel() {
+		currentLevel++;
+	}
+
+	#endregion
+
 
 	#region Private API
 
 	protected override void SetupMatch() {
-		SetMatchDifficulty(BushidoMatchInfo.Get().SoloDifficulty);
+		if (firstDuelSetup) {
+			SetMatchDifficulty(BushidoMatchInfo.Get().SoloDifficulty);
+			firstDuelSetup = false;
+		}
 		UpdateMatchSettings();
 	}
 
 	protected void SetMatchDifficulty(int difficulty) {
 		if (difficulty >= 0 && difficulty < 3) {
 			currentDifficulty = Globals.Difficulties[difficulty];
-			currentLevel = (int)currentDifficulty;
+			currentLevel = 0;
 			switch (currentDifficulty) {
 			case Globals.Difficulty.SLOW:
 				winLimit = 3;
@@ -47,12 +59,13 @@ public class SoloDuelManager : BaseDuelManager {
 
 	protected void UpdateMatchSettings() {
 		maxTime = timesToBeat[(int)currentDifficulty + currentLevel];
-		maxTime += (int)Random.Range(-2, 2);
+		maxTime += (int)Random.Range(-2, 1);
 	}
 
 	protected override void CheckForTimeout () {
 		if (currTime >= maxTime) {
 
+			Debug.Log("Speed: " + currentDifficulty + " - Level: " + currentLevel + " - Time elapsed: " + maxTime + " - OTime: " + (timesToBeat[(int)currentDifficulty + currentLevel]));
 			// Trigger NPC reaction
 			TriggerReaction(false, maxTime);
 		}
