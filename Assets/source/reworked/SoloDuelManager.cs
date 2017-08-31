@@ -20,6 +20,7 @@ public class SoloDuelManager : BaseDuelManager {
 	#region Public API
 
 	public void NextLevel() {
+		Debug.Log("LEVEL CHANGED");
 		currentLevel++;
 	}
 
@@ -81,8 +82,9 @@ public class SoloDuelManager : BaseDuelManager {
 		yield return new WaitForSeconds(4);
 
 		Debug.Log("Restarting round");
-		// Checks if either player has won the match after this round
+		// Checks if the player has won the match after this round
 		if (MatchWon()) {
+			// Check if the player has completed the final level
 			if (currentLevel == (int)currentDifficulty + 2) {
 				// Trigger the "match win" event
 				EventManager.TriggerGameOver();
@@ -90,17 +92,17 @@ public class SoloDuelManager : BaseDuelManager {
 				// Leave the duel scene after a delay
 				Get().StartCoroutine(WaitAndEndGame());
 			}
-			else {
+			else {	// Final level not complete, increase difficulty
 				currentLevel++;
 				UpdateMatchSettings();
 
-				GUI.ToggleShadeForRoundEnd();
+				GUI.ToggleShadeForRoundEnd(true);
 			}
 		}
 		else {
 			// No player has won the match
 			// Trigger the "reset for new round" event
-			GUI.ToggleShadeForRoundEnd();
+			GUI.ToggleShadeForRoundEnd(false);
 		}
 	}
 

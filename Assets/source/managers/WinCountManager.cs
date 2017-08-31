@@ -92,9 +92,19 @@ public class WinCountManager : MonoBehaviour {
 	}
 
 	public void ResetWinCount() {
+		Debug.Log("Resetting win count");
 		leftCount = 0;
 		rightCount = 0;
-		RefreshCircles();
+
+		LeftIcon1.enabled = false;
+		LeftIcon2.enabled = false;
+		LeftIcon3.enabled = false;
+		LeftIcon4.enabled = false;
+
+		RightIcon1.enabled = false;
+		RightIcon2.enabled = false;
+		RightIcon3.enabled = false;
+		RightIcon4.enabled = false;
 	}
 
 	public void SignalWin(bool leftWon) {

@@ -285,7 +285,7 @@ public class BaseDuelManager : MonoBehaviour {
 			LeftSamurai.BestTime, RightSamurai.BestTime,
 			true);
 
-		GUI.ToggleShadeForMatchEnd(false);
+		GUI.ToggleShadeForMatchEnd();
 	}
 
 	protected void UpdateCurrentTime() {
@@ -385,7 +385,7 @@ public class BaseDuelManager : MonoBehaviour {
 		else {
 			// No player has won the match
 			// Trigger the "reset for new round" event
-			GUI.ToggleShadeForRoundEnd();
+			GUI.ToggleShadeForRoundEnd(false);
 		}
 	}
 

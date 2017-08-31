@@ -201,19 +201,19 @@ public class BaseUIManager : MonoBehaviour {
 		}
 		else if (roundEnd) {
 			roundEnd = false;
-			EventManager.TriggerGameReset();
-		}
-		else if (matchEnd) {
-			matchEnd = false;
+			// Check if the next round is a new level
 			if (nextLevel) {
+				Debug.Log("NEW LEVEL");
 				nextLevel = false;
 				((SoloDuelManager)manager).NextLevel();
 				winCount.ResetWinCount();
-				EventManager.TriggerGameReset();
 			}
-			else {
-				LeaveScene();
-			}
+			EventManager.TriggerGameReset();
+			Debug.Log("Round Reset");
+		}
+		else if (matchEnd) {
+			matchEnd = false;
+			LeaveScene();
 		}
 	}
 
@@ -261,13 +261,13 @@ public class BaseUIManager : MonoBehaviour {
 		Shade.Toggle();
 	}
 
-	public void ToggleShadeForRoundEnd() {
+	public void ToggleShadeForRoundEnd(bool nextLevel) {
+		this.nextLevel = nextLevel;
 		roundEnd = true;
 		Shade.Toggle();
 	}
 
-	public void ToggleShadeForMatchEnd(bool nextLevel) {
-		this.nextLevel = nextLevel;
+	public void ToggleShadeForMatchEnd() {
 		matchEnd = true;
 		Shade.Toggle();
 	}
