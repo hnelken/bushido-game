@@ -17,17 +17,13 @@ public class SoloDuelManager : BaseDuelManager {
 
 	#endregion
 
-	#region Public API
-
-	public void NextLevel() {
-		Debug.Log("LEVEL CHANGED");
-		currentLevel++;
-	}
-
-	#endregion
-
 
 	#region Private API
+
+	protected void ResetWinCounts() {
+		LeftSamurai.ResetWinCount();
+		RightSamurai.ResetWinCount();
+	}
 
 	protected override void SetupMatch() {
 		if (firstDuelSetup) {
@@ -85,7 +81,8 @@ public class SoloDuelManager : BaseDuelManager {
 		// Checks if the player has won the match after this round
 		if (MatchWon()) {
 			// Check if the player has completed the final level
-			if (currentLevel == (int)currentDifficulty + 2) {
+			Debug.Log("Diff: " + currentDifficulty + " Level: " + currentLevel);
+			if (currentLevel == 2) {
 				// Trigger the "match win" event
 				EventManager.TriggerGameOver();
 
@@ -95,7 +92,7 @@ public class SoloDuelManager : BaseDuelManager {
 			else {	// Final level not complete, increase difficulty
 				currentLevel++;
 				UpdateMatchSettings();
-
+				ResetWinCounts();
 				GUI.ToggleShadeForRoundEnd(true);
 			}
 		}

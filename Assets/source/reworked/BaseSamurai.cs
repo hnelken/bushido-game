@@ -78,12 +78,16 @@ public class BaseSamurai : MonoBehaviour {
 		}
 	}
 
+	// Sets the win and strike count to zero
+	public void ResetWinCount() {
+		winCount = 0;
+	}
+
 	// Returns whether a player has struck out following the last round
 	public bool StrikeOut(int strikeLimit) {
 		// Player's strike count must reach limit to strike out
 		return strikeCount >= strikeLimit;
 	}
-
 
 	#endregion
 

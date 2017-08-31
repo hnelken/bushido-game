@@ -205,7 +205,6 @@ public class BaseUIManager : MonoBehaviour {
 			if (nextLevel) {
 				Debug.Log("NEW LEVEL");
 				nextLevel = false;
-				((SoloDuelManager)manager).NextLevel();
 				winCount.ResetWinCount();
 			}
 			EventManager.TriggerGameReset();
